@@ -6,3 +6,4 @@ El negocio "San José" ofrece lavados y servicios de mantenimiento (cambio de ac
 ## Miembros del Equipo:
 -Guillermo Giles, 33359, guillermogiles, https://github.com/guille123giles-cloud
 -Martinez Baltazar, 33242, baltazar martinez, https://github.com/gitbal-hzd
+-Puertas Bautista 33604, bautistapuertas,https://github.com/Bautistapuertas
