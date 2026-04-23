@@ -12,40 +12,35 @@ Integrantes:
 Fecha: 16 de abril de 2026
 Versión: v1.0
 
-RESUMEN EJECUTIVO.
-Plataforma web diseñada para centralizar la operación del Lavadero y Lubricentro San José. El sistema permite gestionar turnos online, registrar el historial técnico por vehículo y controlar el stock de insumos.
+Alcance del Producto:
 
-OPORTUNIDAD DE NEGOCIO.
-Problema: Gestión manual y desorganizada de servicios en papel. Falta de un historial clínico vehicular.
-Impacto: Pérdida de tiempo del dueño y falta de recordatorios de mantenimiento para clientes.
-Limitaciones actuales: Las agendas de papel impiden el acceso remoto y la generación de estadísticas.
+Dentro del Alcance:
 
-VISIÓN DEL PRODUCTO.
-Descripción: Aplicación web de gestión operativa y agenda digital.
-Propuesta de valor: Comodidad de reserva 24/7 para el cliente y profesionalización del servicio mediante una ficha técnica por patente.
-Usuarios: Clientes particulares y Dueño/Administrador del local.
+Módulo de Gestión de Clientes y Vehículos:
+-Registro y edición de datos del cliente (Nombre, teléfono, mail).
+-Vinculación de vehículos por patente (Dominio), marca, modelo y año.
+-Búsqueda rápida de clientes por DNI.
 
-OBJETIVOS DEL PROYECTO.
-Objetivo principal: Automatizar el ciclo de turnos y el seguimiento técnico del Lavadero San José.
-Objetivos específicos: 
-- Digitalizar el 100% de los servicios.
-- Implementar alertas de stock para aceites y filtros.
-Métricas: Lograr que el 50% de los turnos sean web en 3 meses y evitar superposiciones.
+Módulo de Turnos Online: 
+-Calendario interactivo para que el cliente seleccione fecha y hora.
+-Validación de disponibilidad en tiempo real para evitar superposiciones.
+-Panel de gestión de turnos para el administrador (Confirmar, cancelar o reprogramar).
+-Envío de recordatorios automáticos vía e-mail.
 
-ALCANCE DEL PRODUCTO.
-Dentro del Alcance: Registro de vehículos, módulo de turnos, ficha técnica de servicios y panel de administración de precios.
-Fuera del Alcance: Pagos online, facturación electrónica legal y gestión de sueldos.
+Módulo de Ficha Técnica e Historial de Servicios:
+-Registro detallado de cada servicio realizado: tipo de lavado, cambio de aceite, filtros cambiados.
+-Registro del kilometraje actual y cálculo automático del próximo servicio recomendado.
 
-SUPUESTOS Y RESTRICCIONES.
-Supuestos: El local tiene internet y los clientes usan smartphones.
-Restricciones: Finalizar antes del cierre del ciclo lectivo y presupuesto limitado para hosting.
+Módulo de Control de Insumos (Stock):
+-Carga inicial de stock de aceites y filtros.
+-Descuento automático de stock al finalizar un servicio.
+-Sistema de alertas visuales cuando un producto llega al stock mínimo definido.
 
-STAKEHOLDERS CLAVES.
-Cliente: Dueño del Lavadero y Lubricentro San José.
-Usuarios: Clientes de la zona y operarios.
-Interesados: Alumnos del Grupo 4 y docentes de la cátedra.
+Módulo de Administración de Precios:
+-Panel para actualizar valores de los diferentes tipos de lavados y servicios de lubricentro.
 
-RIESGOS INICIALES.
-Riesgo: Baja adopción del sistema web | Probabilidad: Media | Impacto: Media | Mitigación: Interfaz simple.
-Riesgo: Pérdida de datos | Probabilidad: Baja | Impacto: Alta | Mitigación: Backups automáticos.
-Riesgo: Retrasos por falta de tiempo | Probabilidad: Alta | Impacto: Media | Mitigación: Dividir tareas equitativamente.
+
+Fuera del Alcance: 
+-Formas de Pago: No se integrará cobro con tarjetas o Mercado Pago dentro de la web.
+-Facturación Legal: El sistema no emitirá facturas fiscales de AFIP ni se conectará a controladores fiscales.
+-Gestión de Compras: No se manejarán órdenes de compra automáticas a proveedores de insumos.
