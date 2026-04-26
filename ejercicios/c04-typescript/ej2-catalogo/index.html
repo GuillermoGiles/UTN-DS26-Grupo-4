@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ejercicio 2 - Catálogo de Libros</title>
+    <style>
+        body { font-family: sans-serif; max-width: 600px; margin: 20px auto; line-height: 1.6; }
+        .controles { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        input { padding: 8px; flex-grow: 1; }
+        button { padding: 8px 15px; cursor: pointer; }
+        ul { list-style: none; padding: 0; }
+        li { padding: 10px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; }
+        .disponible { color: green; font-weight: bold; }
+        .no-disponible { color: red; }
+        #stats { background: #f4f4f4; padding: 10px; border-radius: 5px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <h1>Catálogo de Libros</h1>
+
+    <div class="controles">
+        <input type="text" id="filtroAutor" placeholder="Escribí un autor...">
+        <button id="filtrar">Filtrar</button>
+        <button id="mostrarDisponibles">Solo disponibles</button>
+        <button id="mostrarTodos">Ver todos</button>
+    </div>
+
+    <ul id="listado"></ul>
+
+    <p id="stats"></p>
+
+    <script src="app.js"></script>
+</body>
+</html>

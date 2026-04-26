@@ -1,0 +1,124 @@
+/* Variables Globales */
+:root {
+    --color-primario: #2c3e50;
+    --color-secundario: #3498db;
+    --color-fondo: #f0f2f5;
+    --blanco: #ffffff;
+    --borde-radio: 12px;
+    --sombra: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Reset y Box-sizing */
+* {
+    box-sizing: border-box; /* Requisito del ejercicio */
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: var(--color-fondo);
+    color: #333;
+    line-height: 1.6;
+}
+
+/* Flexbox en el Menú */
+nav ul {
+    display: flex; /* Activa Flexbox */
+    justify-content: center;
+    gap: 30px;
+    background-color: var(--color-primario);
+    padding: 1rem;
+    list-style: none;
+}
+
+nav a {
+    color: var(--blanco);
+    text-decoration: none;
+    font-weight: bold;
+}
+
+/* Flexbox en el Contenedor Principal */
+main {
+    display: flex; /* Activa Flexbox */
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px;
+    gap: 20px;
+}
+
+/* Estilos de las Secciones */
+section {
+    background-color: var(--blanco);
+    width: 100%;
+    max-width: 800px;
+    padding: 25px;
+    border-radius: var(--borde-radio); /* Usa variable */
+    box-shadow: var(--sombra);         /* Usa variable */
+}
+
+h1, h2 {
+    color: var(--color-primario);
+    margin-bottom: 10px;
+}
+
+/* --- Estilos para el Formulario --- */
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+input, textarea {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    width: 100%;
+}
+
+button {
+    background-color: var(--color-secundario);
+    color: white;
+    padding: 12px;
+    border: none;
+    border-radius: var(--borde-radio);
+    cursor: pointer;
+    font-weight: bold;
+    transition: background 0.3s;
+}
+
+button:hover {
+    background-color: var(--color-primario);
+}
+
+/* --- MEDIA QUERIES (Diseño Responsive) --- */
+
+/* Tablet y Desktop (768px en adelante) [cite: 718] */
+@media (min-width: 768px) {
+    nav ul {
+        flex-direction: row; /* En PC el menú es horizontal [cite: 706] */
+        justify-content: center;
+    }
+
+    section {
+        padding: 40px;
+    }
+}
+
+/* Solo para Celulares (Base/Mobile First) [cite: 698-701] */
+@media (max-width: 767px) {
+    nav ul {
+        flex-direction: column; /* En celular el menú se apila [cite: 700] */
+        gap: 10px;
+    }
+
+    h1 {
+        font-size: 1.5rem;
+    }
+}

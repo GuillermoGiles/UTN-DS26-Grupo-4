@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Ejercicio 6 - Lista Dinámica</title>
+    <style>
+        .error { color: rgb(255, 0, 0); display: none; }
+        li { margin-bottom: 5px; }
+        button.eliminar { margin-left: 10px; background-color: #ff4d4d; color: white; border: none; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Gestión de Productos</h1>
+    
+    <input type="text" id="producto" placeholder="Nombre del producto">
+    <button id="btnAgregar">Agregar</button>
+    
+    <p id="errorMsg" class="error">El nombre no puede estar vacío.</p>
+    <p id="infoContador">0 productos en la lista</p>
+
+    <ul id="lista"></ul>
+
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <title>CV - Contacto</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>Contacto</h1>
+        <nav>
+            <ul>
+                <li><a href="index.html">Inicio</a></li>
+                <li><a href="estudios.html">Estudios</a></li>
+                <li><a href="experiencia.html">Experiencia</a></li>
+                <li><a href="hobbies.html">Hobbies</a></li>
+                <li><a href="contacto.html">Contacto</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section>
+            <h2>Enviame un mensaje</h2>
+            <form action="#" method="post">
+                <div class="form-group">
+                    <label for="nombre">Nombre completo:</label> <input type="text" id="nombre" name="nombre" placeholder="Escribí tu nombre" required> </div>
+
+                <div class="form-group">
+                    <label for="email">Correo Electrónico:</label>
+                    <input type="email" id="email" name="email" placeholder="ejemplo@correo.com" required> </div>
+
+                <div class="form-group">
+                    <label for="asunto">Asunto:</label>
+                    <input type="text" id="asunto" name="asunto" minlength="6" placeholder="Mínimo 6 caracteres" required> </div>
+
+                <div class="form-group">
+                    <label for="mensaje">Mensaje:</label>
+                    <textarea id="mensaje" name="mensaje" rows="5" placeholder="¿En qué puedo ayudarte?"></textarea> </div>
+
+                <button type="submit">Enviar Formulario</button> </form>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 - Desarrollo de Software UTN FRLP</p>
+    </footer>
+</body>
+</html>

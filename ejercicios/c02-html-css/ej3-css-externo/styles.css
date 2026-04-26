@@ -1,0 +1,29 @@
+/* Selector de Etiqueta (Afecta a todo el cuerpo) */
+body {
+    font-family: Arial, sans-serif; /* Tipografía [cite: 1323] */
+    background-color: #f4f4f4;      /* Color de fondo [cite: 1341] */
+    margin: 0;                      /* Margen externo [cite: 1297] */
+    padding: 20px;                  /* Espacio interno [cite: 1300] */
+    line-height: 1.6;               /* Interlineado [cite: 1335] */
+}
+
+/* Selector de Etiqueta (Para los títulos) */
+h1 {
+    color: #2c3e50;                 /* Color hexadecimal [cite: 1369] */
+    border-bottom: 2px solid #3498db; /* Borde decorativo [cite: 1352] */
+    padding-bottom: 10px;
+}
+
+/* Selector de Clase (Para resaltar textos específicos) */
+.resaltado {
+    color: #e74c3c;
+    font-weight: bold;              /* Negrita [cite: 1326] */
+    background-color: #fff;
+    padding: 5px;
+    border-radius: 5px;             /* Esquinas redondeadas [cite: 1351] */
+}
+
+/* Ajuste de márgenes para párrafos */
+p {
+    margin-bottom: 1.5rem;          /* Usando unidades relativas rem [cite: 1373] */
+}

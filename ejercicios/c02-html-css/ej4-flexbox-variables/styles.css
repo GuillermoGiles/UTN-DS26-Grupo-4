@@ -1,0 +1,63 @@
+/* Variables Globales */
+:root {
+    --color-primario: #2c3e50;
+    --color-secundario: #3498db;
+    --color-fondo: #f0f2f5;
+    --blanco: #ffffff;
+    --borde-radio: 12px;
+    --sombra: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Reset y Box-sizing */
+* {
+    box-sizing: border-box; /* Requisito del ejercicio */
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: var(--color-fondo);
+    color: #333;
+    line-height: 1.6;
+}
+
+/* Flexbox en el Menú */
+nav ul {
+    display: flex; /* Activa Flexbox */
+    justify-content: center;
+    gap: 30px;
+    background-color: var(--color-primario);
+    padding: 1rem;
+    list-style: none;
+}
+
+nav a {
+    color: var(--blanco);
+    text-decoration: none;
+    font-weight: bold;
+}
+
+/* Flexbox en el Contenedor Principal */
+main {
+    display: flex; /* Activa Flexbox */
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px;
+    gap: 20px;
+}
+
+/* Estilos de las Secciones */
+section {
+    background-color: var(--blanco);
+    width: 100%;
+    max-width: 800px;
+    padding: 25px;
+    border-radius: var(--borde-radio); /* Usa variable */
+    box-shadow: var(--sombra);         /* Usa variable */
+}
+
+h1, h2 {
+    color: var(--color-primario);
+    margin-bottom: 10px;
+}
