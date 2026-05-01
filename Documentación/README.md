@@ -11,5 +11,6 @@
 * **2.4 Diagramas Complementarios:** Modelado de procesos y actividades.
 
 ## [03 - Backlog](./03-Backlog)
-**[3.1 Épicas y Features](./03-Backlog):**
-**[3.2 Historias de Usuario](./03-Backlog):**
+* **3.1 Épicas y Features:** Listado ordenado y priorizado de las grandes funcionalidades del sistema.
+* **3.2 Historias de Usuario:** Detalle de funcionalidades con criterios de aceptación.
+
