@@ -13,4 +13,6 @@
 ## [03 - Backlog](./03-Backlog)
 * **3.1 Épicas y Features:** Listado ordenado y priorizado de las grandes funcionalidades del sistema.
 * **3.2 Historias de Usuario:** Detalle de funcionalidades con criterios de aceptación.
+* **3.3 División de historias** Desglose de requerimientos complejos en unidades de trabajo más pequeñas para optimizar el desarrollo y la estimación.
+* **3.4 Calendario de planificación** Hoja de ruta temporal con los hitos, sprints y plazos de entrega previstos para los incrementos del sistema.
 
