@@ -9,3 +9,7 @@
 * **2.2 Requisitos Funcionales:** Detalle de las capacidades del software.
 * **2.3 Reglas de Negocio:** Normas y lógica operativa del lavadero/lubricentro.
 * **2.4 Diagramas Complementarios:** Modelado de procesos y actividades.
+
+## [03 - Backlog](./03-Backlog)
+**[3.1 Épicas y Features](./03-Backlog):**
+**[3.2 Historias de Usuario](./03-Backlog):**
