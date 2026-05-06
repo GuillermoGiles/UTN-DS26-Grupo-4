@@ -16,8 +16,6 @@
 * **3.3 División de historias:** Desglose de requerimientos complejos en unidades de trabajo más pequeñas para optimizar el desarrollo y la estimación.
 * **3.4 Calendario de planificación:** Hoja de ruta temporal con los hitos, sprints y plazos de entrega previstos para los incrementos del sistema.
 
-## [04 - UX/UI](./04%20UX-UI)
-* **4.1 Wireframes**: Representaciones visuales de baja fidelidad que definen la disposición de los elementos y la arquitectura de la información.
-    * [Solicitud de Turnos - Vista Cliente](./04%20UX-UI/01_wireframe_Solicitud_Turno.png): Interfaz para que el usuario elija su vehículo, el servicio y el horario disponible de forma autónoma (RF-003).
-    * [Agenda Operativa - Vista Administrador](./04%20UX-UI/02_wireframe_Agenda_Admin.png): Panel para visualizar y gestionar las solicitudes de turnos en la agenda (RF-005).
-    * [Registro de Ficha Técnica - Vista Operativa](./04%20UX-UI/03_wireframe_Ficha_Tecnica.png): Formulario técnico para registrar kilometraje, servicios realizados y descontar stock de insumos (RF-006, RN-003, RN-004).
+* [Solicitud de Turnos - Vista Cliente](./04%20-%20UX_UI/01_Wireframe_Reserva_Cliente.png)
+* [Agenda Operativa - Vista Administrador](./04%20-%20UX_UI/02_Wireframe_Agenda_Admin.png)
+* [Registro de Ficha Técnica - Vista Operativa](./04%20-%20UX_UI/03_Wireframe_Ficha_Tecnica.png)
