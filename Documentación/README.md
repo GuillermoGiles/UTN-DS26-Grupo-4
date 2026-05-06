@@ -17,5 +17,5 @@
 * **3.4 Calendario de planificación:** Hoja de ruta temporal con los hitos, sprints y plazos de entrega previstos para los incrementos del sistema.
 
 * * [Solicitud de Turnos - Vista Cliente](https://github.com/guille123giles-cloud/UTN-DS26-Grupo-4/blob/main/Documentaci%C3%B3n/04%20UX-UI/01_Wireframe_Reserva_Cliente.png)
-* [Agenda Operativa - Vista Administrador](https://github.com/Bautistapuertas/UTN-DS25-Grupo-4-/blob/main/Documentación/04%20-%20UX_UI/02_Wireframe_Agenda_Admin.png)
-* [Registro de Ficha Técnica - Vista Operativa](https://github.com/Bautistapuertas/UTN-DS25-Grupo-4-/blob/main/Documentación/04%20-%20UX_UI/03_Wireframe_Ficha_Tecnica.png)
+* [Agenda Operativa - Vista Administrador](https://github.com/guille123giles-cloud/UTN-DS26-Grupo-4/blob/main/Documentaci%C3%B3n/04%20UX-UI/02_Wireframe_Agenda_Admin.png)
+* [Registro de Ficha Técnica - Vista Operativa](https://github.com/guille123giles-cloud/UTN-DS26-Grupo-4/blob/main/Documentaci%C3%B3n/04%20UX-UI/03_Wireframe_Ficha_Tecnica.png)
