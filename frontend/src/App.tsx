@@ -2,6 +2,7 @@ import './App.css'
 import { ResumenCaja } from './components/ResumenCaja';
 import { ServicioDestacado } from './components/ServicioDestacado';
 import TurnoCard from './components/TurnoCard';
+import { Footer } from './components/Footer';
 
 function App() {
   return (
@@ -38,9 +39,12 @@ function App() {
           tipo="lavadero"
         />
       </div>
+    <Footer nombreNegocio="Lavadero y Lubricentro San José" anio={2026} />
+      
 
     </> 
   )
 }
+
 
 export default App
