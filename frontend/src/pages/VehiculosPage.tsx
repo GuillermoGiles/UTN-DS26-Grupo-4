@@ -7,7 +7,7 @@ export function VehiculosPage() {
         <h2>Gestión de Vehículos</h2>
         <Button variant="primary">+ Nuevo Vehículo</Button>
       </div>
-
+        // Maquetado de la página de Vehículos - Bautista Puertas
       <Table striped bordered hover responsive className="shadow-sm">
         <thead className="table-dark">
           <tr>
