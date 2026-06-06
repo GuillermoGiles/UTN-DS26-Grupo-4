@@ -1,4 +1,3 @@
-// Configuración central de rutas. Envuelvo todo en <Layout> y defino qué página se renderiza según la URL.
 import { Routes, Route } from 'react-router-dom';
 import { Layout } from './components/Layout/Layout';
 import { Home } from './pages/Home';

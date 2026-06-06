@@ -4,8 +4,8 @@ import { ServicioDestacado } from '../components/ServicioDestacado';
 
 export function Servicios() {
   return (
-    <Container className="py-5">
-      <h2 className="text-center mb-5 fw-bold text-secondary">Nuestros Servicios Destacados</h2>
+    <div id="stock" className="container mt-5 pt-4">
+      <h2 className="mb-4 text-center">Gestión de Servicios e Insumos</h2>
       <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '2rem' }}>
         <ServicioDestacado 
           nombre="Cambio de Aceite" 
