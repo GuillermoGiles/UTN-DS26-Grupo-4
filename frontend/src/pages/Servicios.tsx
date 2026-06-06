@@ -20,6 +20,6 @@ export function Servicios() {
           tipo="lavadero"
         />
       </div>
-    </Container>
+    </div>
   );
 }
