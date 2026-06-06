@@ -1,26 +1,32 @@
 import { Routes, Route } from 'react-router-dom';
-import { Footer } from './components/Footer';
 
-// Importamos las dos páginas
-import { HomePage } from './pages/HomePage';
+// 1. Imports de tus compañeros (El Layout y sus páginas)
+import {Layout} from './components/Layout/Layout';
+import { Home } from './pages/Home';
+import { Servicios } from './pages/Servicios';
+
+// 2. Import de tu página
 import { VehiculosPage } from './pages/VehiculosPage';
 
 function App() {
   return (
-    <div className="d-flex flex-column min-vh-100 bg-dark text-light">
+    // El Layout ya tiene el Header y el Footer adentro. 
+    // Todo lo que pongamos en el medio va a ser la prop "children".
+    <Layout>
       
-      {/* El Router: Solo dibuja en pantalla el "element" que coincide con el "path".
-        Nunca dibuja los dos al mismo tiempo.
-      */}
+      {/* El motor de rutas */}
       <Routes>
-        <Route path="/" element={<HomePage />} />
+        {/* La Home principal que hicieron ellos */}
+        <Route path="/" element={<Home />} />
+        
+        {/* La página de Servicios de ellos */}
+        <Route path="/servicios" element={<Servicios />} />
+        
+        {/* TU página de vehículos */}
         <Route path="/vehiculos" element={<VehiculosPage />} />
       </Routes>
 
-      {/* El Footer queda afuera del Router porque queremos que se vea en todas las pantallas */}
-      <Footer nombreNegocio="Lavadero y Lubricentro San José" anio={2026} />
-      
-    </div>
+    </Layout>
   );
 }
 
