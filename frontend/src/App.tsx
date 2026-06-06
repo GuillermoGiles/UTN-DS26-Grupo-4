@@ -1,50 +1,27 @@
-import './App.css'
-import { ResumenCaja } from './components/ResumenCaja';
-import { ServicioDestacado } from './components/ServicioDestacado';
-import TurnoCard from './components/TurnoCard';
+import { Routes, Route } from 'react-router-dom';
 import { Footer } from './components/Footer';
+
+// Importamos las dos páginas
+import { HomePage } from './pages/HomePage';
+import { VehiculosPage } from './pages/VehiculosPage';
 
 function App() {
   return (
-    <>       
-      <div className="container mt-5">
-        <h1 className="mb-4">Sistema de Gestión San Jose</h1> 
-        <div className="row">
-          {/* Componente de Caja */}
-          <div className="col-12 col-md-6 col-lg-4 mb-3">
-            <ResumenCaja ingresos={185000} vehiculos={12} />
-          </div>
-          
-          {/* Componentes de Turnos integrados */}
-          <div className="col-12 col-md-6 col-lg-4 mb-3">
-            <TurnoCard patente="AB 123 CD" servicio="Cambio de Aceite" />
-          </div>
-          <div className="col-12 col-md-6 col-lg-4 mb-3">
-            <TurnoCard patente="XYZ 987" servicio="Lavado Completo Premium" />
-          </div>
-        </div>
-      </div>
-
-      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '1rem', margin: '2rem 0' }}>
-        <ServicioDestacado 
-          nombre="Cambio de Aceite" 
-          precio={45000} 
-          descripcion="Servicio técnico completo con reemplazo de filtros esenciales según kilometraje."
-          tipo="lubricentro"
-        />
-        <ServicioDestacado 
-          nombre="Lavado Completo Premium" 
-          precio={12000} 
-          descripcion="Limpieza artesanal profunda exterior e interior con productos de alta calidad."
-          tipo="lavadero"
-        />
-      </div>
-    <Footer nombreNegocio="Lavadero y Lubricentro San José" anio={2026} />
+    <div className="d-flex flex-column min-vh-100 bg-dark text-light">
       
+      {/* El Router: Solo dibuja en pantalla el "element" que coincide con el "path".
+        Nunca dibuja los dos al mismo tiempo.
+      */}
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/vehiculos" element={<VehiculosPage />} />
+      </Routes>
 
-    </> 
-  )
+      {/* El Footer queda afuera del Router porque queremos que se vea en todas las pantallas */}
+      <Footer nombreNegocio="Lavadero y Lubricentro San José" anio={2026} />
+      
+    </div>
+  );
 }
 
-
-export default App
+export default App;
