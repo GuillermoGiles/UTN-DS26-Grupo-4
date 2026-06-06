@@ -1,5 +1,4 @@
 // Mi página propia para mostrar el catálogo de servicios, usando el componente ServicioDestacado que armé en la AG pasada.
-import { Container } from 'react-bootstrap';
 import { ServicioDestacado } from '../components/ServicioDestacado';
 
 export function Servicios() {

@@ -1,6 +1,7 @@
 // Página de inicio. Acá moví los componentes de mis compañeros (Caja y Turnos) que antes estaban sueltos en App.tsx.
 import { ResumenCaja } from '../components/ResumenCaja';
 import TurnoCard from '../components/TurnoCard';
+import { Link } from 'react-router-dom';
 
 export function Home() {
   return (
@@ -23,6 +24,7 @@ export function Home() {
       <div id="clientes" className="container mt-5 pt-4 mb-5 text-center">
         <h2>Módulo de Clientes y Vehículos</h2>
         <p className="text-muted">Listado de clientes</p>
+        <Link to="/clientes" className="btn btn-outline-primary mt-2">Ir a Clientes y Vehículos</Link>
       </div>
     </>
   );
