@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Card, Button } from 'react-bootstrap';
+import { Badge } from 'react-bootstrap';
+import { FiCheck, FiShoppingBag } from 'react-icons/fi';
 
 export type ServicioDestacadoProps = {
   nombre: string;       
@@ -21,33 +22,41 @@ export const ServicioDestacado: React.FC<ServicioDestacadoProps> = ({
   };
 
   return (
-    <Card 
-      className={`shadow-sm h-100 ${seleccionado ? 'border-primary bg-light' : ''}`}
-      style={{ width: '18rem', margin: '1rem' }}
+    <div 
+      className={`saas-card h-100 d-flex flex-column ${seleccionado ? 'border-primary' : ''}`}
+      style={{ 
+        width: '20rem', margin: '0.5rem',
+        boxShadow: seleccionado ? '0 0 0 2px var(--primary-color), var(--shadow-md)' : 'var(--shadow-sm)'
+      }}
     >
-      <Card.Body className="d-flex flex-column justify-content-between">
+      <div className="p-4 d-flex flex-column h-100">
         <div>
-          <div className="d-flex justify-content-between align-items-center mb-2">
-            <span className={`badge ${tipo === 'lubricentro' ? 'bg-danger' : 'bg-info text-dark'} text-uppercase`}>
-              {tipo}
-            </span>
+          <div className="d-flex justify-content-between align-items-center mb-3">
+            <Badge 
+              bg={tipo === 'lubricentro' ? 'danger' : 'info'} 
+              className={tipo === 'lubricentro' ? '' : 'text-dark'}
+              pill
+            >
+              {tipo.toUpperCase()}
+            </Badge>
+            {seleccionado && <FiCheck className="text-primary" size={24} />}
           </div>
-          <Card.Title className="fw-bold text-dark">{nombre}</Card.Title>
-          <Card.Text className="text-muted small">{descripcion}</Card.Text>
+          <h4 className="fw-bold text-dark mb-2">{nombre}</h4>
+          <p className="text-muted small lh-lg">{descripcion}</p>
         </div>
-        <div className="mt-3">
-          <div className="fs-4 fw-bold text-primary mb-3">
-            ${precio.toLocaleString('es-AR')}
+        
+        <div className="mt-auto pt-4 border-top">
+          <div className="d-flex align-items-baseline mb-4">
+            <span className="fs-2 fw-bold text-dark">${precio.toLocaleString('es-AR')}</span>
           </div>
-          <Button 
-            variant={seleccionado ? "success" : "outline-primary"} 
-            className="w-100" 
+          <button 
+            className={`w-100 d-flex justify-content-center align-items-center gap-2 ${seleccionado ? "btn-primary-custom" : "btn-outline-custom"}`}
             onClick={handleSeleccion}
           >
-            {seleccionado ? "✓ Seleccionado" : "Reservar Turno"}
-          </Button>
+            {seleccionado ? <><FiCheck /> Reservado</> : <><FiShoppingBag /> Reservar Turno</>}
+          </button>
         </div>
-      </Card.Body>
-    </Card>
+      </div>
+    </div>
   );
 };

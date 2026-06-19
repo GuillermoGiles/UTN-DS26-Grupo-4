@@ -4,7 +4,8 @@ import { Home } from './pages/Home';
 import { Servicios } from './pages/Servicios';
 import { VehiculosPage } from './pages/VehiculosPage';
 import { PanelGestion } from './pages/PanelGestion'; 
-import { PerfilCliente } from './pages/PerfilCliente'; // <-- 1. IMPORTAR TU PÁGINA
+import { PerfilCliente } from './pages/PerfilCliente';
+import { AltaUsuario } from './pages/AltaUsuario';
 
 function App() {
   return (
@@ -14,9 +15,8 @@ function App() {
         <Route path="/servicios" element={<Servicios />} />
         <Route path="/vehiculos" element={<VehiculosPage />} />
         <Route path="/panel" element={<PanelGestion />} /> 
-        
-        {/* 2. REGISTRAR LA RUTA PARA TU VISTA */}
         <Route path="/clientes" element={<PerfilCliente />} /> 
+        <Route path="/usuarios/nuevo" element={<AltaUsuario />} />
       </Routes>
     </Layout>
   );

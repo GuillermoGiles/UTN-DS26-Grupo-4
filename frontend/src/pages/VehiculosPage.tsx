@@ -1,41 +1,53 @@
-import { Container, Table, Button } from 'react-bootstrap';
+import { Container, Table } from 'react-bootstrap';
+import { FiPlus, FiClock } from 'react-icons/fi';
 
 export function VehiculosPage() {
   return (
-    <Container className="py-4">
+    <Container className="py-5">
       <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2>Gestión de Vehículos</h2>
-        <Button variant="primary">+ Nuevo Vehículo</Button>
+        <div>
+          <h2 className="mb-1">Vehículos Registrados</h2>
+          <p className="text-muted mb-0">Listado completo de vehículos y sus clientes titulares.</p>
+        </div>
+        <button className="btn-primary-custom d-flex align-items-center gap-2">
+          <FiPlus /> Nuevo Vehículo
+        </button>
       </div>
-        // Maquetado de la página de Vehículos - Bautista Puertas
-      <Table striped bordered hover responsive className="shadow-sm">
-        <thead className="table-dark">
-          <tr>
-            <th>Patente</th>
-            <th>Nombre Modelo</th>
-            <th>Cliente Titular</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td className="fw-bold">AB 123 CD</td>
-            <td>Toyota Hilux 2.8 TDI</td>
-            <td>Juan Pérez</td>
-            <td>
-              <Button variant="outline-secondary" size="sm">Ver Historial</Button>
-            </td>
-          </tr>
-          <tr>
-            <td className="fw-bold">XYZ 987</td>
-            <td>Ford Fiesta Kinetic</td>
-            <td>María Gómez</td>
-            <td>
-              <Button variant="outline-secondary" size="sm">Ver Historial</Button>
-            </td>
-          </tr>
-        </tbody>
-      </Table>
+      
+      <div className="saas-card">
+        <Table responsive className="table-saas mb-0">
+          <thead>
+            <tr>
+              <th>Patente</th>
+              <th>Nombre Modelo</th>
+              <th>Cliente Titular</th>
+              <th className="text-end">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td className="fw-bold text-primary">AB 123 CD</td>
+              <td>Toyota Hilux 2.8 TDI</td>
+              <td>Juan Pérez</td>
+              <td className="text-end">
+                <button className="btn-outline-custom btn-sm d-inline-flex align-items-center gap-1">
+                  <FiClock size={14} /> Historial
+                </button>
+              </td>
+            </tr>
+            <tr>
+              <td className="fw-bold text-primary">XYZ 987</td>
+              <td>Ford Fiesta Kinetic</td>
+              <td>María Gómez</td>
+              <td className="text-end">
+                <button className="btn-outline-custom btn-sm d-inline-flex align-items-center gap-1">
+                  <FiClock size={14} /> Historial
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </Table>
+      </div>
     </Container>
   );
 }
