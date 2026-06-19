@@ -1,48 +1,52 @@
 import { useState } from 'react';
-import { Card, Button, Badge } from 'react-bootstrap';
+import { Badge } from 'react-bootstrap';
+import { FiTrendingUp, FiInfo, FiChevronDown, FiChevronUp } from 'react-icons/fi';
 
-// Tipamos las props que va a recibir la tarjeta
 type ResumenCajaProps = {
   ingresos: number;
   vehiculos: number;
 };
 
 export function ResumenCaja({ ingresos, vehiculos }: ResumenCajaProps) {
-  // Estado para mostrar u ocultar el análisis extra
   const [verDetalle, setVerDetalle] = useState<boolean>(false);
-
-  // Calculamos el ticket promedio asegurándonos de no dividir por cero
   const ticketPromedio = vehiculos > 0 ? (ingresos / vehiculos) : 0;
 
   return (
-    <Card className="shadow-sm border-0 mb-4">
-      <Card.Header className="bg-dark text-white fw-bold">
-        📊 Tablero de Control - Caja
-      </Card.Header>
-      <Card.Body>
-        <Card.Title>
-          Ingresos del Día: <span className="text-success">${ingresos.toLocaleString('es-AR')}</span>
-        </Card.Title>
-        <Card.Text className="text-muted mt-3">
-          Vehículos atendidos: <Badge bg="primary" className="ms-1">{vehiculos}</Badge>
-        </Card.Text>
+    <div className="saas-card mb-4 h-100">
+      <div className="p-4">
+        <div className="d-flex justify-content-between align-items-center mb-4">
+          <div className="d-flex align-items-center gap-2 text-muted fw-bold small">
+            <FiTrendingUp className="text-primary" size={18} /> INGRESOS DEL DÍA
+          </div>
+          <Badge bg="primary" pill className="px-3 py-2 fw-normal">
+            {vehiculos} vehículos
+          </Badge>
+        </div>
+
+        <div className="mb-4">
+          <h2 className="display-5 fw-bold mb-0 text-dark">
+            ${ingresos.toLocaleString('es-AR')}
+          </h2>
+        </div>
         
-        {/* Sección condicional que se muestra solo si verDetalle es true */}
         {verDetalle && (
-          <div className="alert alert-info mt-3 small">
-            <strong>Análisis:</strong> El ticket promedio por vehículo en la jornada de hoy es de ${ticketPromedio.toLocaleString('es-AR')}.
+          <div className="bg-light p-3 rounded-3 mb-4 d-flex gap-3 align-items-start border">
+            <FiInfo className="text-primary mt-1 flex-shrink-0" />
+            <div>
+              <p className="mb-0 small text-muted">
+                <strong>Análisis:</strong> El ticket promedio por vehículo en la jornada de hoy es de <strong className="text-dark">${ticketPromedio.toLocaleString('es-AR')}</strong>.
+              </p>
+            </div>
           </div>
         )}
         
-        <Button 
-          variant="outline-dark" 
-          size="sm" 
-          className="mt-2"
+        <button 
+          className="btn-outline-custom w-100 d-flex justify-content-center align-items-center gap-2"
           onClick={() => setVerDetalle(!verDetalle)}
         >
-          {verDetalle ? 'Ocultar métricas' : 'Ver análisis de métricas'}
-        </Button>
-      </Card.Body>
-    </Card>
+          {verDetalle ? <><FiChevronUp /> Ocultar métricas</> : <><FiChevronDown /> Ver análisis</>}
+        </button>
+      </div>
+    </div>
   );
 }

@@ -1,28 +1,40 @@
-// Página de inicio. Acá moví los componentes de mis compañeros (Caja y Turnos) que antes estaban sueltos en App.tsx.
 import { ResumenCaja } from '../components/ResumenCaja';
 import TurnoCard from '../components/TurnoCard';
+import { Container, Row, Col } from 'react-bootstrap';
+import { FiActivity, FiUsers } from 'react-icons/fi';
 
 export function Home() {
   return (
     <>
-      <div id="turnos" className="container mt-4 pt-4">
-        <h1 className="mb-4">Panel de Turnos y Caja</h1> 
-        <div className="row">
-          <div className="col-12 col-md-6 col-lg-4 mb-3">
-            <ResumenCaja ingresos={185000} vehiculos={12} />
-          </div>
-          <div className="col-12 col-md-6 col-lg-4 mb-3">
-            <TurnoCard patente="AB 123 CD" servicio="Cambio de Aceite" />
-          </div>
-          <div className="col-12 col-md-6 col-lg-4 mb-3">
-            <TurnoCard patente="XYZ 987" servicio="Lavado Completo Premium" />
-          </div>
+      <Container id="turnos" className="py-5">
+        <div className="d-flex align-items-center gap-2 mb-4">
+          <FiActivity size={24} className="text-primary" />
+          <h2 className="mb-0">Panel de Control Operativo</h2> 
         </div>
-      </div>
+        
+        <Row className="g-4">
+          <Col xs={12} md={6} lg={4}>
+            <ResumenCaja ingresos={185000} vehiculos={12} />
+          </Col>
+          <Col xs={12} md={6} lg={4}>
+            <TurnoCard patente="AB 123 CD" servicio="Cambio de Aceite" />
+          </Col>
+          <Col xs={12} md={6} lg={4}>
+            <TurnoCard patente="XYZ 987" servicio="Lavado Completo Premium" />
+          </Col>
+        </Row>
+      </Container>
 
-      <div id="clientes" className="container mt-5 pt-4 mb-5 text-center">
-        <h2>Módulo de Clientes y Vehículos</h2>
-        <p className="text-muted">Listado de clientes</p>
+      <div className="bg-white border-top py-5">
+        <Container id="clientes" className="text-center">
+          <FiUsers size={48} className="text-muted mb-3 opacity-50" />
+          <h2>Módulo de Clientes y Vehículos</h2>
+          <p className="text-muted max-w-2xl mx-auto">
+            Acceda al listado completo de clientes, administre sus datos personales y 
+            lleve un registro detallado del historial de mantenimiento de cada vehículo.
+          </p>
+          <button className="btn-outline-custom mt-3">Ver Directorio</button>
+        </Container>
       </div>
     </>
   );
