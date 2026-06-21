@@ -1,11 +1,13 @@
 import { Container, Card, Table, Button } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
+import type { Cliente } from '../schemas/clienteSchema';
 
-export function Clientes() {
-  const clientesDummy = [
-    { id: 1, nombre: 'Juan Pérez', vehiculo: 'Ford Fiesta', patente: 'AB 123 CD', telefono: '11-1234-5678' },
-    { id: 2, nombre: 'María Gómez', vehiculo: 'Toyota Corolla', patente: 'XYZ 987', telefono: '11-9876-5432' },
-    { id: 3, nombre: 'Carlos López', vehiculo: 'VW Gol', patente: 'EF 456 GH', telefono: '11-4567-8901' },
-  ];
+interface Props {
+  clientes: Cliente[];
+}
+
+export function Clientes({ clientes }: Props) {
+  const navigate = useNavigate();
 
   return (
     <Container className="mt-4 pt-4 mb-5">
@@ -14,7 +16,7 @@ export function Clientes() {
         <Card.Body>
           <div className="d-flex justify-content-between align-items-center mb-3">
             <Card.Title className="m-0">Directorio de Clientes</Card.Title>
-            <Button variant="primary">Nuevo Cliente</Button>
+            <Button variant="primary" onClick={() => navigate('/clientes/nuevo')}>Nuevo Cliente</Button>
           </div>
           <Table responsive hover className="align-middle">
             <thead className="table-light">
@@ -28,7 +30,7 @@ export function Clientes() {
               </tr>
             </thead>
             <tbody>
-              {clientesDummy.map(cliente => (
+              {clientes.map(cliente => (
                 <tr key={cliente.id}>
                   <td>{cliente.id}</td>
                   <td className="fw-bold">{cliente.nombre}</td>

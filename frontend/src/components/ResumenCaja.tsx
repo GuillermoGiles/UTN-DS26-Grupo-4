@@ -17,7 +17,7 @@ export function ResumenCaja({ ingresos, vehiculos }: ResumenCajaProps) {
   return (
     <Card className="shadow-sm border-0 mb-4">
       <Card.Header className="bg-dark text-white fw-bold">
-        📊 Tablero de Control - Caja
+        Tablero de Control - Caja
       </Card.Header>
       <Card.Body>
         <Card.Title>
