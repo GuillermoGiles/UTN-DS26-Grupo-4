@@ -6,7 +6,8 @@ import { VehiculosPage } from "./pages/VehiculosPage";
 import { PanelGestion } from "./pages/PanelGestion";
 import { PerfilCliente } from "./pages/PerfilCliente";
 import { AltaUsuario } from "./pages/AltaUsuario";
-import { AltaLavado } from "./pages/AltaLavado"; // <-- Tu nuevo import
+import { AltaLavado } from "./pages/AltaLavado";
+import { AltaTurno } from "./pages/AltaTurno";
 
 function App() {
   return (
@@ -18,9 +19,10 @@ function App() {
         <Route path="/panel" element={<PanelGestion />} />
         <Route path="/clientes" element={<PerfilCliente />} />
         <Route path="/usuarios/nuevo" element={<AltaUsuario />} />
-
-        {/* Tu nueva ruta para el formulario */}
         <Route path="/lavados/nuevo" element={<AltaLavado />} />
+        
+        {/* Nueva ruta para el formulario de alta de turnos */}
+        <Route path="/turnos/nuevo" element={<AltaTurno />} />
       </Routes>
     </Layout>
   );

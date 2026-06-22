@@ -1,6 +1,6 @@
-import { Navbar, Nav, Container } from 'react-bootstrap';
+import { Navbar, Nav, NavDropdown, Container } from 'react-bootstrap';
 import { Link, useLocation } from 'react-router-dom';
-import { FiHome, FiTool, FiUserPlus } from 'react-icons/fi';
+import { FiHome, FiTool, FiUserPlus, FiCalendar, FiPlusCircle } from 'react-icons/fi';
 import { BsCarFrontFill } from 'react-icons/bs';
 
 export function Header() {
@@ -32,9 +32,25 @@ export function Header() {
             <Nav.Link as={Link} to="/clientes" className={`d-flex align-items-center gap-2 ${path === '/clientes' ? 'active' : ''}`}>
               Clientes
             </Nav.Link>
-            <Nav.Link as={Link} to="/usuarios/nuevo" className={`d-flex align-items-center gap-2 ${path === '/usuarios/nuevo' ? 'active' : ''}`}>
-              <FiUserPlus /> Alta Usuario
-            </Nav.Link>
+            
+            {/* Agrupamos todas las Altas en un Dropdown */}
+            <NavDropdown 
+              title={<span className="d-inline-flex align-items-center gap-2"><FiPlusCircle /> Nuevos Registros</span>} 
+              id="basic-nav-dropdown"
+              className={path.includes('/nuevo') ? 'active fw-bold' : ''}
+            >
+              <NavDropdown.Item as={Link} to="/turnos/nuevo" className={path === '/turnos/nuevo' ? 'active' : ''}>
+                <FiCalendar className="me-2 text-primary" /> Nuevo Turno
+              </NavDropdown.Item>
+              <NavDropdown.Item as={Link} to="/lavados/nuevo" className={path === '/lavados/nuevo' ? 'active' : ''}>
+                <BsCarFrontFill className="me-2 text-primary" /> Ingreso Vehículo
+              </NavDropdown.Item>
+              <NavDropdown.Divider />
+              <NavDropdown.Item as={Link} to="/usuarios/nuevo" className={path === '/usuarios/nuevo' ? 'active' : ''}>
+                <FiUserPlus className="me-2 text-primary" /> Alta Usuario
+              </NavDropdown.Item>
+            </NavDropdown>
+            
           </Nav>
           <Nav>
             <Navbar.Text className="text-muted">
