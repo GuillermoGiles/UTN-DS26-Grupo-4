@@ -1,16 +1,14 @@
 import { Container, Row, Col } from 'react-bootstrap';
+import { Link } from 'react-router-dom';
 import { ServicioDestacado } from '../components/ServicioDestacado';
 import { FiTool, FiPlus } from 'react-icons/fi';
+import type { Servicio } from '../types/servicio';
 
-// Array de datos simulados para maquetar el catálogo
-const SERVICIOS_MOCK = [
-  { id: 1, nombre: "Cambio de Aceite", precio: 45000, desc: "Servicio técnico completo con reemplazo de filtros esenciales.", tipo: "lubricentro" },
-  { id: 2, nombre: "Lavado Premium", precio: 12000, desc: "Limpieza artesanal profunda exterior e interior.", tipo: "lavadero" },
-  { id: 3, nombre: "Alineación y Balanceo", precio: 25000, desc: "Ajuste de tren delantero y balanceo computarizado.", tipo: "lubricentro" },
-  { id: 4, nombre: "Limpieza Tapizados", precio: 35000, desc: "Lavado en seco de butacas y alfombras con máquinas de inyección.", tipo: "lavadero" }
-];
+type ServiciosProps = {
+  servicios: Servicio[];
+};
 
-export function Servicios() {
+export function Servicios({ servicios }: ServiciosProps) {
   return (
     <Container id="stock" className="py-5">
       <div className="d-flex flex-column align-items-center mb-5">
@@ -22,20 +20,20 @@ export function Servicios() {
                 <h2 className="mb-2 text-center text-md-start">Catálogo de Servicios</h2>
                 <p className="text-muted text-center text-md-start mb-0">Explore nuestros servicios especializados de lavadero y lubricentro.</p>
             </div>
-            <button className="btn-primary-custom d-flex align-items-center gap-2">
+            <Link to="/servicios/nuevo" className="btn-primary-custom d-flex align-items-center gap-2 text-decoration-none">
               <FiPlus /> Nuevo Servicio
-            </button>
+            </Link>
         </div>
       </div>
       
       <Row className="g-4 justify-content-center">
-        {SERVICIOS_MOCK.map((srv) => (
+        {servicios.map((srv) => (
           <Col key={srv.id} xs={12} sm={6} lg={4} className="d-flex justify-content-center">
             <ServicioDestacado 
               nombre={srv.nombre} 
               precio={srv.precio} 
               descripcion={srv.desc}
-              tipo={srv.tipo as 'lavadero' | 'lubricentro'}
+              tipo={srv.tipo}
             />
           </Col>
         ))}
