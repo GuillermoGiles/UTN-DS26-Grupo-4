@@ -1,14 +1,13 @@
-import { Container, Row, Col } from 'react-bootstrap';
+import { Container, Row, Col, Spinner, Alert } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { ServicioDestacado } from '../components/ServicioDestacado';
 import { FiTool, FiPlus } from 'react-icons/fi';
+import { useFetch } from '../hooks/useFetch';
 import type { Servicio } from '../types/servicio';
 
-type ServiciosProps = {
-  servicios: Servicio[];
-};
+export function Servicios() {
+  const { data: servicios, loading, error } = useFetch<Servicio[]>('/servicios.json');
 
-export function Servicios({ servicios }: ServiciosProps) {
   return (
     <Container id="stock" className="py-5">
       <div className="d-flex flex-column align-items-center mb-5">
@@ -26,18 +25,32 @@ export function Servicios({ servicios }: ServiciosProps) {
         </div>
       </div>
       
-      <Row className="g-4 justify-content-center">
-        {servicios.map((srv) => (
-          <Col key={srv.id} xs={12} sm={6} lg={4} className="d-flex justify-content-center">
-            <ServicioDestacado 
-              nombre={srv.nombre} 
-              precio={srv.precio} 
-              descripcion={srv.desc}
-              tipo={srv.tipo}
-            />
-          </Col>
-        ))}
-      </Row>
+      {loading && (
+        <div className="text-center my-5">
+          <Spinner animation="border" variant="primary" />
+        </div>
+      )}
+
+      {error && (
+        <Alert variant="danger" className="text-center my-5">
+          {error}
+        </Alert>
+      )}
+
+      {!loading && !error && (
+        <Row className="g-4 justify-content-center">
+          {(servicios ?? []).map((srv) => (
+            <Col key={srv.id} xs={12} sm={6} lg={4} className="d-flex justify-content-center">
+              <ServicioDestacado 
+                nombre={srv.nombre} 
+                precio={srv.precio} 
+                descripcion={srv.desc}
+                tipo={srv.tipo}
+              />
+            </Col>
+          ))}
+        </Row>
+      )}
     </Container>
   );
 }
