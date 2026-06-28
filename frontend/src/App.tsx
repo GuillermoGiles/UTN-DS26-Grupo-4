@@ -38,7 +38,7 @@ function App() {
     <Layout>
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/servicios" element={<Servicios servicios={servicios} />} />
+        <Route path="/servicios" element={<Servicios />} />
         <Route path="/servicios/nuevo" element={<ServicioNuevo onAgregar={agregarServicio} />} />
         <Route path="/vehiculos" element={<VehiculosPage />} />
         <Route path="/panel" element={<PanelGestion />} />
