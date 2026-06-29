@@ -1,0 +1,5 @@
+[
+  { "id": 1, "nombre": "Blasko Telechea", "vehiculo": "Fiat Duna", "patente": "FGH 452", "telefono": "11-1234-5678" },
+  { "id": 2, "nombre": "Lautaro Diguilmi", "vehiculo": "Toyota Corolla", "patente": "XTZ 987", "telefono": "11-9876-5432" },
+  { "id": 3, "nombre": "Federico Corbalan", "vehiculo": "VW Gol", "patente": "EF 456 GH", "telefono": "11-4567-8901" }
+]

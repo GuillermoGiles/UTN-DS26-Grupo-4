@@ -3,13 +3,9 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form, Button, Container, Card } from 'react-bootstrap';
 import { clienteSchema } from '../schemas/clienteSchema';
-import type { ClienteValidado, Cliente } from '../schemas/clienteSchema';
+import type { ClienteValidado } from '../schemas/clienteSchema';
 
-interface Props {
-  onAgregar: (cliente: Cliente) => void;
-}
-
-export function ClienteNuevo({ onAgregar }: Props) {
+export function ClienteNuevo() {
   const navigate = useNavigate();
 
   const { register, handleSubmit, formState: { errors } } = useForm<ClienteValidado>({
@@ -23,12 +19,9 @@ export function ClienteNuevo({ onAgregar }: Props) {
   });
 
   const onSubmit = (data: ClienteValidado) => {
-    const nuevoCliente: Cliente = {
-      ...data,
-      id: Date.now(), // ID generado automáticamente
-    };
-    onAgregar(nuevoCliente);
-    navigate('/clientes'); // Redirigir al listado tras un alta exitosa
+    console.log("Simulación de alta de cliente:", data);
+    // En el futuro acá irá el fetch con POST. Por ahora redirige.
+    navigate('/clientes'); 
   };
 
   return (

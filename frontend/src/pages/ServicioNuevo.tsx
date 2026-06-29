@@ -4,13 +4,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { servicioSchema } from '../schemas/servicioSchema';
 import type { ServicioValidado } from '../schemas/servicioSchema';
-import type { Servicio } from '../types/servicio';
 
-type ServicioNuevoProps = {
-  onAgregar: (servicio: Servicio) => void;
-};
-
-export function ServicioNuevo({ onAgregar }: ServicioNuevoProps) {
+export function ServicioNuevo() {
   const navigate = useNavigate();
 
   const { register, handleSubmit, formState: { errors } } = useForm<ServicioValidado>({
@@ -24,11 +19,8 @@ export function ServicioNuevo({ onAgregar }: ServicioNuevoProps) {
   });
 
   const onSubmit = (data: ServicioValidado) => {
-    const nuevoServicio: Servicio = {
-      ...data,
-      id: Date.now().toString(),
-    };
-    onAgregar(nuevoServicio);
+    console.log("Simulación de alta de servicio:", data);
+    // En el futuro acá irá el fetch con POST. Por ahora redirige.
     navigate('/servicios');
   };
 
