@@ -13,39 +13,33 @@ export function PanelGestion() {
       {/* Tarjetas de KPIs (Indicadores clave) */}
       <Row className="mb-4 g-4">
         <Col md={4}>
-          <Card className="shadow-sm border-primary border-top border-3">
-            <Card.Body>
-              <Card.Title className="text-muted fs-6">Vehículos Hoy</Card.Title>
-              <h3 className="fw-bold">{vehiculosLavados}</h3>
-            </Card.Body>
-          </Card>
+          <div className="saas-card-dark p-4 h-100 d-flex flex-column justify-content-center align-items-start">
+            <Badge bg="primary" pill className="mb-3 px-3 py-2 text-uppercase" style={{ letterSpacing: '0.5px' }}>Vehículos Hoy</Badge>
+            <h3 className="fw-bold m-0 text-white">{vehiculosLavados}</h3>
+          </div>
         </Col>
         <Col md={4}>
-          <Card className="shadow-sm border-success border-top border-3">
-            <Card.Body>
-              <Card.Title className="text-muted fs-6">Ingresos del Día</Card.Title>
-              <h3 className="fw-bold">${ingresosDiarios.toLocaleString('es-AR')}</h3>
-            </Card.Body>
-          </Card>
+          <div className="saas-card-dark p-4 h-100 d-flex flex-column justify-content-center align-items-start">
+            <Badge bg="success" pill className="mb-3 px-3 py-2 text-uppercase" style={{ letterSpacing: '0.5px' }}>Ingresos del Día</Badge>
+            <h3 className="fw-bold m-0 text-white">${ingresosDiarios.toLocaleString('es-AR')}</h3>
+          </div>
         </Col>
         <Col md={4}>
-          <Card className="shadow-sm border-warning border-top border-3">
-            <Card.Body>
-              <Card.Title className="text-muted fs-6">Turnos Pendientes</Card.Title>
-              <h3 className="fw-bold">{turnosPendientes}</h3>
-            </Card.Body>
-          </Card>
+          <div className="saas-card-dark p-4 h-100 d-flex flex-column justify-content-center align-items-start">
+            <Badge bg="warning" text="dark" pill className="mb-3 px-3 py-2 text-uppercase" style={{ letterSpacing: '0.5px' }}>Turnos Pendientes</Badge>
+            <h3 className="fw-bold m-0 text-white">{turnosPendientes}</h3>
+          </div>
         </Col>
       </Row>
 
       {/* Tabla de últimos servicios */}
-      <Card className="shadow-sm">
-        <Card.Header className="bg-white fw-bold py-3">
+      <div className="saas-card-dark">
+        <div className="fw-bold p-3 border-bottom border-secondary text-white">
           Últimos Servicios Registrados
-        </Card.Header>
-        <Card.Body className="p-0">
-          <Table responsive hover className="mb-0">
-            <thead className="table-light">
+        </div>
+        <div className="p-0">
+          <Table responsive hover variant="dark" className="mb-0">
+            <thead>
               <tr>
                 <th>Patente</th>
                 <th>Tipo de Lavado</th>
@@ -78,8 +72,8 @@ export function PanelGestion() {
               </tr>
             </tbody>
           </Table>
-        </Card.Body>
-      </Card>
+        </div>
+      </div>
     </Container>
   );
 }

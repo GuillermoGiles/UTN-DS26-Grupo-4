@@ -23,7 +23,7 @@ export const ServicioDestacado: React.FC<ServicioDestacadoProps> = ({
 
   return (
     <div 
-      className={`saas-card h-100 d-flex flex-column ${seleccionado ? 'border-primary' : ''}`}
+      className={`saas-card-dark h-100 d-flex flex-column ${seleccionado ? 'border-primary' : ''}`}
       style={{ 
         width: '20rem', margin: '0.5rem',
         boxShadow: seleccionado ? '0 0 0 2px var(--primary-color), var(--shadow-md)' : 'var(--shadow-sm)'

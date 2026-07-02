@@ -35,58 +35,56 @@ export function VehiculoNuevo() {
 
   return (
     <Container className="mt-4 pt-4 mb-5" style={{ maxWidth: 600 }}>
-      <Card className="shadow-sm border-0 text-start">
-        <Card.Body className="p-4">
-          <h2 className="mb-4 fw-bold text-dark">Nuevo Vehículo</h2>
-          <Form onSubmit={handleSubmit(onSubmit)}>
-            
-            <Form.Group className="mb-3">
-              <Form.Label>Patente</Form.Label>
-              <Form.Control 
-                {...register('patente')} 
-                isInvalid={!!errors.patente} 
-                placeholder="Ej. AB123CD o XYZ987"
-              />
-              <Form.Control.Feedback type="invalid">
-                {errors.patente?.message}
-              </Form.Control.Feedback>
-            </Form.Group>
+      <div className="saas-card-dark p-4 text-start">
+        <h2 className="mb-4 fw-bold">Nuevo Vehículo</h2>
+        <Form onSubmit={handleSubmit(onSubmit)}>
+          
+          <Form.Group className="mb-3">
+            <Form.Label>Patente</Form.Label>
+            <Form.Control 
+              {...register('patente')} 
+              isInvalid={!!errors.patente} 
+              placeholder="Ej. AB123CD o XYZ987"
+            />
+            <Form.Control.Feedback type="invalid">
+              {errors.patente?.message}
+            </Form.Control.Feedback>
+          </Form.Group>
 
-            <Form.Group className="mb-3">
-              <Form.Label>Nombre / Modelo del Vehículo</Form.Label>
-              <Form.Control 
-                {...register('modelo')} 
-                isInvalid={!!errors.modelo} 
-                placeholder="Ej. Toyota Hilux 2.8 TDI"
-              />
-              <Form.Control.Feedback type="invalid">
-                {errors.modelo?.message}
-              </Form.Control.Feedback>
-            </Form.Group>
+          <Form.Group className="mb-3">
+            <Form.Label>Nombre / Modelo del Vehículo</Form.Label>
+            <Form.Control 
+              {...register('modelo')} 
+              isInvalid={!!errors.modelo} 
+              placeholder="Ej. Toyota Hilux 2.8 TDI"
+            />
+            <Form.Control.Feedback type="invalid">
+              {errors.modelo?.message}
+            </Form.Control.Feedback>
+          </Form.Group>
 
-            <Form.Group className="mb-4">
-              <Form.Label>Cliente Titular</Form.Label>
-              <Form.Control 
-                {...register('clienteTitular')} 
-                isInvalid={!!errors.clienteTitular} 
-                placeholder="Ej. Juan Pérez"
-              />
-              <Form.Control.Feedback type="invalid">
-                {errors.clienteTitular?.message}
-              </Form.Control.Feedback>
-            </Form.Group>
+          <Form.Group className="mb-4">
+            <Form.Label>Cliente Titular</Form.Label>
+            <Form.Control 
+              {...register('clienteTitular')} 
+              isInvalid={!!errors.clienteTitular} 
+              placeholder="Ej. Juan Pérez"
+            />
+            <Form.Control.Feedback type="invalid">
+              {errors.clienteTitular?.message}
+            </Form.Control.Feedback>
+          </Form.Group>
 
-            <div className="d-flex gap-2">
-              <Button type="submit" variant="primary" className="fw-bold">
-                Guardar Vehículo
-              </Button>
-              <Button variant="secondary" onClick={() => navigate('/vehiculos')}>
-                Cancelar
-              </Button>
-            </div>
-          </Form>
-        </Card.Body>
-      </Card>
+          <div className="d-flex gap-2">
+            <button type="submit" className="btn-primary-custom w-100 fw-bold">
+              Guardar Vehículo
+            </button>
+            <button type="button" className="btn-outline-custom w-100" onClick={() => navigate('/vehiculos')}>
+              Cancelar
+            </button>
+          </div>
+        </Form>
+      </div>
     </Container>
   );
 }

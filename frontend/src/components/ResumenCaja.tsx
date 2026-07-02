@@ -12,7 +12,7 @@ export function ResumenCaja({ ingresos, vehiculos }: ResumenCajaProps) {
   const ticketPromedio = vehiculos > 0 ? (ingresos / vehiculos) : 0;
 
   return (
-    <div className="saas-card mb-4 h-100">
+    <div className="saas-card-dark mb-4 h-100">
       <div className="p-4">
         <div className="d-flex justify-content-between align-items-center mb-4">
           <div className="d-flex align-items-center gap-2 text-muted fw-bold small">
