@@ -2,12 +2,12 @@ import React, { useState } from 'react';
 import { Badge } from 'react-bootstrap';
 import { FiCheck, FiShoppingBag } from 'react-icons/fi';
 
-export type ServicioDestacadoProps = {
+export interface ServicioDestacadoProps {
   nombre: string;       
   precio: number;       
   descripcion?: string; 
   tipo?: 'lavadero' | 'lubricentro'; 
-};
+}
 
 export const ServicioDestacado: React.FC<ServicioDestacadoProps> = ({
   nombre,

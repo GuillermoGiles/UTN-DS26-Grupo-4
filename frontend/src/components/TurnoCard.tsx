@@ -2,10 +2,10 @@ import { useState } from 'react';
 import { Badge } from 'react-bootstrap';
 import { FiClock, FiPlayCircle, FiRotateCcw } from 'react-icons/fi';
 
-type TurnoCardProps = {
+export interface TurnoCardProps {
   patente: string;
   servicio: string;
-};
+}
 
 export default function TurnoCard({ patente, servicio }: TurnoCardProps) {
   const [enProceso, setEnProceso] = useState<boolean>(false);
