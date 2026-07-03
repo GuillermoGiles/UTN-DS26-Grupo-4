@@ -31,7 +31,7 @@ export function AltaUsuario() {
         <Container className="py-5">
             <Row className="justify-content-md-center">
                 <Col md={8} lg={6}>
-                    <div className="saas-card p-4 p-md-5">
+                    <div className="saas-card-dark p-4 p-md-5">
                         <div className="text-center mb-5">
                             <h2 className="mb-2">Crear Cuenta</h2>
                             <p className="text-muted">Unite a la plataforma de gestión SGI San José</p>

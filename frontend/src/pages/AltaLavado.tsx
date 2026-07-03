@@ -21,70 +21,66 @@ export function AltaLavado() {
 
   return (
     <Container className="py-5" style={{ maxWidth: '600px' }}>
-      <Card className="shadow-sm">
-        <Card.Header className="bg-primary text-white fw-bold py-3">
-          Ingreso de Vehículo
-        </Card.Header>
-        <Card.Body>
-          <Form onSubmit={handleSubmit(onSubmit)}>
-            
-            <Form.Group className="mb-3">
-              <Form.Label>Patente</Form.Label>
-              <Form.Control 
-                type="text" 
-                placeholder="Ej: AB 123 CD"
-                {...register('patente')} 
-                isInvalid={!!errors.patente} 
-              />
-              <Form.Control.Feedback type="invalid">
-                {errors.patente?.message}
-              </Form.Control.Feedback>
-            </Form.Group>
+      <div className="saas-card-dark p-4">
+        <h3 className="fw-bold mb-4">Ingreso de Vehículo</h3>
+        <Form onSubmit={handleSubmit(onSubmit)}>
+          
+          <Form.Group className="mb-3">
+            <Form.Label>Patente</Form.Label>
+            <Form.Control 
+              type="text" 
+              placeholder="Ej: AB 123 CD"
+              {...register('patente')} 
+              isInvalid={!!errors.patente} 
+            />
+            <Form.Control.Feedback type="invalid">
+              {errors.patente?.message}
+            </Form.Control.Feedback>
+          </Form.Group>
 
-            <Form.Group className="mb-3">
-              <Form.Label>Modelo</Form.Label>
-              <Form.Control 
-                type="text" 
-                placeholder="Ej: Ford Ka o Chevrolet Sonic"
-                {...register('modelo')} 
-                isInvalid={!!errors.modelo} 
-              />
-              <Form.Control.Feedback type="invalid">
-                {errors.modelo?.message}
-              </Form.Control.Feedback>
-            </Form.Group>
+          <Form.Group className="mb-3">
+            <Form.Label>Modelo</Form.Label>
+            <Form.Control 
+              type="text" 
+              placeholder="Ej: Ford Ka o Chevrolet Sonic"
+              {...register('modelo')} 
+              isInvalid={!!errors.modelo} 
+            />
+            <Form.Control.Feedback type="invalid">
+              {errors.modelo?.message}
+            </Form.Control.Feedback>
+          </Form.Group>
 
-            <Form.Group className="mb-3">
-              <Form.Label>Tipo de Servicio</Form.Label>
-              <Form.Select {...register('tipoLavado')} isInvalid={!!errors.tipoLavado}>
-                <option value="">Seleccione un servicio...</option>
-                <option value="basico">Lavado Básico</option>
-                <option value="premium">Lavado Premium</option>
-                <option value="tapizado">Limpieza de Tapizados</option>
-              </Form.Select>
-              <Form.Control.Feedback type="invalid">
-                {errors.tipoLavado?.message}
-              </Form.Control.Feedback>
-            </Form.Group>
+          <Form.Group className="mb-3">
+            <Form.Label>Tipo de Servicio</Form.Label>
+            <Form.Select {...register('tipoLavado')} isInvalid={!!errors.tipoLavado}>
+              <option value="">Seleccione un servicio...</option>
+              <option value="basico">Lavado Básico</option>
+              <option value="premium">Lavado Premium</option>
+              <option value="tapizado">Limpieza de Tapizados</option>
+            </Form.Select>
+            <Form.Control.Feedback type="invalid">
+              {errors.tipoLavado?.message}
+            </Form.Control.Feedback>
+          </Form.Group>
 
-            <Form.Group className="mb-4">
-              <Form.Label>Empleado Asignado</Form.Label>
-              <Form.Select {...register('empleado')} isInvalid={!!errors.empleado}>
-                <option value="">Asignar a...</option>
-                <option value="marcos">Marcos Díaz</option>
-                <option value="juan">Juan Pérez</option>
-              </Form.Select>
-              <Form.Control.Feedback type="invalid">
-                {errors.empleado?.message}
-              </Form.Control.Feedback>
-            </Form.Group>
+          <Form.Group className="mb-4">
+            <Form.Label>Empleado Asignado</Form.Label>
+            <Form.Select {...register('empleado')} isInvalid={!!errors.empleado}>
+              <option value="">Asignar a...</option>
+              <option value="marcos">Marcos Díaz</option>
+              <option value="juan">Juan Pérez</option>
+            </Form.Select>
+            <Form.Control.Feedback type="invalid">
+              {errors.empleado?.message}
+            </Form.Control.Feedback>
+          </Form.Group>
 
-            <Button variant="primary" type="submit" className="w-100 fw-bold">
-              Registrar Ingreso
-            </Button>
-          </Form>
-        </Card.Body>
-      </Card>
+          <button type="submit" className="btn-primary-custom w-100 mt-2">
+            Registrar Ingreso
+          </button>
+        </Form>
+      </div>
     </Container>
   );
 }
