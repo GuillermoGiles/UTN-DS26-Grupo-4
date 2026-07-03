@@ -11,7 +11,7 @@ export default function TurnoCard({ patente, servicio }: TurnoCardProps) {
   const [enProceso, setEnProceso] = useState<boolean>(false);
 
   return (
-    <div className="saas-card h-100 d-flex flex-column" style={{ position: 'relative' }}>
+    <div className="saas-card-dark h-100 d-flex flex-column" style={{ position: 'relative' }}>
       <div 
         style={{ 
           position: 'absolute', top: 0, left: 0, bottom: 0, width: '4px', 

@@ -10,57 +10,55 @@ export function Clientes() {
 
   return (
     <Container className="mt-4 pt-4 mb-5">
-      <h1 className="mb-4">Clientes y Vehículos</h1>
-      <Card className="shadow-sm border-0">
-        <Card.Body>
-          <div className="d-flex justify-content-between align-items-center mb-3">
-            <Card.Title className="m-0">Directorio de Clientes</Card.Title>
-            <Button variant="primary" onClick={() => navigate('/clientes/nuevo')}>Nuevo Cliente</Button>
+      <h1 className="mb-4 fw-bold">Clientes y Vehículos</h1>
+      <div className="saas-card-dark p-0">
+        <div className="p-4 border-bottom border-secondary d-flex justify-content-between align-items-center">
+          <h5 className="m-0 fw-bold text-white">Directorio de Clientes</h5>
+          <button className="btn-primary-custom" onClick={() => navigate('/clientes/nuevo')}>Nuevo Cliente</button>
+        </div>
+
+        {loading && (
+          <div className="text-center my-5">
+            <Spinner animation="border" variant="primary" />
           </div>
+        )}
 
-          {loading && (
-            <div className="text-center my-5">
-              <Spinner animation="border" variant="primary" />
-            </div>
-          )}
+        {error && (
+          <Alert variant="danger" className="text-center my-5 mx-4">
+            {error}
+          </Alert>
+        )}
 
-          {error && (
-            <Alert variant="danger" className="text-center my-5">
-              {error}
-            </Alert>
-          )}
-
-          {!loading && !error && (
-            <Table responsive hover className="align-middle">
-              <thead className="table-light">
-                <tr>
-                  <th>ID</th>
-                  <th>Nombre</th>
-                  <th>Vehículo</th>
-                  <th>Patente</th>
-                  <th>Teléfono</th>
-                  <th>Acciones</th>
+        {!loading && !error && (
+          <Table responsive hover variant="dark" className="align-middle mb-0">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Vehículo</th>
+                <th>Patente</th>
+                <th>Teléfono</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(clientes ?? []).map(cliente => (
+                <tr key={cliente.id}>
+                  <td className="text-muted">{cliente.id}</td>
+                  <td className="fw-bold text-white">{cliente.nombre}</td>
+                  <td>{cliente.vehiculo}</td>
+                  <td><span className="badge bg-secondary">{cliente.patente}</span></td>
+                  <td>{cliente.telefono}</td>
+                  <td>
+                    <button className="btn-action-dark me-2">Ver</button>
+                    <button className="btn-action-dark">Editar</button>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {(clientes ?? []).map(cliente => (
-                  <tr key={cliente.id}>
-                    <td>{cliente.id}</td>
-                    <td className="fw-bold">{cliente.nombre}</td>
-                    <td>{cliente.vehiculo}</td>
-                    <td><span className="badge bg-secondary">{cliente.patente}</span></td>
-                    <td>{cliente.telefono}</td>
-                    <td>
-                      <Button variant="outline-info" size="sm" className="me-2">Ver</Button>
-                      <Button variant="outline-primary" size="sm">Editar</Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </Table>
-          )}
-        </Card.Body>
-      </Card>
+              ))}
+            </tbody>
+          </Table>
+        )}
+      </div>
     </Container>
   );
 }
