@@ -2,10 +2,10 @@ import { useState } from 'react';
 import { Badge } from 'react-bootstrap';
 import { FiTrendingUp, FiInfo, FiChevronDown, FiChevronUp } from 'react-icons/fi';
 
-type ResumenCajaProps = {
+export interface ResumenCajaProps {
   ingresos: number;
   vehiculos: number;
-};
+}
 
 export function ResumenCaja({ ingresos, vehiculos }: ResumenCajaProps) {
   const [verDetalle, setVerDetalle] = useState<boolean>(false);
