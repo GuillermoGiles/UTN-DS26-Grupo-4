@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Form, Button, Container, Card } from 'react-bootstrap';
+import { Form, Container} from 'react-bootstrap';
 import { z } from 'zod';
 
 // Definimos el esquema de validación con Zod adaptado a la tabla de vehículos

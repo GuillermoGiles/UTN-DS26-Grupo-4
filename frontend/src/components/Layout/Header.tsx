@@ -1,6 +1,6 @@
 import { Navbar, Nav, NavDropdown, Container } from 'react-bootstrap';
 import { Link, useLocation } from 'react-router-dom';
-import { FiHome, FiTool, FiUserPlus, FiCalendar, FiPlusCircle } from 'react-icons/fi';
+import {FiTool, FiUserPlus, FiCalendar, FiPlusCircle } from 'react-icons/fi';
 import { BsCarFrontFill } from 'react-icons/bs';
 
 export function Header() {
@@ -17,9 +17,6 @@ export function Header() {
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="me-auto gap-1">
-            <Nav.Link as={Link} to="/" className={`d-flex align-items-center gap-2 ${path === '/' ? 'active' : ''}`}>
-              <FiHome /> Panel y Turnos
-            </Nav.Link>
             <Nav.Link as={Link} to="/vehiculos" className={`d-flex align-items-center gap-2 ${path === '/vehiculos' ? 'active' : ''}`}>
               <BsCarFrontFill /> Vehículos
             </Nav.Link>
