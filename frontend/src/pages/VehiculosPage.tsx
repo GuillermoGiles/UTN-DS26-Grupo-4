@@ -1,6 +1,7 @@
 import { Container, Table } from 'react-bootstrap';
 import { FiPlus, FiClock } from 'react-icons/fi';
-import { useNavigate } from 'react-router-dom'; // 1. Importar el hook
+import { useNavigate } from 'react-router-dom';
+
 
 export function VehiculosPage() {
   const navigate = useNavigate(); // 2. Inicializar el navegador
