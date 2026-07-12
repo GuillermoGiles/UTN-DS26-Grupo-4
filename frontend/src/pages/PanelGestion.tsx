@@ -1,4 +1,4 @@
-import { Container, Row, Col, Card, Table, Badge } from 'react-bootstrap';
+import { Container, Row, Col, Table, Badge } from 'react-bootstrap';
 
 export function PanelGestion() {
   // Datos simulados para maquetar la vista
