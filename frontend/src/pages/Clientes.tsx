@@ -1,4 +1,4 @@
-import { Container, Card, Table, Button, Spinner, Alert } from 'react-bootstrap';
+import { Container, Table, Spinner, Alert } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { useFetch } from '../hooks/useFetch';
 import type { Cliente } from '../schemas/clienteSchema';

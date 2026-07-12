@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Form, Button, Container, Card } from 'react-bootstrap';
+import { Container, Form } from 'react-bootstrap';
 import { clienteSchema } from '../schemas/clienteSchema';
 import type { ClienteValidado } from '../schemas/clienteSchema';
 

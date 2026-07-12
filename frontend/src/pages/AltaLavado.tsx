@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { Form, Button, Container, Card } from 'react-bootstrap';
+import { Container, Form } from 'react-bootstrap';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { lavadoSchema } from '../validations/lavadoSchema';
