@@ -13,6 +13,7 @@
   "dependencies": {
     "@prisma/adapter-pg": "^7.9.1",
     "@prisma/client": "^7.9.1",
+    "dotenv": "^16.4.7",
     "express": "^5.2.1",
     "pg": "^8.13.3"
   },
@@ -20,7 +21,6 @@
     "@types/express": "^5.0.2",
     "@types/node": "^22.15.0",
     "@types/pg": "^8.11.11",
-    "dotenv": "^16.4.7",
     "prisma": "^7.9.1",
     "tsx": "^4.19.4",
     "typescript": "^5.8.3"
