@@ -1,0 +1,118 @@
+@baseUrl = http://localhost:3000
+
+### =====================
+### HELLO
+### =====================
+
+### Hello API
+GET {{baseUrl}}/
+
+### =====================
+### SERVICIOS
+### =====================
+
+### Listar todos los servicios
+GET {{baseUrl}}/api/servicios
+
+### Filtrar servicios por tipo (lavadero)
+GET {{baseUrl}}/api/servicios?tipo=lavadero
+
+### Filtrar servicios por tipo (lubricentro)
+GET {{baseUrl}}/api/servicios?tipo=lubricentro
+
+### Obtener un servicio por ID
+GET {{baseUrl}}/api/servicios/1
+
+### Obtener un servicio que no existe → 404
+GET {{baseUrl}}/api/servicios/999
+
+### Crear un servicio
+POST {{baseUrl}}/api/servicios
+Content-Type: application/json
+
+{
+  "nombre": "Cambio de Filtro de Aire",
+  "precio": 18000,
+  "desc": "Reemplazo del filtro de aire del motor para mejorar rendimiento.",
+  "tipo": "lubricentro"
+}
+
+### Editar un servicio
+PUT {{baseUrl}}/api/servicios/1
+Content-Type: application/json
+
+{
+  "nombre": "Cambio de Aceite Premium",
+  "precio": 55000,
+  "desc": "Servicio técnico completo con aceite sintético y filtros.",
+  "tipo": "lubricentro"
+}
+
+### Editar un servicio que no existe → 404
+PUT {{baseUrl}}/api/servicios/999
+Content-Type: application/json
+
+{
+  "nombre": "No existe",
+  "precio": 0,
+  "desc": "Este servicio no existe",
+  "tipo": "lavadero"
+}
+
+### Borrar un servicio
+DELETE {{baseUrl}}/api/servicios/4
+
+### Borrar un servicio que no existe → 404
+DELETE {{baseUrl}}/api/servicios/999
+
+### =====================
+### CLIENTES
+### =====================
+
+### Listar todos los clientes
+GET {{baseUrl}}/api/clientes
+
+### Obtener un cliente por ID
+GET {{baseUrl}}/api/clientes/1
+
+### Obtener un cliente que no existe → 404
+GET {{baseUrl}}/api/clientes/999
+
+### Crear un cliente
+POST {{baseUrl}}/api/clientes
+Content-Type: application/json
+
+{
+  "nombre": "María González",
+  "vehiculo": "Renault Sandero",
+  "patente": "AB 123 CD",
+  "telefono": "11-5555-1234"
+}
+
+### Editar un cliente
+PUT {{baseUrl}}/api/clientes/1
+Content-Type: application/json
+
+{
+  "nombre": "Blasko Telechea",
+  "vehiculo": "Fiat Cronos",
+  "patente": "FGH 452",
+  "telefono": "11-1234-5678"
+}
+
+### Editar un cliente que no existe → 404
+PUT {{baseUrl}}/api/clientes/999
+Content-Type: application/json
+
+{
+  "nombre": "No existe",
+  "vehiculo": "Nada",
+  "patente": "XXX 000",
+  "telefono": "00-0000-0000"
+}
+
+### Borrar un cliente
+DELETE {{baseUrl}}/api/clientes/3
+
+### Borrar un cliente que no existe → 404
+DELETE {{baseUrl}}/api/clientes/999
