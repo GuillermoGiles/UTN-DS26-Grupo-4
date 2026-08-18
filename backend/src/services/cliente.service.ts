@@ -1,38 +1,32 @@
-import type { Cliente } from "../types/cliente.types";
+import type { Cliente } from "@prisma/client";
+import { prisma } from "../config/prisma";
 
-// Datos hardcodeados — misma forma que frontend/public/clientes.json
-const clientes: Cliente[] = [
-  { id: 1, nombre: "Blasko Telechea", vehiculo: "Fiat Duna", patente: "FGH 452", telefono: "11-1234-5678" },
-  { id: 2, nombre: "Lautaro Diguilmi", vehiculo: "Toyota Corolla", patente: "XTZ 987", telefono: "11-9876-5432" },
-  { id: 3, nombre: "Federico Corbalan", vehiculo: "VW Gol", patente: "EF 456 GH", telefono: "11-4567-8901" },
-];
-
-let proximoId = 4;
-
-export function findAll(): Cliente[] {
-  return clientes;
+export async function findAll(): Promise<Cliente[]> {
+  return prisma.cliente.findMany();
 }
 
-export function findById(id: number): Cliente | undefined {
-  return clientes.find((c) => c.id === id);
+export async function findById(id: number): Promise<Cliente | null> {
+  return prisma.cliente.findUnique({ where: { id } });
 }
 
-export function create(datos: Omit<Cliente, "id">): Cliente {
-  const nuevo: Cliente = { id: proximoId++, ...datos };
-  clientes.push(nuevo);
-  return nuevo;
+export async function create(datos: Omit<Cliente, "id">): Promise<Cliente> {
+  return prisma.cliente.create({ data: datos });
 }
 
-export function update(id: number, datos: Omit<Cliente, "id">): Cliente | undefined {
-  const index = clientes.findIndex((c) => c.id === id);
-  if (index === -1) return undefined;
-  clientes[index] = { id, ...datos };
-  return clientes[index];
+export async function update(id: number, datos: Partial<Omit<Cliente, "id">>): Promise<Cliente | null> {
+  const existe = await prisma.cliente.findUnique({ where: { id } });
+  if (!existe) return null;
+
+  return prisma.cliente.update({
+    where: { id },
+    data: datos,
+  });
 }
 
-export function remove(id: number): boolean {
-  const index = clientes.findIndex((c) => c.id === id);
-  if (index === -1) return false;
-  clientes.splice(index, 1);
+export async function remove(id: number): Promise<boolean> {
+  const existe = await prisma.cliente.findUnique({ where: { id } });
+  if (!existe) return false;
+
+  await prisma.cliente.delete({ where: { id } });
   return true;
 }

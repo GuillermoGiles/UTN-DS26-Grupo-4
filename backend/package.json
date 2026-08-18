@@ -1,17 +1,28 @@
 {
   "name": "sgi-sanjose-api",
   "version": "1.0.0",
+  "main": "src/index.ts",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
-    "start": "tsx src/index.ts"
+    "start": "tsx src/index.ts",
+    "dev": "npx prisma generate && tsx watch src/index.ts",
+    "setup": "sh src/setup.sh"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
-    "express": "^5.2.1"
+    "@prisma/adapter-pg": "^7.9.1",
+    "@prisma/client": "^7.9.1",
+    "express": "^5.2.1",
+    "pg": "^8.13.3"
   },
   "devDependencies": {
-    "tsx": "^4.19.4",
-    "typescript": "^5.8.3",
     "@types/express": "^5.0.2",
-    "@types/node": "^22.15.0"
+    "@types/node": "^22.15.0",
+    "@types/pg": "^8.11.11",
+    "dotenv": "^16.4.7",
+    "prisma": "^7.9.1",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3"
   }
 }

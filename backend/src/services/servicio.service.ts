@@ -1,40 +1,35 @@
-import type { Servicio } from "../types/servicio.types";
+import type { Servicio } from "@prisma/client";
+import { prisma } from "../config/prisma";
 
-// Datos hardcodeados — misma forma que frontend/public/servicios.json
-const servicios: Servicio[] = [
-  { id: 1, nombre: "Cambio de Aceite", precio: 45000, desc: "Servicio técnico completo con reemplazo de filtros esenciales.", tipo: "lubricentro" },
-  { id: 2, nombre: "Lavado Premium", precio: 12000, desc: "Limpieza artesanal profunda exterior e interior.", tipo: "lavadero" },
-  { id: 3, nombre: "Alineación y Balanceo", precio: 25000, desc: "Ajuste de tren delantero y balanceo computarizado.", tipo: "lubricentro" },
-  { id: 4, nombre: "Limpieza Tapizados", precio: 35000, desc: "Lavado en seco de butacas y alfombras con máquinas de inyección.", tipo: "lavadero" },
-];
-
-let proximoId = 5;
-
-export function findAll(tipo?: string): Servicio[] {
-  if (tipo === undefined) return servicios;
-  return servicios.filter((s) => s.tipo === tipo);
+export async function findAll(tipo?: string): Promise<Servicio[]> {
+  if (tipo === undefined) {
+    return prisma.servicio.findMany();
+  }
+  return prisma.servicio.findMany({ where: { tipo } });
 }
 
-export function findById(id: number): Servicio | undefined {
-  return servicios.find((s) => s.id === id);
+export async function findById(id: number): Promise<Servicio | null> {
+  return prisma.servicio.findUnique({ where: { id } });
 }
 
-export function create(datos: Omit<Servicio, "id">): Servicio {
-  const nuevo: Servicio = { id: proximoId++, ...datos };
-  servicios.push(nuevo);
-  return nuevo;
+export async function create(datos: Omit<Servicio, "id">): Promise<Servicio> {
+  return prisma.servicio.create({ data: datos });
 }
 
-export function update(id: number, datos: Omit<Servicio, "id">): Servicio | undefined {
-  const index = servicios.findIndex((s) => s.id === id);
-  if (index === -1) return undefined;
-  servicios[index] = { id, ...datos };
-  return servicios[index];
+export async function update(id: number, datos: Partial<Omit<Servicio, "id">>): Promise<Servicio | null> {
+  const existe = await prisma.servicio.findUnique({ where: { id } });
+  if (!existe) return null;
+
+  return prisma.servicio.update({
+    where: { id },
+    data: datos,
+  });
 }
 
-export function remove(id: number): boolean {
-  const index = servicios.findIndex((s) => s.id === id);
-  if (index === -1) return false;
-  servicios.splice(index, 1);
+export async function remove(id: number): Promise<boolean> {
+  const existe = await prisma.servicio.findUnique({ where: { id } });
+  if (!existe) return false;
+
+  await prisma.servicio.delete({ where: { id } });
   return true;
 }

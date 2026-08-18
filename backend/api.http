@@ -116,3 +116,55 @@ DELETE {{baseUrl}}/api/clientes/3
 
 ### Borrar un cliente que no existe → 404
 DELETE {{baseUrl}}/api/clientes/999
+
+### =====================
+### TURNOS
+### =====================
+
+### Listar todos los turnos
+GET {{baseUrl}}/api/turnos
+
+### Obtener un turno por ID
+GET {{baseUrl}}/api/turnos/1
+
+### Obtener un turno que no existe → 404
+GET {{baseUrl}}/api/turnos/999
+
+### Crear un turno
+POST {{baseUrl}}/api/turnos
+Content-Type: application/json
+
+{
+  "fecha": "2026-08-25",
+  "hora": "10:00",
+  "cliente": "María González",
+  "tipoServicio": "Lavado Premium"
+}
+
+### Editar un turno
+PUT {{baseUrl}}/api/turnos/1
+Content-Type: application/json
+
+{
+  "fecha": "2026-08-25",
+  "hora": "11:00",
+  "cliente": "María González",
+  "tipoServicio": "Cambio de Aceite"
+}
+
+### Editar un turno que no existe → 404
+PUT {{baseUrl}}/api/turnos/999
+Content-Type: application/json
+
+{
+  "fecha": "2026-01-01",
+  "hora": "08:00",
+  "cliente": "No existe",
+  "tipoServicio": "Nada"
+}
+
+### Borrar un turno
+DELETE {{baseUrl}}/api/turnos/3
+
+### Borrar un turno que no existe → 404
+DELETE {{baseUrl}}/api/turnos/999
