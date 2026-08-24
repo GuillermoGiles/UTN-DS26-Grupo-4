@@ -1,14 +1,19 @@
 services:
   api:
     build: ./backend
+    command: sh -c "npx prisma generate && npm run dev"
     ports:
       - "3000:3000"
+      - "5555:5555"
     env_file:
       - backend/.env
     volumes:
       - ./backend/src:/app/src
+      - ./backend/prisma:/app/prisma
+      - ./backend/prisma.config.ts:/app/prisma.config.ts
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
   db:
     image: postgres:16-alpine
@@ -18,6 +23,11 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
 volumes:
   pgdata:

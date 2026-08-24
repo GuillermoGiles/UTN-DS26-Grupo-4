@@ -1,12 +1,14 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Form, Row, Col, Container } from 'react-bootstrap';
+import { Form, Row, Col, Container, Alert, Spinner } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { turnoSchema, type TurnoValidado } from '../validations/turnoSchema';
 import { FiCalendar, FiClock, FiUser, FiTool, FiCheckCircle } from 'react-icons/fi';
+import { usePost } from '../hooks/usePost';
 
 export function AltaTurno() {
     const navigate = useNavigate();
+    const { postData, loading, error } = usePost('/api/turnos');
 
     const {
         register,
@@ -22,11 +24,11 @@ export function AltaTurno() {
         }
     });
 
-    const onSubmit = (data: TurnoValidado) => {
-        console.log("Nuevo turno registrado exitosamente: ", data);
-        // Acá a futuro iría la conexión al backend. 
-        // Por ahora, cumplimos con el TP redirigiendo al home/panel
-        navigate('/');
+    const onSubmit = async (data: TurnoValidado) => {
+        const resultado = await postData(data);
+        if (resultado) {
+            navigate('/');
+        }
     };
 
     return (
@@ -38,6 +40,12 @@ export function AltaTurno() {
                             <h2 className="mb-2">Reservar Turno</h2>
                             <p className="text-muted">Agendá un nuevo ingreso para el lavadero o lubricentro</p>
                         </div>
+
+                        {error && (
+                            <Alert variant="danger" className="text-center">
+                                {error}
+                            </Alert>
+                        )}
 
                         <Form onSubmit={handleSubmit(onSubmit)}>
                             <Row>
@@ -103,10 +111,10 @@ export function AltaTurno() {
                                         style={{ paddingLeft: '2.5rem' }}
                                     >
                                         <option value="">Seleccione una opción...</option>
-                                        <option value="lavado_basico">Lavado Básico</option>
-                                        <option value="lavado_premium">Lavado Completo Premium</option>
-                                        <option value="cambio_aceite">Cambio de Aceite y Filtros</option>
-                                        <option value="alineacion">Alineación y Balanceo</option>
+                                        <option value="Lavado Básico">Lavado Básico</option>
+                                        <option value="Lavado Premium">Lavado Completo Premium</option>
+                                        <option value="Cambio de Aceite">Cambio de Aceite y Filtros</option>
+                                        <option value="Alineación y Balanceo">Alineación y Balanceo</option>
                                     </Form.Select>
                                     <FiTool className="position-absolute text-muted" style={{ left: '1rem', top: '50%', transform: 'translateY(-50%)' }} />
                                     <Form.Control.Feedback type="invalid">
@@ -115,8 +123,16 @@ export function AltaTurno() {
                                 </div>
                             </Form.Group>
 
-                            <button type="submit" className="w-100 btn-primary-custom d-flex justify-content-center align-items-center gap-2">
-                                <FiCheckCircle size={20} /> Confirmar Turno
+                            <button 
+                                type="submit" 
+                                className="w-100 btn-primary-custom d-flex justify-content-center align-items-center gap-2"
+                                disabled={loading}
+                            >
+                                {loading ? (
+                                    <><Spinner animation="border" size="sm" /> Guardando...</>
+                                ) : (
+                                    <><FiCheckCircle size={20} /> Confirmar Turno</>
+                                )}
                             </button>
                         </Form>
                     </div>

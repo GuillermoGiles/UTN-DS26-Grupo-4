@@ -13,8 +13,9 @@ RUN npm install
 # Copiar el resto del código
 COPY . .
 
-# Exponer puerto
+# Exponer puertos
 EXPOSE 3000
+EXPOSE 5555
 
 # Comando por defecto
 CMD ["npm", "run", "dev"]
