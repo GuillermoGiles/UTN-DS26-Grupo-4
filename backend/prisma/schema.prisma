@@ -7,25 +7,29 @@ datasource db {
 }
 
 model Cliente {
-  id        Int    @id @default(autoincrement())
+  id        Int     @id @default(autoincrement())
   nombre    String
   vehiculo  String
-  patente   String @unique
+  patente   String  @unique
   telefono  String
+  turnos    Turno[]
 }
 
 model Servicio {
-  id      Int    @id @default(autoincrement())
-  nombre  String
-  precio  Float
-  desc    String
-  tipo    String // "lavadero" | "lubricentro"
+  id     Int     @id @default(autoincrement())
+  nombre String
+  precio Float
+  desc   String
+  tipo   String  // "lavadero" | "lubricentro"
+  turnos Turno[]
 }
 
 model Turno {
-  id           Int    @id @default(autoincrement())
-  fecha        String
-  hora         String
-  cliente      String
-  tipoServicio String
+  id         Int      @id @default(autoincrement())
+  fecha      String
+  hora       String
+  clienteId  Int
+  cliente    Cliente  @relation(fields: [clienteId], references: [id], onDelete: Restrict)
+  servicioId Int
+  servicio   Servicio @relation(fields: [servicioId], references: [id], onDelete: Restrict)
 }

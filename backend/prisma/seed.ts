@@ -13,17 +13,29 @@ const servicios = [
   { nombre: "Limpieza Tapizados", precio: 35000, desc: "Lavado en seco de butacas y alfombras con máquinas de inyección.", tipo: "lavadero" },
 ];
 
-const turnos = [
-  { fecha: "2026-08-20", hora: "09:00", cliente: "Blasko Telechea", tipoServicio: "Cambio de Aceite" },
-  { fecha: "2026-08-20", hora: "10:30", cliente: "Lautaro Diguilmi", tipoServicio: "Lavado Premium" },
-  { fecha: "2026-08-21", hora: "14:00", cliente: "Federico Corbalan", tipoServicio: "Alineación y Balanceo" },
-];
-
 async function main() {
   await prisma.cliente.createMany({ data: clientes });
   await prisma.servicio.createMany({ data: servicios });
-  await prisma.turno.createMany({ data: turnos });
-  console.log("Seed completado: clientes, servicios y turnos creados.");
+
+  const c1 = await prisma.cliente.findUnique({ where: { patente: "FGH 452" } });
+  const c2 = await prisma.cliente.findUnique({ where: { patente: "XTZ 987" } });
+  const c3 = await prisma.cliente.findUnique({ where: { patente: "EF 456 GH" } });
+
+  const s1 = await prisma.servicio.findFirst({ where: { nombre: "Cambio de Aceite" } });
+  const s2 = await prisma.servicio.findFirst({ where: { nombre: "Lavado Premium" } });
+  const s3 = await prisma.servicio.findFirst({ where: { nombre: "Alineación y Balanceo" } });
+
+  if (c1 && c2 && c3 && s1 && s2 && s3) {
+    await prisma.turno.createMany({
+      data: [
+        { fecha: "2026-08-20", hora: "09:00", clienteId: c1.id, servicioId: s1.id },
+        { fecha: "2026-08-20", hora: "10:30", clienteId: c2.id, servicioId: s2.id },
+        { fecha: "2026-08-21", hora: "14:00", clienteId: c3.id, servicioId: s3.id },
+      ],
+    });
+  }
+
+  console.log("Seed completado: clientes, servicios y turnos creados con relaciones.");
 }
 
 main()
