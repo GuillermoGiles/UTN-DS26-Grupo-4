@@ -192,3 +192,74 @@ DELETE {{baseUrl}}/api/turnos/3
 
 ### Error 404: Borrar un turno que no existe
 DELETE {{baseUrl}}/api/turnos/999
+
+### -----------------------------
+### PRUEBAS DE CLIENTE (C17 Zod)
+### -----------------------------
+
+### Crear cliente incompleto (falla validación 400)
+POST {{baseUrl}}/api/clientes
+Content-Type: application/json
+
+{
+  "nombre": "Incompleto"
+}
+
+### Crear cliente correcto
+POST {{baseUrl}}/api/clientes
+Content-Type: application/json
+
+{
+  "nombre": "Validacion Test",
+  "vehiculo": "Peugeot 208",
+  "patente": "AB123CD",
+  "telefono": "2214445555"
+}
+
+### Crear cliente con patente repetida (falla Prisma 409)
+POST {{baseUrl}}/api/clientes
+Content-Type: application/json
+
+{
+  "nombre": "Copia",
+  "vehiculo": "Gol",
+  "patente": "AB123CD",
+  "telefono": "111"
+}
+
+### Actualizar cliente que no existe (falla Prisma 404)
+PUT {{baseUrl}}/api/clientes/999
+Content-Type: application/json
+
+{
+  "vehiculo": "Nuevo Auto"
+}
+
+### Obtener con id invalido (falla validación 400)
+GET {{baseUrl}}/api/clientes/abc
+
+### -----------------------------
+### PRUEBAS DE SERVICIO (C17 Zod)
+### -----------------------------
+
+### Crear servicio precio negativo (falla validación 400)
+POST {{baseUrl}}/api/servicios
+Content-Type: application/json
+
+{
+  "nombre": "Lavado",
+  "precio": -500,
+  "desc": "Lavado malo",
+  "tipo": "lavadero"
+}
+
+### Crear servicio con tipo incorrecto (falla validación 400)
+POST {{baseUrl}}/api/servicios
+Content-Type: application/json
+
+{
+  "nombre": "Lavado Raro",
+  "precio": 1000,
+  "desc": "Hola",
+  "tipo": "peluqueria"
+}
