@@ -15,7 +15,8 @@
     "@prisma/client": "^7.9.1",
     "dotenv": "^16.4.7",
     "express": "^5.2.1",
-    "pg": "^8.13.3"
+    "pg": "^8.13.3",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/express": "^5.0.2",

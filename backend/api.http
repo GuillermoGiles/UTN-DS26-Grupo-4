@@ -118,10 +118,10 @@ DELETE {{baseUrl}}/api/clientes/3
 DELETE {{baseUrl}}/api/clientes/999
 
 ### =====================
-### TURNOS
+### TURNOS (Con Relaciones y Validaciones)
 ### =====================
 
-### Listar todos los turnos
+### Listar todos los turnos (incluye datos de cliente y servicio)
 GET {{baseUrl}}/api/turnos
 
 ### Obtener un turno por ID
@@ -130,15 +130,37 @@ GET {{baseUrl}}/api/turnos/1
 ### Obtener un turno que no existe → 404
 GET {{baseUrl}}/api/turnos/999
 
-### Crear un turno
+### Obtener un turno con ID inválido (string) → 400
+GET {{baseUrl}}/api/turnos/abc
+
+### Crear un turno válido
 POST {{baseUrl}}/api/turnos
 Content-Type: application/json
 
 {
   "fecha": "2026-08-25",
   "hora": "10:00",
-  "cliente": "María González",
-  "tipoServicio": "Lavado Premium"
+  "clienteId": 1,
+  "servicioId": 2
+}
+
+### Error 400: Crear un turno sin campos obligatorios (Zod)
+POST {{baseUrl}}/api/turnos
+Content-Type: application/json
+
+{
+  "fecha": "2026-08-25"
+}
+
+### Error 409: Crear un turno con cliente inexistente (FK Prisma P2003)
+POST {{baseUrl}}/api/turnos
+Content-Type: application/json
+
+{
+  "fecha": "2026-08-25",
+  "hora": "11:00",
+  "clienteId": 9999,
+  "servicioId": 1
 }
 
 ### Editar un turno
@@ -146,25 +168,27 @@ PUT {{baseUrl}}/api/turnos/1
 Content-Type: application/json
 
 {
-  "fecha": "2026-08-25",
-  "hora": "11:00",
-  "cliente": "María González",
-  "tipoServicio": "Cambio de Aceite"
+  "hora": "11:30"
 }
 
-### Editar un turno que no existe → 404
+### Error 400: Editar un turno con ID inválido en ruta
+PUT {{baseUrl}}/api/turnos/abc
+Content-Type: application/json
+
+{
+  "hora": "12:00"
+}
+
+### Error 404: Editar un turno que no existe
 PUT {{baseUrl}}/api/turnos/999
 Content-Type: application/json
 
 {
-  "fecha": "2026-01-01",
-  "hora": "08:00",
-  "cliente": "No existe",
-  "tipoServicio": "Nada"
+  "hora": "12:00"
 }
 
 ### Borrar un turno
 DELETE {{baseUrl}}/api/turnos/3
 
-### Borrar un turno que no existe → 404
+### Error 404: Borrar un turno que no existe
 DELETE {{baseUrl}}/api/turnos/999
