@@ -1,13 +1,14 @@
 import { Router } from "express";
 import * as clienteController from "../controllers/cliente.controller";
+import { validate, validateParams } from "../middleware/validate.middleware";
+import { clienteCreateSchema, clienteUpdateSchema, idParamSchema } from "../validations/cliente.validation";
 
 const router = Router();
 
-// Las rutas van RELATIVAS: el prefijo /api/clientes lo monta index.ts.
 router.get("/", clienteController.getAll);
-router.get("/:id", clienteController.getById);
-router.post("/", clienteController.create);
-router.put("/:id", clienteController.update);
-router.delete("/:id", clienteController.remove);
+router.get("/:id", validateParams(idParamSchema), clienteController.getById);
+router.post("/", validate(clienteCreateSchema), clienteController.create);
+router.put("/:id", validateParams(idParamSchema), validate(clienteUpdateSchema), clienteController.update);
+router.delete("/:id", validateParams(idParamSchema), clienteController.remove);
 
 export default router;
