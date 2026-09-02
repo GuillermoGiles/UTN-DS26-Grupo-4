@@ -22,10 +22,18 @@ export async function create(req: Request, res: Response) {
 
 export async function update(req: Request, res: Response) {
   const actualizado = await turnoService.update(Number(req.params.id), req.body);
+  if (!actualizado) {
+    res.status(404).json({ error: "Turno no encontrado" });
+    return;
+  }
   res.json(actualizado);
 }
 
 export async function remove(req: Request, res: Response) {
-  await turnoService.remove(Number(req.params.id));
+  const ok = await turnoService.remove(Number(req.params.id));
+  if (!ok) {
+    res.status(404).json({ error: "Turno no encontrado" });
+    return;
+  }
   res.status(204).send();
 }
