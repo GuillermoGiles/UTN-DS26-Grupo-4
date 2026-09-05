@@ -263,3 +263,172 @@ Content-Type: application/json
   "desc": "Hola",
   "tipo": "peluqueria"
 }
+
+### ===================================================
+### CLASE 18 — AUTENTICACIÓN, ROLES Y SEGURIDAD (AG-C18)
+### ===================================================
+
+### 1. Registro exitoso (201 sin passwordHash)
+# @name registroNuevo
+POST {{baseUrl}}/api/auth/registro
+Content-Type: application/json
+
+{
+  "nombre": "Nuevo Conductor",
+  "email": "nuevo@sanjose.test",
+  "password": "Password123"
+}
+
+### 2. Error 409: Registro con email duplicado (Prisma P2002)
+POST {{baseUrl}}/api/auth/registro
+Content-Type: application/json
+
+{
+  "nombre": "Duplicado",
+  "email": "nuevo@sanjose.test",
+  "password": "Password123"
+}
+
+### 3. Error 400: Registro con password débil / corta (Zod)
+POST {{baseUrl}}/api/auth/registro
+Content-Type: application/json
+
+{
+  "nombre": "Test",
+  "email": "invalido@test.com",
+  "password": "123"
+}
+
+### 4. Error 401: Login con email inexistente
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "noexiste@sanjose.test",
+  "password": "Password123"
+}
+
+### 5. Error 401: Login con password incorrecta
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@sanjose.test",
+  "password": "PasswordEquivocada"
+}
+
+### 6. Login exitoso como ADMIN (200 + token)
+# @name loginAdmin
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@sanjose.test",
+  "password": "AdminPassword123"
+}
+
+### Guardar token de Admin
+@tokenAdmin = {{loginAdmin.response.body.token}}
+
+### 7. Login exitoso como EMPLEADO (200 + token)
+# @name loginEmpleado
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "empleado@sanjose.test",
+  "password": "EmpleadoPassword123"
+}
+
+### Guardar token de Empleado
+@tokenEmpleado = {{loginEmpleado.response.body.token}}
+
+### 8. Login exitoso como CLIENTE (200 + token)
+# @name loginCliente
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "cliente@sanjose.test",
+  "password": "ClientePassword123"
+}
+
+### Guardar token de Cliente
+@tokenCliente = {{loginCliente.response.body.token}}
+
+### 9. Error 401: GET /api/auth/yo sin token
+GET {{baseUrl}}/api/auth/yo
+
+### 10. GET /api/auth/yo autenticado con token de ADMIN (200)
+GET {{baseUrl}}/api/auth/yo
+Authorization: Bearer {{tokenAdmin}}
+
+### 11. GET /api/auth/yo autenticado con token de CLIENTE (200)
+GET {{baseUrl}}/api/auth/yo
+Authorization: Bearer {{tokenCliente}}
+
+### 12. GET /api/servicios es público (200 sin header)
+GET {{baseUrl}}/api/servicios
+
+### 13. Error 401: POST /api/servicios sin token
+POST {{baseUrl}}/api/servicios
+Content-Type: application/json
+
+{
+  "nombre": "Encerado Acrílico",
+  "precio": 28000,
+  "desc": "Protección y brillo con cera acrílica de larga duración.",
+  "tipo": "lavadero"
+}
+
+### 14. Error 403: POST /api/servicios con token de CLIENTE
+POST {{baseUrl}}/api/servicios
+Authorization: Bearer {{tokenCliente}}
+Content-Type: application/json
+
+{
+  "nombre": "Encerado Acrílico",
+  "precio": 28000,
+  "desc": "Protección y brillo con cera acrílica de larga duración.",
+  "tipo": "lavadero"
+}
+
+### 15. POST /api/servicios con token de ADMIN (201 Created)
+POST {{baseUrl}}/api/servicios
+Authorization: Bearer {{tokenAdmin}}
+Content-Type: application/json
+
+{
+  "nombre": "Encerado Acrílico",
+  "precio": 28000,
+  "desc": "Protección y brillo con cera acrílica de larga duración.",
+  "tipo": "lavadero"
+}
+
+### 16. Error 401: GET /api/clientes sin token
+GET {{baseUrl}}/api/clientes
+
+### 17. Error 403: GET /api/clientes con token de CLIENTE
+GET {{baseUrl}}/api/clientes
+Authorization: Bearer {{tokenCliente}}
+
+### 18. GET /api/clientes con token de EMPLEADO (200 OK)
+GET {{baseUrl}}/api/clientes
+Authorization: Bearer {{tokenEmpleado}}
+
+### 19. POST /api/turnos con token de CLIENTE (201 Created)
+POST {{baseUrl}}/api/turnos
+Authorization: Bearer {{tokenCliente}}
+Content-Type: application/json
+
+{
+  "fecha": "2026-09-10",
+  "hora": "15:00",
+  "clienteId": 1,
+  "servicioId": 1
+}
+
+### 20. Error 403: DELETE /api/clientes/2 con token de EMPLEADO (Solo ADMIN)
+DELETE {{baseUrl}}/api/clientes/2
+Authorization: Bearer {{tokenEmpleado}}
+

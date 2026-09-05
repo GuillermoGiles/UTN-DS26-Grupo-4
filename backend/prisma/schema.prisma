@@ -33,3 +33,19 @@ model Turno {
   servicioId Int
   servicio   Servicio @relation(fields: [servicioId], references: [id], onDelete: Restrict)
 }
+
+enum Rol {
+  ADMIN
+  EMPLEADO
+  CLIENTE
+}
+
+model Usuario {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  nombre       String
+  passwordHash String
+  rol          Rol      @default(CLIENTE)
+  createdAt    DateTime @default(now())
+}
+

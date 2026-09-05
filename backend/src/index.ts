@@ -1,4 +1,5 @@
 import express from "express";
+import authRoutes from "./routes/auth.routes";
 import servicioRoutes from "./routes/servicio.routes";
 import clienteRoutes from "./routes/cliente.routes";
 import turnoRoutes from "./routes/turno.routes";
@@ -13,9 +14,11 @@ app.get("/", (_req, res) => {
   res.json({ mensaje: "API SGI San José 🐳" });
 });
 
+app.use("/api/auth", authRoutes);
 app.use("/api/servicios", servicioRoutes);
 app.use("/api/clientes", clienteRoutes);
 app.use("/api/turnos", turnoRoutes);
+
 
 app.use(errorHandler);
 

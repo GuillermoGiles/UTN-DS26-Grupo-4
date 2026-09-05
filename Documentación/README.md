@@ -28,4 +28,6 @@
 ## [05 - Diseño de API](./05%20-%20Diseño%20de%20API)
 * **Listado de Operaciones:** Mapeo de pantallas a operaciones y entidades ([Operaciones.md](./05%20-%20Diseño%20de%20API/Operaciones.md)).
 * **Contrato de API REST:** Endpoints definidos para Servicios, Clientes, Vehículos, Turnos, Lavados y Usuarios.
+* **Matriz de Permisos (RBAC):** Control de acceso por endpoint para roles ADMIN, EMPLEADO, CLIENTE y Público ([Matriz_Permisos.md](./05%20-%20Diseño%20de%20API/Matriz_Permisos.md)).
+
 
