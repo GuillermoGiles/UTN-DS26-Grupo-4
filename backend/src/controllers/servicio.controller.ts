@@ -1,8 +1,9 @@
 import { Request, Response } from "express";
 import * as servicioService from "../services/servicio.service";
 
-export async function getAll(_req: Request, res: Response) {
-  const servicios = await servicioService.findAll();
+export async function getAll(req: Request, res: Response) {
+  const tipo = typeof req.query.tipo === "string" ? req.query.tipo : undefined;
+  const servicios = await servicioService.findAll(tipo);
   res.json(servicios);
 }
 
