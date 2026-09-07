@@ -1,27 +1,29 @@
 import { useState, useEffect } from 'react';
+import { apiFetch } from '../services/api';
 
 export function useFetch<T>(url: string) {
-    const [data, setData] = useState<T | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+  const [data, setData] = useState<T | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-    useEffect(() => {
-        const cargar = async () => {
-            try {
-                setLoading(true);
-                setError(null);
-                const res = await fetch(url);
-                if (!res.ok) throw new Error('Error al cargar los datos');
-                setData(await res.json());
-            } catch (e) {
-                setError(e instanceof Error ? e.message : 'Error desconocido');
-            } finally {
-                setLoading(false);
-            }
-        };
+  useEffect(() => {
+    let montado = true;
+    
+    async function fetchData() {
+      try {
+        setLoading(true);
+        const result = await apiFetch<T>(url);
+        if (montado) setData(result);
+      } catch (err: any) {
+        if (montado) setError(err.message);
+      } finally {
+        if (montado) setLoading(false);
+      }
+    }
+    
+    fetchData();
+    return () => { montado = false; };
+  }, [url]);
 
-        cargar();
-    }, [url]);
-
-    return { data, loading, error };
+  return { data, loading, error };
 }
