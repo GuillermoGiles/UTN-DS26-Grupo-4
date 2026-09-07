@@ -5,8 +5,9 @@ import type { Cliente } from '../schemas/clienteSchema';
 
 export function Clientes() {
   const navigate = useNavigate();
-  // Aplicamos el custom hook para consumir el mock de clientes
-  const { data: clientes, loading, error } = useFetch<Cliente[]>('/clientes.json');
+  // Conectado al endpoint real del backend (requiere auth ADMIN o EMPLEADO)
+  // apiFetch inyecta automáticamente el Bearer token desde localStorage
+  const { data: clientes, loading, error } = useFetch<Cliente[]>('/api/clientes');
 
   return (
     <Container className="mt-4 pt-4 mb-5">

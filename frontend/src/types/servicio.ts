@@ -1,5 +1,7 @@
+// Tipo alineado con el modelo Prisma del backend
+// GET /api/servicios devuelve objetos con esta forma
 export type Servicio = {
-  id: string | number;
+  id: number;
   nombre: string;
   precio: number;
   desc: string;
