@@ -3,7 +3,7 @@ import { Container, Form, Button, Alert, Card } from 'react-bootstrap';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate } from 'react-router-dom';
-import { loginSchema, LoginFormData } from '../schemas/loginSchema';
+import { loginSchema, type LoginFormData } from '../schemas/loginSchema';
 import { apiFetch } from '../services/api';
 import { guardarToken } from '../services/sesion';
 
