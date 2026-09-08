@@ -1,12 +1,17 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Form, Container } from 'react-bootstrap';
+import { Form, Container, Alert, Spinner } from 'react-bootstrap';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { servicioSchema } from '../schemas/servicioSchema';
 import type { ServicioValidado } from '../schemas/servicioSchema';
+import { apiFetch } from '../services/api';
+import type { Servicio } from '../types/servicio';
 
 export function ServicioNuevo() {
   const navigate = useNavigate();
+  const [serverError, setServerError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   const { register, handleSubmit, formState: { errors } } = useForm<ServicioValidado>({
     resolver: zodResolver(servicioSchema),
@@ -18,16 +23,33 @@ export function ServicioNuevo() {
     }
   });
 
-  const onSubmit = (data: ServicioValidado) => {
-    console.log("Simulación de alta de servicio:", data);
-    // En el futuro acá irá el fetch con POST. Por ahora redirige.
-    navigate('/servicios');
+  const onSubmit = async (data: ServicioValidado) => {
+    setServerError(null);
+    setSubmitting(true);
+    try {
+      await apiFetch<Servicio>('/api/servicios', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+      navigate('/servicios');
+    } catch (err) {
+      setServerError(err instanceof Error ? err.message : 'Error al guardar el servicio');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
     <Container className="py-5" style={{ maxWidth: 600 }}>
       <div className="saas-card-dark p-4">
         <h2 className="text-center mb-4 fw-bold">Agregar Nuevo Servicio</h2>
+        
+        {serverError && (
+          <Alert variant="danger" className="mb-4" dismissible onClose={() => setServerError(null)}>
+            <strong>Error:</strong> {serverError}
+          </Alert>
+        )}
+
         <Form onSubmit={handleSubmit(onSubmit)}>
           
           <Form.Group className="mb-3">
@@ -80,8 +102,19 @@ export function ServicioNuevo() {
             </Form.Control.Feedback>
           </Form.Group>
 
-          <button type="submit" className="btn-primary-custom w-100 fw-bold mt-2">
-            Guardar Servicio
+          <button 
+            type="submit" 
+            className="btn-primary-custom w-100 fw-bold mt-2 d-flex align-items-center justify-content-center gap-2"
+            disabled={submitting}
+          >
+            {submitting ? (
+              <>
+                <Spinner size="sm" animation="border" />
+                <span>Guardando...</span>
+              </>
+            ) : (
+              'Guardar Servicio'
+            )}
           </button>
         </Form>
       </div>
