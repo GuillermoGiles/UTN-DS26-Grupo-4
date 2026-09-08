@@ -14,8 +14,9 @@ export function useFetch<T>(url: string) {
         setLoading(true);
         const result = await apiFetch<T>(url);
         if (montado) setData(result);
-      } catch (err: any) {
-        if (montado) setError(err.message);
+      } catch (err) {
+        if (montado && err instanceof Error) setError(err.message);
+        else if (montado) setError(String(err));
       } finally {
         if (montado) setLoading(false);
       }
