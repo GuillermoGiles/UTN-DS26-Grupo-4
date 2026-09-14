@@ -13,6 +13,8 @@ import { Clientes } from './pages/Clientes';
 import { ClienteNuevo } from './pages/ClienteNuevo';
 import { ServicioNuevo } from './pages/ServicioNuevo';
 import { VehiculoNuevo } from './pages/VehiculoNuevo';
+import { AuthProvider } from './context/AuthContext';
+
 
 function App() {
   return (
