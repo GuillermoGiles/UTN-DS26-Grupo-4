@@ -13,26 +13,26 @@ Definición de control de acceso basado en roles (RBAC) para los endpoints de la
 
 ## Matriz de Control de Acceso por Endpoint
 
-| Entidad | Endpoint | Método | Público | CLIENTE | EMPLEADO | ADMIN |
-| :--- | :--- | :---: | :---: | :---: | :---: | :---: |
-| **Auth** | `/api/auth/registro` | POST | ✅ 201 | ✅ 201 | ✅ 201 | ✅ 201 |
-| | `/api/auth/login` | POST | ✅ 200 | ✅ 200 | ✅ 200 | ✅ 200 |
-| | `/api/auth/yo` | GET | ❌ 401 | ✅ 200 | ✅ 200 | ✅ 200 |
-| **Servicios** | `/api/servicios` | GET | ✅ 200 | ✅ 200 | ✅ 200 | ✅ 200 |
-| | `/api/servicios/:id` | GET | ✅ 200 | ✅ 200 | ✅ 200 | ✅ 200 |
-| | `/api/servicios` | POST | ❌ 401 | ❌ 403 | ❌ 403 | ✅ 201 |
-| | `/api/servicios/:id` | PUT | ❌ 401 | ❌ 403 | ❌ 403 | ✅ 200 |
-| | `/api/servicios/:id` | DELETE | ❌ 401 | ❌ 403 | ❌ 403 | ✅ 204 |
-| **Clientes** | `/api/clientes` | GET | ❌ 401 | ❌ 403 | ✅ 200 | ✅ 200 |
-| | `/api/clientes/:id` | GET | ❌ 401 | ❌ 403 | ✅ 200 | ✅ 200 |
-| | `/api/clientes` | POST | ❌ 401 | ❌ 403 | ✅ 201 | ✅ 201 |
-| | `/api/clientes/:id` | PUT | ❌ 401 | ❌ 403 | ✅ 200 | ✅ 200 |
-| | `/api/clientes/:id` | DELETE | ❌ 401 | ❌ 403 | ❌ 403 | ✅ 204 |
-| **Turnos** | `/api/turnos` | GET | ❌ 401 | ❌ 403 | ✅ 200 | ✅ 200 |
-| | `/api/turnos/:id` | GET | ❌ 401 | ❌ 403 | ✅ 200 | ✅ 200 |
-| | `/api/turnos` | POST | ❌ 401 | ✅ 201 | ✅ 201 | ✅ 201 |
-| | `/api/turnos/:id` | PUT | ❌ 401 | ❌ 403 | ✅ 200 | ✅ 200 |
-| | `/api/turnos/:id` | DELETE | ❌ 401 | ❌ 403 | ✅ 204 | ✅ 204 |
+| Entidad | Endpoint | Método | Público | CLIENTE | EMPLEADO | ADMIN | Qué hace la UI |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :--- |
+| **Auth** | `/api/auth/registro` | POST | ✅ 201 | ✅ 201 | ✅ 201 | ✅ 201 | Formulario de registro público. Redirige a login al terminar. |
+| | `/api/auth/login` | POST | ✅ 200 | ✅ 200 | ✅ 200 | ✅ 200 | Formulario de inicio de sesión. Cambia la NavBar a "Hola, {nombre}". |
+| | `/api/auth/yo` | GET | ❌ 401 | ✅ 200 | ✅ 200 | ✅ 200 | Lo llama el `AuthProvider` al recargar la página (F5) para rehidratar el estado. |
+| **Servicios** | `/api/servicios` | GET | ✅ 200 | ✅ 200 | ✅ 200 | ✅ 200 | Catálogo de servicios público. Sin login. |
+| | `/api/servicios/:id` | GET | ✅ 200 | ✅ 200 | ✅ 200 | ✅ 200 | Detalle del servicio público. |
+| | `/api/servicios` | POST | ❌ 401 | ❌ 403 | ❌ 403 | ✅ 201 | Botón "Nuevo Servicio" solo visible para ADMIN. Formulario en ruta protegida con `PrivateRoute rol="ADMIN"`. |
+| | `/api/servicios/:id` | PUT | ❌ 401 | ❌ 403 | ❌ 403 | ✅ 200 | Botón "Editar" solo visible para ADMIN en el listado/detalle. |
+| | `/api/servicios/:id` | DELETE | ❌ 401 | ❌ 403 | ❌ 403 | ✅ 204 | Botón "Borrar" solo visible para ADMIN en el listado/detalle. |
+| **Clientes** | `/api/clientes` | GET | ❌ 401 | ❌ 403 | ✅ 200 | ✅ 200 | Panel interno de clientes protegido para empleados/admins. |
+| | `/api/clientes/:id` | GET | ❌ 401 | ❌ 403 | ✅ 200 | ✅ 200 | Detalle de cliente protegido para empleados/admins. |
+| | `/api/clientes` | POST | ❌ 401 | ❌ 403 | ✅ 201 | ✅ 201 | Botón y formulario protegido para empleados/admins. |
+| | `/api/clientes/:id` | PUT | ❌ 401 | ❌ 403 | ✅ 200 | ✅ 200 | Edición de cliente protegida para empleados/admins. |
+| | `/api/clientes/:id` | DELETE | ❌ 401 | ❌ 403 | ❌ 403 | ✅ 204 | Botón "Borrar Cliente" solo visible para ADMIN. |
+| **Turnos** | `/api/turnos` | GET | ❌ 401 | ❌ 403 | ✅ 200 | ✅ 200 | Calendario/listado de turnos general, visible para empleados/admins. |
+| | `/api/turnos/:id` | GET | ❌ 401 | ❌ 403 | ✅ 200 | ✅ 200 | Detalle del turno. |
+| | `/api/turnos` | POST | ❌ 401 | ✅ 201 | ✅ 201 | ✅ 201 | Botón "Solicitar Turno" visible logueado. Ruta protegida con `PrivateRoute` (sin rol). |
+| | `/api/turnos/:id` | PUT | ❌ 401 | ❌ 403 | ✅ 200 | ✅ 200 | Cambio de estado del turno (ej. "Completado"), visible para empleados/admins. |
+| | `/api/turnos/:id` | DELETE | ❌ 401 | ❌ 403 | ✅ 204 | ✅ 204 | Cancelación del turno, visible para empleados/admins. |
 
 ---
 
