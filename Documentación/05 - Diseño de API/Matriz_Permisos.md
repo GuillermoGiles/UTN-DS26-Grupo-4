@@ -36,6 +36,25 @@ Definición de control de acceso basado en roles (RBAC) para los endpoints de la
 
 ---
 
+## Rutas del Frontend y su Barrera (`PrivateRoute`)
+
+La misma matriz, vista desde el router (`frontend/src/App.tsx`). Cada grupo es una *layout route* `<Route element={<PrivateRoute rol=... />}>` que anticipa el 401/403 del back **sin llamarlo**:
+
+| Barrera | Qué hace `PrivateRoute` | Rutas |
+| :--- | :--- | :--- |
+| Pública | No pasa por `PrivateRoute`. | `/`, `/login`, `/servicios`, `/sin-permiso` |
+| Login (cualquier rol) | Sin usuario → `/login`. | `/turnos/nuevo`, `/perfil-cliente` |
+| `EMPLEADO` o `ADMIN` | Sin usuario → `/login`. Con `CLIENTE` → `/sin-permiso`. | `/clientes`, `/clientes/nuevo`, `/vehiculos`, `/vehiculos/nuevo`, `/lavados/nuevo` |
+| Solo `ADMIN` | Sin usuario → `/login`. Con `CLIENTE` o `EMPLEADO` → `/sin-permiso`. | `/servicios/nuevo`, `/usuarios/nuevo`, `/panel` |
+
+Mientras el `AuthProvider` todavía no sabe quién sos (`cargando`, esperando `GET /api/auth/yo`), `PrivateRoute` muestra un spinner y **no decide nada**: así un F5 en una ruta protegida no "flashea" a `/login`.
+
+Las redirecciones usan `replace` para que "atrás" no vuelva a la ruta protegida y atrape al usuario. Al mandar a `/login` se guarda la ruta de origen (`state.desde`) y el login devuelve al usuario ahí.
+
+> **Esconder ≠ proteger.** Se esconde el link (renderizado por rol) **y** se protege la ruta (`PrivateRoute`). Si alguien escribe la URL a mano, `PrivateRoute` lo para; si saltea la UI entera con `curl`, el back responde 401/403. La regla vive en la API.
+
+---
+
 ## Políticas de Autenticación y Autorización
 
 1. **Autenticación Stateless (JWT):**

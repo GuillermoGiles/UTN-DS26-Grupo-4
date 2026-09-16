@@ -27,7 +27,7 @@ export function ServicioNuevo() {
     setServerError(null);
     setSubmitting(true);
     try {
-      await apiFetch<Servicio>('/api/servicios', {
+      await apiFetch<Servicio>('/servicios', {
         method: 'POST',
         body: JSON.stringify(data),
       });

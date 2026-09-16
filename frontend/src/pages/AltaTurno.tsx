@@ -8,7 +8,7 @@ import { usePost } from '../hooks/usePost';
 
 export function AltaTurno() {
     const navigate = useNavigate();
-    const { postData, loading, error } = usePost('/api/turnos');
+    const { postData, loading, error } = usePost('/turnos');
 
     const {
         register,
