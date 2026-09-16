@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Usuario, Rol } from '../types/sesion';
+import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import type { Usuario, Rol } from '../types/sesion';
 import { apiFetch } from '../services/api';
 import { obtenerToken, guardarToken, borrarToken } from '../services/sesion';
 
