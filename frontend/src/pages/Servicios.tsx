@@ -3,9 +3,11 @@ import { Link } from 'react-router-dom';
 import { ServicioDestacado } from '../components/ServicioDestacado';
 import { FiTool, FiPlus } from 'react-icons/fi';
 import { useFetch } from '../hooks/useFetch';
+import { useAuth } from '../hooks/useAuth';
 import type { Servicio } from '../types/servicio';
 
 export function Servicios() {
+  const { tieneRol } = useAuth();
   // Conectado al endpoint real del backend (público, no requiere auth)
   const { data: servicios, loading, error } = useFetch<Servicio[]>('/servicios');
 
@@ -20,9 +22,11 @@ export function Servicios() {
                 <h2 className="mb-2 text-center text-md-start">Catálogo de Servicios</h2>
                 <p className="text-muted text-center text-md-start mb-0">Explore nuestros servicios especializados de lavadero y lubricentro.</p>
             </div>
-            <Link to="/servicios/nuevo" className="btn-primary-custom d-flex align-items-center gap-2 text-decoration-none">
-              <FiPlus /> Nuevo Servicio
-            </Link>
+            {tieneRol('ADMIN') && (
+              <Link to="/servicios/nuevo" className="btn-primary-custom d-flex align-items-center gap-2 text-decoration-none">
+                <FiPlus /> Nuevo Servicio
+              </Link>
+            )}
         </div>
       </div>
       
