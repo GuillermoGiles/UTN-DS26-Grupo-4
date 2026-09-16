@@ -9,5 +9,7 @@ function obligatorio(nombre: string): string {
 }
 
 export const JWT_SECRET = obligatorio("JWT_SECRET");
-export const JWT_EXPIRES_IN: SignOptions["expiresIn"] = "2h";
+// Vencimiento del token. Se lee de JWT_EXPIRES_IN (formato ms: "2h", "30m", "7d");
+// si no está definida, 2 horas. Ver comentario en .env.example.
+export const JWT_EXPIRES_IN = (process.env.JWT_EXPIRES_IN ?? "2h") as SignOptions["expiresIn"];
 export const SALT_ROUNDS = 10;

@@ -26,7 +26,7 @@ export function ClienteNuevo() {
     setServerError(null);
     setSubmitting(true);
     try {
-      await apiFetch('/api/clientes', {
+      await apiFetch('/clientes', {
         method: 'POST',
         body: JSON.stringify(data),
       });

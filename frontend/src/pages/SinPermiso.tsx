@@ -1,7 +1,7 @@
 import { Container, Alert } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import { FiLock, FiArrowLeft, FiHome } from 'react-icons/fi';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 
 /**
  * La cara del 403: el usuario está logueado pero su rol no alcanza.

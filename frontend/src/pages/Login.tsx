@@ -2,24 +2,18 @@ import { useState } from 'react';
 import { Container, Form, Button, Alert, Card } from 'react-bootstrap';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { loginSchema, type LoginFormData } from '../schemas/loginSchema';
-import { apiFetch } from '../services/api';
-import { guardarToken } from '../services/sesion';
-
-interface Sesion {
-  token: string;
-  usuario: {
-    id: number;
-    email: string;
-    nombre: string;
-    rol: string;
-  };
-}
+import { useAuth } from '../hooks/useAuth';
 
 export function Login() {
   const [errorApi, setErrorApi] = useState<string | null>(null);
   const navigate = useNavigate();
+  const location = useLocation();
+  const { login } = useAuth();
+
+  // Si PrivateRoute nos mandó acá, guardó en state la ruta que el usuario quería ver
+  const desde = (location.state as { desde?: string } | null)?.desde ?? '/';
 
   const {
     register,
@@ -32,13 +26,8 @@ export function Login() {
   const onSubmit = async (datos: LoginFormData) => {
     try {
       setErrorApi(null);
-      const sesion = await apiFetch<Sesion>('/auth/login', {
-        method: 'POST',
-        body: JSON.stringify(datos),
-      });
-      
-      guardarToken(sesion.token);
-      navigate('/');
+      await login(datos);              // el token y el usuario quedan en el AuthProvider
+      navigate(desde, { replace: true });
     } catch (error) {
       if (error instanceof Error) {
         setErrorApi(error.message);

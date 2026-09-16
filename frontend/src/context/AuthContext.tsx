@@ -1,41 +1,32 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
-import type { Usuario, Rol } from '../types/sesion';
+import { useState, useEffect, type ReactNode } from 'react';
+import type { Credenciales, Sesion, Usuario } from '../types/sesion';
 import { apiFetch } from '../services/api';
 import { obtenerToken, guardarToken, borrarToken } from '../services/sesion';
-
-interface AuthContextType {
-  usuario: Usuario | null;
-  cargando: boolean;
-  estaAutenticado: boolean;
-  tieneRol: (rol: Rol) => boolean;
-  login: (datos: any) => Promise<void>;
-  logout: () => void;
-}
-
-const AuthContext = createContext<AuthContextType | null>(null);
+import { AuthContext } from '../hooks/useAuth';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [usuario, setUsuario] = useState<Usuario | null>(null);
+  // Si hay token guardado, arrancamos "cargando" hasta que el back confirme quién es.
+  // Si no hay token, no hay nada que averiguar: arranca en false.
   const [cargando, setCargando] = useState<boolean>(obtenerToken() !== null);
 
+  // Rehidratación al montar: F5 borra el estado de React pero no el token.
+  // Le preguntamos al back (fuente de verdad) en vez de decodificar el token en el front.
   useEffect(() => {
-    if (!obtenerToken()) {
-        setCargando(false);
-        return;
-    }
+    if (!obtenerToken()) return;
     apiFetch<Usuario>('/auth/yo')
       .then(setUsuario)
-      .catch(() => borrarToken())
+      .catch(() => borrarToken())          // vencido o inválido: se limpia
       .finally(() => setCargando(false));
   }, []);
 
-  const login = async (datos: any) => {
-    const res = await apiFetch<{token: string, usuario: Usuario}>('/auth/login', {
+  const login = async (credenciales: Credenciales) => {
+    const sesion = await apiFetch<Sesion>('/auth/login', {
       method: 'POST',
-      body: JSON.stringify(datos)
+      body: JSON.stringify(credenciales),
     });
-    guardarToken(res.token);
-    setUsuario(res.usuario);
+    guardarToken(sesion.token);
+    setUsuario(sesion.usuario);
   };
 
   const logout = () => {
@@ -44,21 +35,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{
-      usuario,
-      cargando,
-      estaAutenticado: usuario !== null,
-      tieneRol: (r) => usuario?.rol === r,
-      login,
-      logout
-    }}>
+    <AuthContext.Provider
+      value={{
+        usuario,
+        cargando,
+        estaAutenticado: usuario !== null,
+        tieneRol: (rol) => usuario?.rol === rol,
+        login,
+        logout,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (!context) throw new Error("useAuth debe usarse dentro de AuthProvider");
-  return context;
 }

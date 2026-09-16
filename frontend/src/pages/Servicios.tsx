@@ -7,7 +7,7 @@ import type { Servicio } from '../types/servicio';
 
 export function Servicios() {
   // Conectado al endpoint real del backend (público, no requiere auth)
-  const { data: servicios, loading, error } = useFetch<Servicio[]>('/api/servicios');
+  const { data: servicios, loading, error } = useFetch<Servicio[]>('/servicios');
 
   return (
     <Container id="stock" className="py-5">
