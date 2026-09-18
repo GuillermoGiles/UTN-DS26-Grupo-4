@@ -67,3 +67,9 @@ Las redirecciones usan `replace` para que "atrás" no vuelva a la ruta protegida
 3. **Manejo de Contraseñas:**
    * Almacenadas como hash unidireccional generado con algoritmo `bcrypt` y 10 rondas de salt.
    * La respuesta del registro y del perfil omite estrictamente el hash de la contraseña.
+4. **Intercepción y Manejo de Sesión Vencida (Capa de Red y Estado Global):**
+   * **Cliente HTTP (`apiFetch`):** Encapsula los errores del backend bajo la clase personalizada `ApiError` (con `status`, `message` y payload `data`).
+   * **Detección de expiración:** Si el backend responde `401 Unauthorized` ante una petición donde se había enviado un token JWT, se dispara el evento global de navegador `sesion-expirada`. (Si el 401 surge de un intento fallido en `/auth/login` sin token previo, no se dispara para no interferir con la validación del formulario).
+   * **Reacción en `AuthContext`:** Un `EventListener` suscripto a `sesion-expirada` invoca `logout()` (limpiando `localStorage` y el usuario en memoria) y redirige automáticamente hacia `/login` preservando la ruta previa (`state.desde`) y enviando `state.sesionExpirada: true`.
+   * **Feedback visual en UI:** La pantalla `Login` detecta la bandera `sesionExpirada` y notifica al usuario con una alerta de advertencia para que vuelva a ingresar.
+
