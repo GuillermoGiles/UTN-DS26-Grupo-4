@@ -3,6 +3,7 @@ import { Container, Form, Button, Alert, Card } from 'react-bootstrap';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { FiAlertCircle } from 'react-icons/fi';
 import { loginSchema, type LoginFormData } from '../schemas/loginSchema';
 import { useAuth } from '../hooks/useAuth';
 
@@ -12,8 +13,10 @@ export function Login() {
   const location = useLocation();
   const { login } = useAuth();
 
-  // Si PrivateRoute nos mandó acá, guardó en state la ruta que el usuario quería ver
-  const desde = (location.state as { desde?: string } | null)?.desde ?? '/';
+  // Si PrivateRoute o la expiración de sesión nos mandó acá, leemos el state
+  const state = location.state as { desde?: string; sesionExpirada?: boolean } | null;
+  const desde = state?.desde ?? '/';
+  const sesionExpirada = Boolean(state?.sesionExpirada);
 
   const {
     register,
@@ -43,6 +46,13 @@ export function Login() {
         <Card.Body className="p-4">
           <h2 className="text-center mb-4 fw-bold">Iniciar Sesión</h2>
           
+          {sesionExpirada && !errorApi && (
+            <Alert variant="warning" className="d-flex align-items-center gap-2">
+              <FiAlertCircle className="flex-shrink-0" />
+              <span>Tu sesión ha expirado. Por favor, iniciá sesión nuevamente.</span>
+            </Alert>
+          )}
+
           {errorApi && <Alert variant="danger">{errorApi}</Alert>}
           
           <Form onSubmit={handleSubmit(onSubmit)}>
