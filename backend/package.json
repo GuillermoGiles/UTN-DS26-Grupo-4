@@ -5,7 +5,11 @@
   "scripts": {
     "start": "tsx src/index.ts",
     "dev": "npx prisma generate && tsx watch src/index.ts",
-    "setup": "sh src/setup.sh"
+    "setup": "sh src/setup.sh",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:sin-db": "vitest run --exclude \"**/*.db.test.ts\"",
+    "coverage": "vitest run --coverage"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
@@ -28,8 +32,12 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^22.15.0",
     "@types/pg": "^8.11.11",
+    "@types/supertest": "^7.2.1",
+    "@vitest/coverage-v8": "^5.0.5",
     "prisma": "^7.9.1",
+    "supertest": "^7.3.1",
     "tsx": "^4.19.4",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vitest": "^5.0.5"
   }
 }
