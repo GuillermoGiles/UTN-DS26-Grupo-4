@@ -152,6 +152,32 @@ El archivo `api.http` contiene la suite completa de pruebas organizada para ejec
 
 ---
 
+## ⚡ Testing Automatizado con Vitest (AG-C21)
+
+El backend cuenta con **56 tests automatizados** desarrollados con **Vitest** y **Supertest**:
+* **55 tests sin base de datos:** Ejecutan en memoria en ~2 segundos, probando middlewares de autenticación, validaciones Zod, la matriz de permisos RBAC completa (401/403/400) y casos de negocio Dado/Cuando/Entonces.
+* **1 test con base de datos (`*.db.test.ts`):** Prueba la conexión real contra PostgreSQL de Docker.
+
+### Comandos Principales:
+```bash
+# Correr tests sin base de datos (rápido, no requiere Docker)
+npm run test:sin-db
+
+# Correr toda la suite (requiere docker compose up -d db)
+npm test
+
+# Modo interactivo / watch
+npm run test:watch
+
+# Cobertura de código (v8)
+npm run coverage
+```
+
+> Para el detalle completo de qué funcionalidades están cubiertas, qué hace falta levantar y el flujo de Git flow, consultar la sección [Testing en el README principal](../README.md#testing).
+
+
+---
+
 ## 📝 Notas para la Evaluación (Entrega 3 - Backend)
 
 * **Separación de responsabilidades:** Arquitectura en capas claras: `routes` -> `controllers` -> `services` -> `prisma`.
