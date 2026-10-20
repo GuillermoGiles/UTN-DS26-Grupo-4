@@ -1,58 +1,99 @@
 import { Navbar, Nav, NavDropdown, Container } from 'react-bootstrap';
-import { Link, useLocation } from 'react-router-dom';
-import {FiTool, FiUserPlus, FiCalendar, FiPlusCircle } from 'react-icons/fi';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { FiCalendar, FiLogOut, FiPlusCircle, FiUser } from 'react-icons/fi';
 import { BsCarFrontFill } from 'react-icons/bs';
+import { useAuth } from '../../hooks/useAuth';
+import type { Rol } from '../../types/sesion';
 
+const NOMBRE_ROL: Record<Rol, string> = { ADMIN: 'Administrador', EMPLEADO: 'Empleado', CLIENTE: 'Cliente' };
+
+/**
+ * NavBar según la sesión (C20): cada rol ve solo los links que puede usar.
+ * Esconder el link no protege nada: la ruta tiene su PrivateRoute y la API su 403.
+ */
 export function Header() {
-  const location = useLocation();
-  const path = location.pathname;
+  const { usuario, logout } = useAuth();
+  const navigate = useNavigate();
+  const rol = usuario?.rol;
+  const esPersonal = rol === 'EMPLEADO' || rol === 'ADMIN';
+
+  const salir = () => {
+    logout();
+    navigate('/', { replace: true });
+  };
 
   return (
-    <Navbar expand="lg" className="navbar-custom sticky-top py-3">
+    <Navbar expand="lg" className="navbar-custom sticky-top py-3" collapseOnSelect>
       <Container fluid>
         <Navbar.Brand as={Link} to="/" className="d-flex align-items-center gap-2">
           <BsCarFrontFill style={{ color: 'var(--primary-color)' }} size={24} />
-          <span className="fw-bold">Gestión San José</span>
+          <span className="fw-bold">San José</span>
         </Navbar.Brand>
-        <Navbar.Toggle aria-controls="basic-navbar-nav" />
-        <Navbar.Collapse id="basic-navbar-nav">
+        <Navbar.Toggle aria-controls="nav-principal" />
+        <Navbar.Collapse id="nav-principal">
           <Nav className="me-auto gap-1">
-            <Nav.Link as={Link} to="/vehiculos" className={`d-flex align-items-center gap-2 ${path === '/vehiculos' ? 'active' : ''}`}>
-              <BsCarFrontFill /> Vehículos
-            </Nav.Link>
-            <Nav.Link as={Link} to="/servicios" className={`d-flex align-items-center gap-2 ${path === '/servicios' ? 'active' : ''}`}>
-              <FiTool /> Gestión Insumos
-            </Nav.Link>
-            <Nav.Link as={Link} to="/panel" className={`d-flex align-items-center gap-2 ${path === '/panel' ? 'active' : ''}`}>
-              Métricas
-            </Nav.Link>
-            <Nav.Link as={Link} to="/clientes" className={`d-flex align-items-center gap-2 ${path === '/clientes' ? 'active' : ''}`}>
-              Clientes
-            </Nav.Link>
-            
-            {/* Agrupamos todas las Altas en un Dropdown */}
-            <NavDropdown 
-              title={<span className="d-inline-flex align-items-center gap-2"><FiPlusCircle /> Nuevos Registros</span>} 
-              id="basic-nav-dropdown"
-              className={path.includes('/nuevo') ? 'active fw-bold' : ''}
-            >
-              <NavDropdown.Item as={Link} to="/turnos/nuevo" className={path === '/turnos/nuevo' ? 'active' : ''}>
-                <FiCalendar className="me-2 text-primary" /> Nuevo Turno
-              </NavDropdown.Item>
-              <NavDropdown.Item as={Link} to="/lavados/nuevo" className={path === '/lavados/nuevo' ? 'active' : ''}>
-                <BsCarFrontFill className="me-2 text-primary" /> Ingreso Vehículo
-              </NavDropdown.Item>
-              <NavDropdown.Divider />
-              <NavDropdown.Item as={Link} to="/usuarios/nuevo" className={path === '/usuarios/nuevo' ? 'active' : ''}>
-                <FiUserPlus className="me-2 text-primary" /> Alta Usuario
-              </NavDropdown.Item>
-            </NavDropdown>
-            
+            <Nav.Link as={NavLink} to="/servicios" eventKey="servicios">Servicios</Nav.Link>
+
+            {rol === 'CLIENTE' && (
+              <>
+                <Nav.Link as={NavLink} to="/turnos/nuevo" eventKey="reservar">Reservar turno</Nav.Link>
+                <Nav.Link as={NavLink} to="/mi-cuenta" eventKey="mi-cuenta">Mi cuenta</Nav.Link>
+              </>
+            )}
+
+            {esPersonal && (
+              <>
+                <Nav.Link as={NavLink} to="/agenda" eventKey="agenda">Agenda</Nav.Link>
+                <Nav.Link as={NavLink} to="/clientes" eventKey="clientes">Clientes</Nav.Link>
+                <Nav.Link as={NavLink} to="/vehiculos" eventKey="vehiculos">Vehículos</Nav.Link>
+              </>
+            )}
+
+            {rol === 'ADMIN' && (
+              <>
+                <Nav.Link as={NavLink} to="/panel" eventKey="panel">Panel</Nav.Link>
+                <Nav.Link as={NavLink} to="/usuarios" eventKey="usuarios">Usuarios</Nav.Link>
+              </>
+            )}
+
+            {esPersonal && (
+              <NavDropdown
+                id="nav-nuevo"
+                title={<span className="d-inline-flex align-items-center gap-2"><FiPlusCircle /> Nuevo</span>}
+              >
+                <NavDropdown.Item as={Link} to="/turnos/nuevo">
+                  <FiCalendar className="me-2 text-primary" /> Turno
+                </NavDropdown.Item>
+                <NavDropdown.Item as={Link} to="/lavados/nuevo">
+                  <BsCarFrontFill className="me-2 text-primary" /> Ingreso al lavadero
+                </NavDropdown.Item>
+                <NavDropdown.Item as={Link} to="/clientes/nuevo">
+                  <FiUser className="me-2 text-primary" /> Cliente
+                </NavDropdown.Item>
+                <NavDropdown.Item as={Link} to="/vehiculos/nuevo">
+                  <BsCarFrontFill className="me-2 text-primary" /> Vehículo
+                </NavDropdown.Item>
+              </NavDropdown>
+            )}
           </Nav>
-          <Nav>
-            <Navbar.Text className="text-muted">
-              Usuario logueado: <span className="text-primary fw-bold">Admin</span>
-            </Navbar.Text>
+
+          <Nav className="align-items-lg-center gap-2">
+            {usuario ? (
+              <>
+                <Navbar.Text className="text-muted">
+                  <span className="fw-bold text-dark">{usuario.nombre}</span>{' '}
+                  <small>({NOMBRE_ROL[usuario.rol]})</small>
+                </Navbar.Text>
+                <button type="button" className="btn-outline-custom d-inline-flex align-items-center gap-2 py-1" onClick={salir}>
+                  <FiLogOut /> Salir
+                </button>
+              </>
+            ) : (
+              <>
+                <Nav.Link as={NavLink} to="/login" eventKey="login">Ingresar</Nav.Link>
+                <Link to="/registro" className="btn-primary-custom text-decoration-none py-1">Crear cuenta</Link>
+              </>
+            )}
           </Nav>
         </Navbar.Collapse>
       </Container>

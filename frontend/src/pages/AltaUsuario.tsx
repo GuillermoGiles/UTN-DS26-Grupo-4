@@ -1,123 +1,74 @@
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Form, Row, Col, Container } from 'react-bootstrap';
+import { Form, Row, Col } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import { usuarioSchema, type UsuarioFormValues } from '../validations/usuarioSchema';
-import { FiUser, FiMail, FiLock, FiCheckCircle } from 'react-icons/fi';
+import { usuarioSchema } from '../schemas/usuarioSchema';
+import { apiFetch } from '../services/api';
+import { MarcoFormulario, BotonGuardar } from '../components/Formulario';
+import { mensajeDeError } from '../utils/formato';
 
+/** Alta de personal (solo ADMIN): rol EMPLEADO o ADMIN. */
 export function AltaUsuario() {
-    const navigate = useNavigate();
+  const navigate = useNavigate();
+  const [errorApi, setErrorApi] = useState<string | null>(null);
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({
+    resolver: zodResolver(usuarioSchema),
+    defaultValues: { nombre: '', email: '', password: '', confirmar: '', rol: 'EMPLEADO' as const },
+  });
 
-    const {
-        register,
-        handleSubmit,
-        formState: { errors }
-    } = useForm<UsuarioFormValues>({
-        resolver: zodResolver(usuarioSchema),
-        defaultValues: {
-            nombre: '',
-            apellido: '',
-            email: '',
-            password: ''
-        }
-    });
+  const onSubmit = handleSubmit(async ({ nombre, email, password, rol }) => {
+    setErrorApi(null);
+    try {
+      await apiFetch('/usuarios', { method: 'POST', body: JSON.stringify({ nombre, email, password, rol }) });
+      navigate('/usuarios');
+    } catch (err) {
+      setErrorApi(mensajeDeError(err, 'No se pudo crear el usuario'));
+    }
+  });
 
-    const onSubmit = (data: UsuarioFormValues) => {
-        console.log("Usuario registrado exitosamente: ", data);
-        navigate('/');
-    };
-
-    return (
-        <Container className="py-5">
-            <Row className="justify-content-md-center">
-                <Col md={8} lg={6}>
-                    <div className="saas-card-dark p-4 p-md-5">
-                        <div className="text-center mb-5">
-                            <h2 className="mb-2">Crear Cuenta</h2>
-                            <p className="text-muted">Unite a la plataforma de gestión SGI San José</p>
-                        </div>
-
-                        <Form onSubmit={handleSubmit(onSubmit)}>
-                            <Row>
-                                <Col md={6}>
-                                    <Form.Group className="mb-4" controlId="nombre">
-                                        <Form.Label className="small fw-bold text-muted">NOMBRE</Form.Label>
-                                        <div className="position-relative">
-                                            <Form.Control 
-                                                type="text" 
-                                                placeholder="Ej: Juan"
-                                                isInvalid={!!errors.nombre}
-                                                {...register("nombre")} 
-                                                style={{ paddingLeft: '2.5rem' }}
-                                            />
-                                            <FiUser className="position-absolute text-muted" style={{ left: '1rem', top: '50%', transform: 'translateY(-50%)' }} />
-                                            <Form.Control.Feedback type="invalid">
-                                                {errors.nombre?.message}
-                                            </Form.Control.Feedback>
-                                        </div>
-                                    </Form.Group>
-                                </Col>
-                                <Col md={6}>
-                                    <Form.Group className="mb-4" controlId="apellido">
-                                        <Form.Label className="small fw-bold text-muted">APELLIDO</Form.Label>
-                                        <div className="position-relative">
-                                            <Form.Control 
-                                                type="text" 
-                                                placeholder="Ej: Pérez"
-                                                isInvalid={!!errors.apellido}
-                                                {...register("apellido")} 
-                                                style={{ paddingLeft: '2.5rem' }}
-                                            />
-                                            <FiUser className="position-absolute text-muted" style={{ left: '1rem', top: '50%', transform: 'translateY(-50%)' }} />
-                                            <Form.Control.Feedback type="invalid">
-                                                {errors.apellido?.message}
-                                            </Form.Control.Feedback>
-                                        </div>
-                                    </Form.Group>
-                                </Col>
-                            </Row>
-
-                            <Form.Group className="mb-4" controlId="email">
-                                <Form.Label className="small fw-bold text-muted">CORREO ELECTRÓNICO</Form.Label>
-                                <div className="position-relative">
-                                    <Form.Control 
-                                        type="email" 
-                                        placeholder="tucorreo@ejemplo.com"
-                                        isInvalid={!!errors.email}
-                                        {...register("email")} 
-                                        style={{ paddingLeft: '2.5rem' }}
-                                    />
-                                    <FiMail className="position-absolute text-muted" style={{ left: '1rem', top: '50%', transform: 'translateY(-50%)' }} />
-                                    <Form.Control.Feedback type="invalid">
-                                        {errors.email?.message}
-                                    </Form.Control.Feedback>
-                                </div>
-                            </Form.Group>
-
-                            <Form.Group className="mb-5" controlId="password">
-                                <Form.Label className="small fw-bold text-muted">CONTRASEÑA</Form.Label>
-                                <div className="position-relative">
-                                    <Form.Control 
-                                        type="password" 
-                                        placeholder="Mínimo 6 caracteres"
-                                        isInvalid={!!errors.password}
-                                        {...register("password")} 
-                                        style={{ paddingLeft: '2.5rem' }}
-                                    />
-                                    <FiLock className="position-absolute text-muted" style={{ left: '1rem', top: '50%', transform: 'translateY(-50%)' }} />
-                                    <Form.Control.Feedback type="invalid">
-                                        {errors.password?.message}
-                                    </Form.Control.Feedback>
-                                </div>
-                            </Form.Group>
-
-                            <button type="submit" className="w-100 btn-primary-custom d-flex justify-content-center align-items-center gap-2">
-                                <FiCheckCircle size={20} /> Finalizar Registro
-                            </button>
-                        </Form>
-                    </div>
-                </Col>
-            </Row>
-        </Container>
-    );
+  return (
+    <MarcoFormulario titulo="Nuevo usuario del personal" error={errorApi} onCerrarError={() => setErrorApi(null)} ancho={600}>
+      <Form onSubmit={onSubmit} noValidate>
+        <Form.Group className="mb-3" controlId="nombre">
+          <Form.Label>Nombre y apellido</Form.Label>
+          <Form.Control {...register('nombre')} isInvalid={!!errors.nombre} />
+          <Form.Control.Feedback type="invalid">{errors.nombre?.message}</Form.Control.Feedback>
+        </Form.Group>
+        <Form.Group className="mb-3" controlId="email">
+          <Form.Label>Email</Form.Label>
+          <Form.Control type="email" {...register('email')} isInvalid={!!errors.email} />
+          <Form.Control.Feedback type="invalid">{errors.email?.message}</Form.Control.Feedback>
+        </Form.Group>
+        <Row>
+          <Col md={6}>
+            <Form.Group className="mb-3" controlId="password">
+              <Form.Label>Contraseña inicial</Form.Label>
+              <Form.Control type="password" {...register('password')} isInvalid={!!errors.password} autoComplete="new-password" />
+              <Form.Control.Feedback type="invalid">{errors.password?.message}</Form.Control.Feedback>
+            </Form.Group>
+          </Col>
+          <Col md={6}>
+            <Form.Group className="mb-3" controlId="confirmar">
+              <Form.Label>Repetir contraseña</Form.Label>
+              <Form.Control type="password" {...register('confirmar')} isInvalid={!!errors.confirmar} autoComplete="new-password" />
+              <Form.Control.Feedback type="invalid">{errors.confirmar?.message}</Form.Control.Feedback>
+            </Form.Group>
+          </Col>
+        </Row>
+        <Form.Group className="mb-4" controlId="rol">
+          <Form.Label>Rol</Form.Label>
+          <Form.Select {...register('rol')} isInvalid={!!errors.rol}>
+            <option value="EMPLEADO">Empleado: agenda, clientes, vehículos y lavados</option>
+            <option value="ADMIN">Administrador: además servicios, usuarios y panel</option>
+          </Form.Select>
+          <Form.Control.Feedback type="invalid">{errors.rol?.message}</Form.Control.Feedback>
+        </Form.Group>
+        <div className="d-flex gap-2">
+          <BotonGuardar guardando={isSubmitting} texto="Crear usuario" />
+          <button type="button" className="btn-outline-custom w-100" onClick={() => navigate('/usuarios')}>Cancelar</button>
+        </div>
+      </Form>
+    </MarcoFormulario>
+  );
 }

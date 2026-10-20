@@ -3,6 +3,7 @@ import { prisma } from "../config/prisma";
 import { AppError } from "../errors/AppError";
 import { HORARIOS, CUPOS_POR_HORARIO } from "../config/negocio";
 import { turnoInclude, type TurnoConDetalle } from "../types/turno.types";
+import { yaPaso } from "../utils/fechas";
 import type { TurnoCreate, TurnoUpdate } from "../validations/turno.validation";
 
 type UsuarioSesion = { id: number; rol: Rol };
@@ -40,6 +41,9 @@ export async function disponibles(fecha: string) {
 }
 
 async function verificarHorarioLibre(fecha: string, hora: string, excluirTurnoId?: number) {
+  if (yaPaso(fecha, hora)) {
+    throw new AppError(400, "No se pueden reservar turnos en un día u horario que ya pasó");
+  }
   const ocupacion = await prisma.turno.count({
     where: {
       fecha,

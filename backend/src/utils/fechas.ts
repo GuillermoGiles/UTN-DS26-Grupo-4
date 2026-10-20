@@ -26,3 +26,19 @@ export function rangoDelDia(fecha: string): { desde: Date; hasta: Date } {
     hasta: new Date(`${sumarDias(fecha, 1)}T00:00:00-03:00`),
   };
 }
+
+/** Hora actual en Argentina con formato HH:MM. */
+export function horaActualAR(base: Date = new Date()): string {
+  return new Intl.DateTimeFormat("en-GB", {
+    timeZone: ZONA,
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).format(base);
+}
+
+/** ¿El día y horario ya pasaron (en hora de Argentina)? */
+export function yaPaso(fecha: string, hora: string, base: Date = new Date()): boolean {
+  const hoy = hoyAR(base);
+  return fecha < hoy || (fecha === hoy && hora <= horaActualAR(base));
+}

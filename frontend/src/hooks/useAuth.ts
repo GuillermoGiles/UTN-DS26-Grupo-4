@@ -6,7 +6,7 @@ export interface AuthContextType {
   cargando: boolean;                  // true mientras averiguamos quién sos (/auth/yo)
   estaAutenticado: boolean;           // usuario !== null, para leer más cómodo
   tieneRol: (rol: Rol) => boolean;    // usuario?.rol === rol
-  login: (credenciales: Credenciales) => Promise<void>;
+  login: (credenciales: Credenciales) => Promise<Usuario>;
   logout: () => void;
 }
 

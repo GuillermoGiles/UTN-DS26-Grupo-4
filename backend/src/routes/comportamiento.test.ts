@@ -53,7 +53,7 @@ describe("Comportamiento específico (Dado / Cuando / Entonces)", () => {
         createdAt: new Date("2026-09-01T10:00:00Z"),
       };
       const payloadTurno = {
-        fecha: "2026-10-25",
+        fecha: "2030-10-25",
         hora: "10:30",
         vehiculoId: 4,
         servicioId: 2,
@@ -105,7 +105,7 @@ describe("Comportamiento específico (Dado / Cuando / Entonces)", () => {
       const res = await request(app)
         .post("/api/turnos")
         .set("Authorization", `Bearer ${tokenCliente}`)
-        .send({ fecha: "2026-10-25", hora: "11:00", servicioId: 2, clienteId: 99 });
+        .send({ fecha: "2030-10-25", hora: "11:00", servicioId: 2, clienteId: 99 });
 
       // Entonces
       expect(res.status).toBe(201);
@@ -120,18 +120,31 @@ describe("Comportamiento específico (Dado / Cuando / Entonces)", () => {
       const res = await request(app)
         .post("/api/turnos")
         .set("Authorization", `Bearer ${tokenEmpleado}`)
-        .send({ fecha: "2026-10-25", hora: "09:00", clienteId: 1, servicioId: 2 });
+        .send({ fecha: "2030-10-25", hora: "09:00", clienteId: 1, servicioId: 2 });
 
       // Entonces
       expect(res.status).toBe(409);
-      expect(res.body).toEqual({ error: "El horario 09:00 del 2026-10-25 ya está ocupado" });
+      expect(res.body).toEqual({ error: "El horario 09:00 del 2030-10-25 ya está ocupado" });
+      expect(prisma.turno.create).not.toHaveBeenCalled();
+    });
+
+    it("Dado un día que ya pasó, Cuando se intenta reservar, Entonces responde 400 y no crea el turno", async () => {
+      // Cuando
+      const res = await request(app)
+        .post("/api/turnos")
+        .set("Authorization", `Bearer ${tokenEmpleado}`)
+        .send({ fecha: "2020-01-15", hora: "10:00", clienteId: 1, servicioId: 2 });
+
+      // Entonces
+      expect(res.status).toBe(400);
+      expect(res.body).toEqual({ error: "No se pueden reservar turnos en un día u horario que ya pasó" });
       expect(prisma.turno.create).not.toHaveBeenCalled();
     });
 
     it("Dado un cliente autenticado con un body sin horario, Cuando envía POST /api/turnos, Entonces responde 400 y no toca la DB", async () => {
       // Dado (Arrange)
       const turnoIncompleto = {
-        fecha: "2026-10-25",
+        fecha: "2030-10-25",
         hora: "   ",
         clienteId: 1,
         servicioId: 2,

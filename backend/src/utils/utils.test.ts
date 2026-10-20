@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { calcularProximoService } from "./service";
-import { hoyAR, sumarDias, rangoDelDia } from "./fechas";
+import { hoyAR, sumarDias, rangoDelDia, yaPaso } from "./fechas";
 import { normalizarPatente, PATENTE_REGEX } from "./patente";
 import { HORARIOS } from "../config/negocio";
 
@@ -47,6 +47,14 @@ describe("Fechas en hora de Argentina", () => {
   it("sumarDias cruza fin de mes", () => {
     expect(sumarDias("2026-10-31", 1)).toBe("2026-11-01");
     expect(sumarDias("2026-11-01", -1)).toBe("2026-10-31");
+  });
+
+  it("yaPaso compara día y hora en hora de Argentina", () => {
+    const ahora = new Date("2026-10-20T13:00:00Z"); // 10:00 en Argentina
+    expect(yaPaso("2026-10-19", "17:00", ahora)).toBe(true);
+    expect(yaPaso("2026-10-20", "09:30", ahora)).toBe(true);
+    expect(yaPaso("2026-10-20", "10:30", ahora)).toBe(false);
+    expect(yaPaso("2026-10-21", "08:00", ahora)).toBe(false);
   });
 
   it("rangoDelDia va de 00:00 a 00:00 del día siguiente en -03:00", () => {

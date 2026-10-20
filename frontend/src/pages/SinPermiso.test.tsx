@@ -14,7 +14,7 @@ describe('SinPermiso', () => {
 
   it('le dice al usuario logueado con qué rol está', () => {
     renderConAuth(<SinPermiso />, {
-      usuario: { id: 3, email: 'cliente@sanjose.test', nombre: 'Cliente Frecuente', apellido: '', rol: 'CLIENTE' },
+      usuario: { id: 3, email: 'cliente@sanjose.test', nombre: 'Cliente Frecuente', rol: 'CLIENTE' },
     });
     expect(screen.getByText('CLIENTE')).toBeInTheDocument();
   });

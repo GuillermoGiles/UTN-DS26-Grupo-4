@@ -20,7 +20,7 @@ export function renderConAuth(
     cargando: false,
     estaAutenticado: usuario !== null,
     tieneRol: (rol: Rol) => usuario?.rol === rol,
-    login: vi.fn(),
+    login: vi.fn().mockResolvedValue(usuario),
     logout: vi.fn(),
   };
 

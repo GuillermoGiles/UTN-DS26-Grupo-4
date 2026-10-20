@@ -1,56 +1,110 @@
-import { Container, Row, Col, Spinner, Alert } from 'react-bootstrap';
+import { useState } from 'react';
+import { Container, Row, Col, Alert, ButtonGroup } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
+import { FiPlus, FiEdit2, FiTrash2 } from 'react-icons/fi';
 import { ServicioDestacado } from '../components/ServicioDestacado';
-import { FiTool, FiPlus } from 'react-icons/fi';
+import { Cargando, ErrorCarga, Vacio } from '../components/Estado';
 import { useFetch } from '../hooks/useFetch';
-import type { Servicio } from '../types/servicio';
+import { useAuth } from '../hooks/useAuth';
+import { apiFetch } from '../services/api';
+import { mensajeDeError } from '../utils/formato';
+import type { Servicio, TipoServicio } from '../types/servicio';
 
 export function Servicios() {
-  // Conectado al endpoint real del backend (público, no requiere auth)
-  const { data: servicios, loading, error } = useFetch<Servicio[]>('/servicios');
+  const { usuario, tieneRol } = useAuth();
+  const esAdmin = tieneRol('ADMIN');
+  const [tipo, setTipo] = useState<TipoServicio | ''>('');
+  const { data: servicios, loading, error, recargar } = useFetch<Servicio[]>(
+    tipo ? `/servicios?tipo=${tipo}` : '/servicios',
+  );
+  const [errorBorrado, setErrorBorrado] = useState<string | null>(null);
+
+  const borrar = async (srv: Servicio) => {
+    if (!window.confirm(`¿Borrar el servicio "${srv.nombre}"?`)) return;
+    setErrorBorrado(null);
+    try {
+      await apiFetch(`/servicios/${srv.id}`, { method: 'DELETE' });
+      recargar();
+    } catch (err) {
+      setErrorBorrado(mensajeDeError(err)); // ej. 409 si ya tiene turnos o lavados
+    }
+  };
+
+  // Invitado → registro; cliente y personal → reservar con el servicio preseleccionado
+  const destinoReserva = (id: number) => (usuario ? `/turnos/nuevo?servicio=${id}` : '/registro');
 
   return (
-    <Container id="stock" className="py-5">
-      <div className="d-flex flex-column align-items-center mb-5">
-        <div className="d-inline-block bg-white p-3 rounded-circle shadow-sm mb-3">
-          <FiTool size={32} className="text-primary" />
+    <Container className="py-5">
+      <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-3 mb-4">
+        <div>
+          <h2 className="mb-1">Servicios</h2>
+          <p className="text-muted mb-0">Lavadero y lubricentro. Los precios incluyen mano de obra.</p>
         </div>
-        <div className="d-flex flex-column flex-md-row justify-content-between align-items-center w-100 gap-3">
-            <div>
-                <h2 className="mb-2 text-center text-md-start">Catálogo de Servicios</h2>
-                <p className="text-muted text-center text-md-start mb-0">Explore nuestros servicios especializados de lavadero y lubricentro.</p>
-            </div>
+        <div className="d-flex gap-2 flex-wrap">
+          <ButtonGroup aria-label="Filtrar por tipo">
+            {(['', 'lavadero', 'lubricentro'] as const).map((t) => (
+              <button
+                key={t || 'todos'}
+                type="button"
+                className={tipo === t ? 'btn-primary-custom' : 'btn-outline-custom'}
+                onClick={() => setTipo(t)}
+              >
+                {t === '' ? 'Todos' : t === 'lavadero' ? 'Lavadero' : 'Lubricentro'}
+              </button>
+            ))}
+          </ButtonGroup>
+          {esAdmin && (
             <Link to="/servicios/nuevo" className="btn-primary-custom d-flex align-items-center gap-2 text-decoration-none">
-              <FiPlus /> Nuevo Servicio
+              <FiPlus /> Nuevo servicio
             </Link>
+          )}
         </div>
       </div>
-      
-      {loading && (
-        <div className="text-center my-5">
-          <Spinner animation="border" variant="primary" />
-        </div>
-      )}
 
-      {error && (
-        <Alert variant="danger" className="text-center my-5">
-          {error}
+      {errorBorrado && (
+        <Alert variant="danger" dismissible onClose={() => setErrorBorrado(null)}>
+          {errorBorrado}
         </Alert>
       )}
+      {loading && <Cargando />}
+      {error && <ErrorCarga mensaje={error} />}
 
       {!loading && !error && (
-        <Row className="g-4 justify-content-center">
-          {(servicios ?? []).map((srv) => (
-            <Col key={srv.id} xs={12} sm={6} lg={4} className="d-flex justify-content-center">
-              <ServicioDestacado 
-                nombre={srv.nombre} 
-                precio={srv.precio} 
-                descripcion={srv.desc}
-                tipo={srv.tipo}
-              />
-            </Col>
-          ))}
-        </Row>
+        servicios && servicios.length > 0 ? (
+          <Row className="g-4">
+            {servicios.map((srv) => (
+              <Col key={srv.id} xs={12} sm={6} lg={4} className="d-flex">
+                <ServicioDestacado
+                  nombre={srv.nombre}
+                  precio={srv.precio}
+                  descripcion={srv.desc}
+                  tipo={srv.tipo}
+                  accion={
+                    !esAdmin && (
+                      <Link to={destinoReserva(srv.id)} className="btn-outline-custom text-decoration-none py-1">
+                        Reservar
+                      </Link>
+                    )
+                  }
+                  acciones={
+                    esAdmin && (
+                      <>
+                        <Link to={`/servicios/${srv.id}/editar`} className="btn-action-dark" aria-label={`Editar ${srv.nombre}`}>
+                          <FiEdit2 /> Editar
+                        </Link>
+                        <button type="button" className="btn-action-dark" onClick={() => borrar(srv)} aria-label={`Borrar ${srv.nombre}`}>
+                          <FiTrash2 /> Borrar
+                        </button>
+                      </>
+                    )
+                  }
+                />
+              </Col>
+            ))}
+          </Row>
+        ) : (
+          <Vacio>No hay servicios cargados todavía.</Vacio>
+        )
       )}
     </Container>
   );

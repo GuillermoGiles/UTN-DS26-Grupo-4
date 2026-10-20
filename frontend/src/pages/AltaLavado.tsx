@@ -1,86 +1,75 @@
-import { useNavigate } from 'react-router-dom';
-import { Container, Form } from 'react-bootstrap';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { lavadoSchema } from '../validations/lavadoSchema';
-import type { LavadoValidado } from '../validations/lavadoSchema';
+import { Form } from 'react-bootstrap';
+import { Link, useNavigate } from 'react-router-dom';
+import { lavadoSchema } from '../schemas/lavadoSchema';
+import { useFetch } from '../hooks/useFetch';
+import { useAuth } from '../hooks/useAuth';
+import { apiFetch } from '../services/api';
+import { MarcoFormulario, BotonGuardar } from '../components/Formulario';
+import { mensajeDeError, mostrarPatente, pesos } from '../utils/formato';
+import type { Servicio } from '../types/servicio';
+import type { VehiculoListado } from '../types/vehiculo';
 
+/** Auto que llega al lavadero sin turno. El empleado que lo registra es el usuario logueado. */
 export function AltaLavado() {
   const navigate = useNavigate();
-  
-  // Conectamos React Hook Form con nuestro esquema de Zod
-  const { register, handleSubmit, formState: { errors } } = useForm<LavadoValidado>({
-    resolver: zodResolver(lavadoSchema)
+  const { usuario } = useAuth();
+  const [errorApi, setErrorApi] = useState<string | null>(null);
+  const vehiculos = useFetch<VehiculoListado[]>('/vehiculos');
+  const servicios = useFetch<Servicio[]>('/servicios?tipo=lavadero');
+
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({
+    resolver: zodResolver(lavadoSchema),
+    defaultValues: { vehiculoId: '', servicioId: '', observaciones: '' },
   });
 
-  const onSubmit = (data: LavadoValidado) => {
-    console.log('Nuevo lavado registrado:', data);
-    // Acá iría el POST al backend. Por ahora, redirigimos al éxito.
-    navigate('/panel'); 
-  };
+  const onSubmit = handleSubmit(async (datos) => {
+    setErrorApi(null);
+    try {
+      await apiFetch('/lavados', { method: 'POST', body: JSON.stringify(datos) });
+      navigate('/agenda');
+    } catch (err) {
+      setErrorApi(mensajeDeError(err, 'No se pudo registrar el ingreso'));
+    }
+  });
 
   return (
-    <Container className="py-5" style={{ maxWidth: '600px' }}>
-      <div className="saas-card-dark p-4">
-        <h3 className="fw-bold mb-4">Ingreso de Vehículo</h3>
-        <Form onSubmit={handleSubmit(onSubmit)}>
-          
-          <Form.Group className="mb-3">
-            <Form.Label>Patente</Form.Label>
-            <Form.Control 
-              type="text" 
-              placeholder="Ej: AB 123 CD"
-              {...register('patente')} 
-              isInvalid={!!errors.patente} 
-            />
-            <Form.Control.Feedback type="invalid">
-              {errors.patente?.message}
-            </Form.Control.Feedback>
-          </Form.Group>
-
-          <Form.Group className="mb-3">
-            <Form.Label>Modelo</Form.Label>
-            <Form.Control 
-              type="text" 
-              placeholder="Ej: Ford Ka o Chevrolet Sonic"
-              {...register('modelo')} 
-              isInvalid={!!errors.modelo} 
-            />
-            <Form.Control.Feedback type="invalid">
-              {errors.modelo?.message}
-            </Form.Control.Feedback>
-          </Form.Group>
-
-          <Form.Group className="mb-3">
-            <Form.Label>Tipo de Servicio</Form.Label>
-            <Form.Select {...register('tipoLavado')} isInvalid={!!errors.tipoLavado}>
-              <option value="">Seleccione un servicio...</option>
-              <option value="basico">Lavado Básico</option>
-              <option value="premium">Lavado Premium</option>
-              <option value="tapizado">Limpieza de Tapizados</option>
-            </Form.Select>
-            <Form.Control.Feedback type="invalid">
-              {errors.tipoLavado?.message}
-            </Form.Control.Feedback>
-          </Form.Group>
-
-          <Form.Group className="mb-4">
-            <Form.Label>Empleado Asignado</Form.Label>
-            <Form.Select {...register('empleado')} isInvalid={!!errors.empleado}>
-              <option value="">Asignar a...</option>
-              <option value="marcos">Marcos Díaz</option>
-              <option value="juan">Juan Pérez</option>
-            </Form.Select>
-            <Form.Control.Feedback type="invalid">
-              {errors.empleado?.message}
-            </Form.Control.Feedback>
-          </Form.Group>
-
-          <button type="submit" className="btn-primary-custom w-100 mt-2">
-            Registrar Ingreso
-          </button>
-        </Form>
-      </div>
-    </Container>
+    <MarcoFormulario
+      titulo="Ingreso al lavadero"
+      subtitulo={`Auto que llega sin turno. Queda registrado a nombre de ${usuario?.nombre ?? 'quien está logueado'}.`}
+      error={errorApi}
+      onCerrarError={() => setErrorApi(null)}
+      ancho={600}
+    >
+      <Form onSubmit={onSubmit} noValidate>
+        <Form.Group className="mb-3" controlId="vehiculoId">
+          <Form.Label>Vehículo</Form.Label>
+          <Form.Select {...register('vehiculoId')} isInvalid={!!errors.vehiculoId}>
+            <option value="">{vehiculos.loading ? 'Cargando vehículos...' : 'Elegí la patente'}</option>
+            {(vehiculos.data ?? []).map((v) => (
+              <option key={v.id} value={v.id}>{mostrarPatente(v.patente)} — {v.marca} {v.modelo} ({v.cliente.nombre})</option>
+            ))}
+          </Form.Select>
+          <Form.Control.Feedback type="invalid">{errors.vehiculoId?.message}</Form.Control.Feedback>
+          <Form.Text className="text-muted">¿Es la primera vez que viene? <Link to="/clientes/nuevo">Cargá el cliente y su auto</Link>.</Form.Text>
+        </Form.Group>
+        <Form.Group className="mb-3" controlId="servicioId">
+          <Form.Label>Lavado</Form.Label>
+          <Form.Select {...register('servicioId')} isInvalid={!!errors.servicioId}>
+            <option value="">Elegí el tipo de lavado</option>
+            {(servicios.data ?? []).map((s) => <option key={s.id} value={s.id}>{s.nombre} ({pesos(s.precio)})</option>)}
+          </Form.Select>
+          <Form.Control.Feedback type="invalid">{errors.servicioId?.message}</Form.Control.Feedback>
+        </Form.Group>
+        <Form.Group className="mb-4" controlId="observaciones">
+          <Form.Label>Observaciones (opcional)</Form.Label>
+          <Form.Control as="textarea" rows={2} {...register('observaciones')} isInvalid={!!errors.observaciones} placeholder="Ej: rayón en la puerta trasera" />
+          <Form.Control.Feedback type="invalid">{errors.observaciones?.message}</Form.Control.Feedback>
+        </Form.Group>
+        <BotonGuardar guardando={isSubmitting} texto="Registrar ingreso" />
+      </Form>
+    </MarcoFormulario>
   );
 }
