@@ -15,12 +15,21 @@ export interface UsuarioPublico {
 
 export async function registrar(datos: RegistroInput): Promise<UsuarioPublico> {
   const hash = await bcrypt.hash(datos.password, SALT_ROUNDS);
+  // La cuenta y la ficha de cliente se crean juntas (nested write: todo o nada).
+  // Si el lubricentro ya lo tenía cargado con ese email, se vincula esa ficha
+  // y el cliente ve su historial desde el primer login.
   const usuario = await prisma.usuario.create({
     data: {
       nombre: datos.nombre,
       email: datos.email,
       passwordHash: hash,
       rol: "CLIENTE", // el registro público nunca asigna otro rol
+      cliente: {
+        connectOrCreate: {
+          where: { email: datos.email },
+          create: { nombre: datos.nombre, email: datos.email, telefono: datos.telefono },
+        },
+      },
     },
     select: {
       id: true,

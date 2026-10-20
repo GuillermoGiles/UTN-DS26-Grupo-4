@@ -1,514 +1,531 @@
-@baseUrl = http://localhost:3000
+# API SGI San José — se corre de arriba hacia abajo con la extensión REST Client.
+# Requiere la base con el seed cargado (docker compose up + migrate + seed).
+# Cada entidad tiene su camino feliz y sus casos de error: 400, 401, 403, 404 y 409.
 
-### =====================
-### HELLO
-### =====================
+@baseUrl = http://localhost:3000
+@hoy = {{$datetime "YYYY-MM-DD"}}
 
 ### Hello API
 GET {{baseUrl}}/
 
-### =====================
-### SERVICIOS
-### =====================
+### 404 en JSON: ruta inexistente
+GET {{baseUrl}}/api/no-existe
 
-### Listar todos los servicios
-GET {{baseUrl}}/api/servicios
+### ================================================================
+### AUTH — sesiones de los tres roles (las usan todos los requests)
+### ================================================================
 
-### Filtrar servicios por tipo (lavadero)
-GET {{baseUrl}}/api/servicios?tipo=lavadero
-
-### Filtrar servicios por tipo (lubricentro)
-GET {{baseUrl}}/api/servicios?tipo=lubricentro
-
-### Obtener un servicio por ID
-GET {{baseUrl}}/api/servicios/1
-
-### Obtener un servicio que no existe → 404
-GET {{baseUrl}}/api/servicios/999
-
-### Crear un servicio
-POST {{baseUrl}}/api/servicios
+# @name loginAdmin
+POST {{baseUrl}}/api/auth/login
 Content-Type: application/json
 
-{
-  "nombre": "Cambio de Filtro de Aire",
-  "precio": 18000,
-  "desc": "Reemplazo del filtro de aire del motor para mejorar rendimiento.",
-  "tipo": "lubricentro"
-}
+{ "email": "admin@sanjose.test", "password": "AdminPassword123" }
 
-### Editar un servicio
-PUT {{baseUrl}}/api/servicios/1
+###
+@tokenAdmin = {{loginAdmin.response.body.token}}
+
+# @name loginEmpleado
+POST {{baseUrl}}/api/auth/login
 Content-Type: application/json
 
-{
-  "nombre": "Cambio de Aceite Premium",
-  "precio": 55000,
-  "desc": "Servicio técnico completo con aceite sintético y filtros.",
-  "tipo": "lubricentro"
-}
+{ "email": "empleado@sanjose.test", "password": "EmpleadoPassword123" }
 
-### Editar un servicio que no existe → 404
-PUT {{baseUrl}}/api/servicios/999
+###
+@tokenEmpleado = {{loginEmpleado.response.body.token}}
+
+# @name loginCliente
+POST {{baseUrl}}/api/auth/login
 Content-Type: application/json
 
-{
-  "nombre": "No existe",
-  "precio": 0,
-  "desc": "Este servicio no existe",
-  "tipo": "lavadero"
-}
+{ "email": "cliente@sanjose.test", "password": "ClientePassword123" }
 
-### Borrar un servicio
-DELETE {{baseUrl}}/api/servicios/4
+###
+@tokenCliente = {{loginCliente.response.body.token}}
 
-### Borrar un servicio que no existe → 404
-DELETE {{baseUrl}}/api/servicios/999
+### Quién soy (rehidratación del AuthProvider al recargar)
+GET {{baseUrl}}/api/auth/yo
+Authorization: Bearer {{tokenCliente}}
 
-### =====================
-### CLIENTES
-### =====================
+### 401: quién soy sin token
+GET {{baseUrl}}/api/auth/yo
 
-### Listar todos los clientes
-GET {{baseUrl}}/api/clientes
-
-### Obtener un cliente por ID
-GET {{baseUrl}}/api/clientes/1
-
-### Obtener un cliente que no existe → 404
-GET {{baseUrl}}/api/clientes/999
-
-### Crear un cliente
-POST {{baseUrl}}/api/clientes
+### 401: login con contraseña incorrecta (mismo mensaje que email inexistente)
+POST {{baseUrl}}/api/auth/login
 Content-Type: application/json
 
-{
-  "nombre": "María González",
-  "vehiculo": "Renault Sandero",
-  "patente": "AB 123 CD",
-  "telefono": "11-5555-1234"
-}
+{ "email": "admin@sanjose.test", "password": "PasswordEquivocada" }
 
-### Editar un cliente
-PUT {{baseUrl}}/api/clientes/1
-Content-Type: application/json
-
-{
-  "nombre": "Blasko Telechea",
-  "vehiculo": "Fiat Cronos",
-  "patente": "FGH 452",
-  "telefono": "11-1234-5678"
-}
-
-### Editar un cliente que no existe → 404
-PUT {{baseUrl}}/api/clientes/999
-Content-Type: application/json
-
-{
-  "nombre": "No existe",
-  "vehiculo": "Nada",
-  "patente": "XXX 000",
-  "telefono": "00-0000-0000"
-}
-
-### Borrar un cliente
-DELETE {{baseUrl}}/api/clientes/3
-
-### Borrar un cliente que no existe → 404
-DELETE {{baseUrl}}/api/clientes/999
-
-### =====================
-### TURNOS (Con Relaciones y Validaciones)
-### =====================
-
-### Listar todos los turnos (incluye datos de cliente y servicio)
-GET {{baseUrl}}/api/turnos
-
-### Obtener un turno por ID
-GET {{baseUrl}}/api/turnos/1
-
-### Obtener un turno que no existe → 404
-GET {{baseUrl}}/api/turnos/999
-
-### Obtener un turno con ID inválido (string) → 400
-GET {{baseUrl}}/api/turnos/abc
-
-### Crear un turno válido
-POST {{baseUrl}}/api/turnos
-Content-Type: application/json
-
-{
-  "fecha": "2026-08-25",
-  "hora": "10:00",
-  "clienteId": 1,
-  "servicioId": 2
-}
-
-### Error 400: Crear un turno sin campos obligatorios (Zod)
-POST {{baseUrl}}/api/turnos
-Content-Type: application/json
-
-{
-  "fecha": "2026-08-25"
-}
-
-### Error 409: Crear un turno con cliente inexistente (FK Prisma P2003)
-POST {{baseUrl}}/api/turnos
-Content-Type: application/json
-
-{
-  "fecha": "2026-08-25",
-  "hora": "11:00",
-  "clienteId": 9999,
-  "servicioId": 1
-}
-
-### Editar un turno
-PUT {{baseUrl}}/api/turnos/1
-Content-Type: application/json
-
-{
-  "hora": "11:30"
-}
-
-### Error 400: Editar un turno con ID inválido en ruta
-PUT {{baseUrl}}/api/turnos/abc
-Content-Type: application/json
-
-{
-  "hora": "12:00"
-}
-
-### Error 404: Editar un turno que no existe
-PUT {{baseUrl}}/api/turnos/999
-Content-Type: application/json
-
-{
-  "hora": "12:00"
-}
-
-### Borrar un turno
-DELETE {{baseUrl}}/api/turnos/3
-
-### Error 404: Borrar un turno que no existe
-DELETE {{baseUrl}}/api/turnos/999
-
-### -----------------------------
-### PRUEBAS DE CLIENTE (C17 Zod)
-### -----------------------------
-
-### Crear cliente incompleto (falla validación 400)
-POST {{baseUrl}}/api/clientes
-Content-Type: application/json
-
-{
-  "nombre": "Incompleto"
-}
-
-### Crear cliente correcto
-POST {{baseUrl}}/api/clientes
-Content-Type: application/json
-
-{
-  "nombre": "Validacion Test",
-  "vehiculo": "Peugeot 208",
-  "patente": "AB123CD",
-  "telefono": "2214445555"
-}
-
-### Crear cliente con patente repetida (falla Prisma 409)
-POST {{baseUrl}}/api/clientes
-Content-Type: application/json
-
-{
-  "nombre": "Copia",
-  "vehiculo": "Gol",
-  "patente": "AB123CD",
-  "telefono": "111"
-}
-
-### Actualizar cliente que no existe (falla Prisma 404)
-PUT {{baseUrl}}/api/clientes/999
-Content-Type: application/json
-
-{
-  "vehiculo": "Nuevo Auto"
-}
-
-### Obtener con id invalido (falla validación 400)
-GET {{baseUrl}}/api/clientes/abc
-
-### -----------------------------
-### PRUEBAS DE SERVICIO (C17 Zod)
-### -----------------------------
-
-### Crear servicio precio negativo (falla validación 400)
-POST {{baseUrl}}/api/servicios
-Content-Type: application/json
-
-{
-  "nombre": "Lavado",
-  "precio": -500,
-  "desc": "Lavado malo",
-  "tipo": "lavadero"
-}
-
-### Crear servicio con tipo incorrecto (falla validación 400)
-POST {{baseUrl}}/api/servicios
-Content-Type: application/json
-
-{
-  "nombre": "Lavado Raro",
-  "precio": 1000,
-  "desc": "Hola",
-  "tipo": "peluqueria"
-}
-
-### ===================================================
-### CLASE 18 — AUTENTICACIÓN, ROLES Y SEGURIDAD (AG-C18)
-### ===================================================
-
-### 1. Registro exitoso (201 sin passwordHash)
-# @name registroNuevo
+### Registro público: crea cuenta CLIENTE + ficha de cliente. El "rol" del body se ignora.
 POST {{baseUrl}}/api/auth/registro
 Content-Type: application/json
 
 {
   "nombre": "Nuevo Conductor",
   "email": "nuevo@sanjose.test",
-  "password": "Password123"
+  "telefono": "221-555-9000",
+  "password": "Password123",
+  "rol": "ADMIN"
 }
 
-### 2. Error 409: Registro con email duplicado (Prisma P2002)
+### 409: registro con email ya usado
 POST {{baseUrl}}/api/auth/registro
 Content-Type: application/json
 
-{
-  "nombre": "Duplicado",
-  "email": "nuevo@sanjose.test",
-  "password": "Password123"
-}
+{ "nombre": "Duplicado", "email": "nuevo@sanjose.test", "telefono": "221-555-9001", "password": "Password123" }
 
-### 3. Error 400: Registro con password débil / corta (Zod)
+### 400: registro sin teléfono y con contraseña corta
 POST {{baseUrl}}/api/auth/registro
 Content-Type: application/json
 
-{
-  "nombre": "Test",
-  "email": "invalido@test.com",
-  "password": "123"
-}
+{ "nombre": "Test", "email": "invalido@test.com", "password": "123" }
 
-### 4. Error 401: Login con email inexistente
-POST {{baseUrl}}/api/auth/login
-Content-Type: application/json
+### ================================================================
+### SERVICIOS — catálogo público, gestión solo ADMIN
+### ================================================================
 
-{
-  "email": "noexiste@sanjose.test",
-  "password": "Password123"
-}
-
-### 5. Error 401: Login con password incorrecta
-POST {{baseUrl}}/api/auth/login
-Content-Type: application/json
-
-{
-  "email": "admin@sanjose.test",
-  "password": "PasswordEquivocada"
-}
-
-### 6. Login exitoso como ADMIN (200 + token)
-# @name loginAdmin
-POST {{baseUrl}}/api/auth/login
-Content-Type: application/json
-
-{
-  "email": "admin@sanjose.test",
-  "password": "AdminPassword123"
-}
-
-### Guardar token de Admin
-@tokenAdmin = {{loginAdmin.response.body.token}}
-
-### 7. Login exitoso como EMPLEADO (200 + token)
-# @name loginEmpleado
-POST {{baseUrl}}/api/auth/login
-Content-Type: application/json
-
-{
-  "email": "empleado@sanjose.test",
-  "password": "EmpleadoPassword123"
-}
-
-### Guardar token de Empleado
-@tokenEmpleado = {{loginEmpleado.response.body.token}}
-
-### 8. Login exitoso como CLIENTE (200 + token)
-# @name loginCliente
-POST {{baseUrl}}/api/auth/login
-Content-Type: application/json
-
-{
-  "email": "cliente@sanjose.test",
-  "password": "ClientePassword123"
-}
-
-### Guardar token de Cliente
-@tokenCliente = {{loginCliente.response.body.token}}
-
-### 9. Error 401: GET /api/auth/yo sin token
-GET {{baseUrl}}/api/auth/yo
-
-### 10. GET /api/auth/yo autenticado con token de ADMIN (200)
-GET {{baseUrl}}/api/auth/yo
-Authorization: Bearer {{tokenAdmin}}
-
-### 11. GET /api/auth/yo autenticado con token de CLIENTE (200)
-GET {{baseUrl}}/api/auth/yo
-Authorization: Bearer {{tokenCliente}}
-
-### 12. GET /api/servicios es público (200 sin header)
+### Catálogo (público)
 GET {{baseUrl}}/api/servicios
 
-### 13. Error 401: POST /api/servicios sin token
-POST {{baseUrl}}/api/servicios
-Content-Type: application/json
+### Filtrar por tipo
+GET {{baseUrl}}/api/servicios?tipo=lavadero
 
-{
-  "nombre": "Encerado Acrílico",
-  "precio": 28000,
-  "desc": "Protección y brillo con cera acrílica de larga duración.",
-  "tipo": "lavadero"
-}
+### 404: servicio inexistente
+GET {{baseUrl}}/api/servicios/9999
 
-### 14. Error 403: POST /api/servicios con token de CLIENTE
-POST {{baseUrl}}/api/servicios
-Authorization: Bearer {{tokenCliente}}
-Content-Type: application/json
+### 400: id no numérico
+GET {{baseUrl}}/api/servicios/abc
 
-{
-  "nombre": "Encerado Acrílico",
-  "precio": 28000,
-  "desc": "Protección y brillo con cera acrílica de larga duración.",
-  "tipo": "lavadero"
-}
-
-### 15. POST /api/servicios con token de ADMIN (201 Created)
+### Crear (ADMIN)
+# @name servicioNuevo
 POST {{baseUrl}}/api/servicios
 Authorization: Bearer {{tokenAdmin}}
 Content-Type: application/json
 
+{ "nombre": "Encerado", "precio": 9000, "desc": "Cera líquida con lustrado a máquina", "tipo": "lavadero" }
+
+###
+@servicioId = {{servicioNuevo.response.body.id}}
+
+### Editar (ADMIN)
+PUT {{baseUrl}}/api/servicios/{{servicioId}}
+Authorization: Bearer {{tokenAdmin}}
+Content-Type: application/json
+
+{ "precio": 9500 }
+
+### 401: crear sin token
+POST {{baseUrl}}/api/servicios
+Content-Type: application/json
+
+{ "nombre": "X", "precio": 1, "desc": "X", "tipo": "lavadero" }
+
+### 403: crear con EMPLEADO
+POST {{baseUrl}}/api/servicios
+Authorization: Bearer {{tokenEmpleado}}
+Content-Type: application/json
+
+{ "nombre": "X", "precio": 1, "desc": "X", "tipo": "lavadero" }
+
+### 400: precio negativo y tipo inválido
+POST {{baseUrl}}/api/servicios
+Authorization: Bearer {{tokenAdmin}}
+Content-Type: application/json
+
+{ "nombre": "Mal", "precio": -5, "desc": "Mal", "tipo": "gomeria" }
+
+### 409: borrar un servicio que ya tiene turnos (onDelete: Restrict)
+DELETE {{baseUrl}}/api/servicios/1
+Authorization: Bearer {{tokenAdmin}}
+
+### Borrar el servicio creado recién (204)
+DELETE {{baseUrl}}/api/servicios/{{servicioId}}
+Authorization: Bearer {{tokenAdmin}}
+
+### 404: borrar uno que ya no existe
+DELETE {{baseUrl}}/api/servicios/{{servicioId}}
+Authorization: Bearer {{tokenAdmin}}
+
+### ================================================================
+### CLIENTES — gestión del personal y portal del cliente
+### ================================================================
+
+### Listar (EMPLEADO). ?q= busca por nombre, teléfono o patente
+GET {{baseUrl}}/api/clientes?q=toyota
+Authorization: Bearer {{tokenEmpleado}}
+
+### Detalle con vehículos (y su próximo service) y turnos
+GET {{baseUrl}}/api/clientes/1
+Authorization: Bearer {{tokenEmpleado}}
+
+### Alta de cliente con su primer vehículo (la patente se normaliza: AB456CD)
+# @name clienteNuevo
+POST {{baseUrl}}/api/clientes
+Authorization: Bearer {{tokenEmpleado}}
+Content-Type: application/json
+
 {
-  "nombre": "Encerado Acrílico",
-  "precio": 28000,
-  "desc": "Protección y brillo con cera acrílica de larga duración.",
-  "tipo": "lavadero"
+  "nombre": "María López",
+  "telefono": "221-611-2233",
+  "email": "maria@mail.test",
+  "vehiculo": { "patente": "ab 456-cd", "marca": "Peugeot", "modelo": "208", "anio": 2020, "km": 15000 }
 }
 
-### 16. Error 401: GET /api/clientes sin token
-GET {{baseUrl}}/api/clientes
+###
+@clienteId = {{clienteNuevo.response.body.id}}
 
-### 17. Error 403: GET /api/clientes con token de CLIENTE
+### Editar
+PUT {{baseUrl}}/api/clientes/{{clienteId}}
+Authorization: Bearer {{tokenEmpleado}}
+Content-Type: application/json
+
+{ "telefono": "221-611-0000" }
+
+### 400: alta sin teléfono y con patente inválida
+POST {{baseUrl}}/api/clientes
+Authorization: Bearer {{tokenEmpleado}}
+Content-Type: application/json
+
+{ "nombre": "Incompleto", "vehiculo": { "patente": "1234", "marca": "X", "modelo": "Y" } }
+
+### 409: email de cliente repetido
+POST {{baseUrl}}/api/clientes
+Authorization: Bearer {{tokenEmpleado}}
+Content-Type: application/json
+
+{ "nombre": "Otra María", "telefono": "221-611-9999", "email": "maria@mail.test" }
+
+### 403: un CLIENTE no ve el directorio
 GET {{baseUrl}}/api/clientes
 Authorization: Bearer {{tokenCliente}}
 
-### 18. GET /api/clientes con token de EMPLEADO (200 OK)
-GET {{baseUrl}}/api/clientes
+### 403: un EMPLEADO no borra clientes
+DELETE {{baseUrl}}/api/clientes/{{clienteId}}
 Authorization: Bearer {{tokenEmpleado}}
 
-### 19. POST /api/turnos con token de CLIENTE (201 Created)
+### 409: borrar un cliente con turnos (onDelete: Restrict)
+DELETE {{baseUrl}}/api/clientes/1
+Authorization: Bearer {{tokenAdmin}}
+
+### Borrar el cliente creado (sin turnos: sus vehículos se borran en cascada)
+DELETE {{baseUrl}}/api/clientes/{{clienteId}}
+Authorization: Bearer {{tokenAdmin}}
+
+### 404: cliente inexistente
+PUT {{baseUrl}}/api/clientes/9999
+Authorization: Bearer {{tokenEmpleado}}
+Content-Type: application/json
+
+{ "nombre": "Nadie" }
+
+### Portal: mi ficha (CLIENTE)
+GET {{baseUrl}}/api/clientes/mio
+Authorization: Bearer {{tokenCliente}}
+
+### Portal: editar mi teléfono
+PUT {{baseUrl}}/api/clientes/mio
+Authorization: Bearer {{tokenCliente}}
+Content-Type: application/json
+
+{ "telefono": "221-555-1234" }
+
+### 403: el personal no tiene "mi ficha"
+GET {{baseUrl}}/api/clientes/mio
+Authorization: Bearer {{tokenAdmin}}
+
+### ================================================================
+### VEHÍCULOS
+### ================================================================
+
+### Directorio con estado del service (EMPLEADO). ?q= patente, marca, modelo o titular
+GET {{baseUrl}}/api/vehiculos
+Authorization: Bearer {{tokenEmpleado}}
+
+### Historial de un vehículo (turnos y lavados)
+GET {{baseUrl}}/api/vehiculos/1
+Authorization: Bearer {{tokenEmpleado}}
+
+### Alta por el personal (indica el titular)
+# @name vehiculoNuevo
+POST {{baseUrl}}/api/vehiculos
+Authorization: Bearer {{tokenEmpleado}}
+Content-Type: application/json
+
+{ "patente": "AE 321 KL", "marca": "Chevrolet", "modelo": "Onix", "anio": 2022, "km": 20000, "clienteId": 1 }
+
+###
+@vehiculoId = {{vehiculoNuevo.response.body.id}}
+
+### Alta por un CLIENTE: queda a su nombre aunque mande otro clienteId
+POST {{baseUrl}}/api/vehiculos
+Authorization: Bearer {{tokenCliente}}
+Content-Type: application/json
+
+{ "patente": "AF 777 MM", "marca": "Renault", "modelo": "Sandero", "clienteId": 1 }
+
+### Registrar service con los km actuales
+POST {{baseUrl}}/api/vehiculos/{{vehiculoId}}/service
+Authorization: Bearer {{tokenEmpleado}}
+Content-Type: application/json
+
+{ "km": 21000 }
+
+### 400: personal sin indicar titular
+POST {{baseUrl}}/api/vehiculos
+Authorization: Bearer {{tokenEmpleado}}
+Content-Type: application/json
+
+{ "patente": "AG111BB", "marca": "Fiat", "modelo": "Uno" }
+
+### 400: patente con formato inválido
+POST {{baseUrl}}/api/vehiculos
+Authorization: Bearer {{tokenEmpleado}}
+Content-Type: application/json
+
+{ "patente": "1234AB", "marca": "Fiat", "modelo": "Uno", "clienteId": 1 }
+
+### 409: patente repetida
+POST {{baseUrl}}/api/vehiculos
+Authorization: Bearer {{tokenEmpleado}}
+Content-Type: application/json
+
+{ "patente": "AE321KL", "marca": "Chevrolet", "modelo": "Onix", "clienteId": 2 }
+
+### 403: un CLIENTE no ve el directorio de vehículos
+GET {{baseUrl}}/api/vehiculos
+Authorization: Bearer {{tokenCliente}}
+
+### 403: un EMPLEADO no borra vehículos
+DELETE {{baseUrl}}/api/vehiculos/{{vehiculoId}}
+Authorization: Bearer {{tokenEmpleado}}
+
+### Borrar (ADMIN)
+DELETE {{baseUrl}}/api/vehiculos/{{vehiculoId}}
+Authorization: Bearer {{tokenAdmin}}
+
+### 404: vehículo inexistente
+GET {{baseUrl}}/api/vehiculos/9999
+Authorization: Bearer {{tokenEmpleado}}
+
+### ================================================================
+### TURNOS
+### ================================================================
+
+### Horarios libres de hoy (público)
+GET {{baseUrl}}/api/turnos/disponibles?fecha={{hoy}}
+
+### 400: disponibles sin fecha
+GET {{baseUrl}}/api/turnos/disponibles
+
+### Agenda del día (EMPLEADO). También ?estado=PENDIENTE
+GET {{baseUrl}}/api/turnos?fecha={{hoy}}
+Authorization: Bearer {{tokenEmpleado}}
+
+### Reserva del CLIENTE (siempre a nombre de su ficha). El vehículo 4 es su Hilux en el seed
+# @name turnoCliente
 POST {{baseUrl}}/api/turnos
 Authorization: Bearer {{tokenCliente}}
 Content-Type: application/json
 
-{
-  "fecha": "2026-09-10",
-  "hora": "15:00",
-  "clienteId": 1,
-  "servicioId": 1
-}
+{ "fecha": "2030-01-15", "hora": "10:00", "servicioId": 2, "vehiculoId": 4, "nota": "Tiene manchas de barro" }
 
-### 20. Error 403: DELETE /api/clientes/2 con token de EMPLEADO (Solo ADMIN)
-DELETE {{baseUrl}}/api/clientes/2
+###
+@turnoId = {{turnoCliente.response.body.id}}
+
+### Mis turnos (CLIENTE)
+GET {{baseUrl}}/api/turnos/mios
+Authorization: Bearer {{tokenCliente}}
+
+### 409: mismo horario ya ocupado
+POST {{baseUrl}}/api/turnos
+Authorization: Bearer {{tokenEmpleado}}
+Content-Type: application/json
+
+{ "fecha": "2030-01-15", "hora": "10:00", "servicioId": 1, "clienteId": 1 }
+
+### 400: hora fuera de los horarios de atención y fecha mal formada
+POST {{baseUrl}}/api/turnos
+Authorization: Bearer {{tokenCliente}}
+Content-Type: application/json
+
+{ "fecha": "15/01/2030", "hora": "10:15", "servicioId": 2 }
+
+### 400: un cliente reservando con el auto de otra persona
+POST {{baseUrl}}/api/turnos
+Authorization: Bearer {{tokenCliente}}
+Content-Type: application/json
+
+{ "fecha": "2030-01-15", "hora": "11:00", "servicioId": 2, "vehiculoId": 1 }
+
+### 400: el personal no indicó el cliente
+POST {{baseUrl}}/api/turnos
+Authorization: Bearer {{tokenEmpleado}}
+Content-Type: application/json
+
+{ "fecha": "2030-01-15", "hora": "11:00", "servicioId": 2 }
+
+### 409: cliente inexistente (FK, Prisma P2003)
+POST {{baseUrl}}/api/turnos
+Authorization: Bearer {{tokenEmpleado}}
+Content-Type: application/json
+
+{ "fecha": "2030-01-15", "hora": "11:30", "servicioId": 2, "clienteId": 9999 }
+
+### Cambiar estado desde la agenda (EMPLEADO)
+PATCH {{baseUrl}}/api/turnos/{{turnoId}}/estado
+Authorization: Bearer {{tokenEmpleado}}
+Content-Type: application/json
+
+{ "estado": "CONFIRMADO" }
+
+### 400: estado inválido
+PATCH {{baseUrl}}/api/turnos/{{turnoId}}/estado
+Authorization: Bearer {{tokenEmpleado}}
+Content-Type: application/json
+
+{ "estado": "TERMINADO" }
+
+### 403: un CLIENTE no cambia estados
+PATCH {{baseUrl}}/api/turnos/{{turnoId}}/estado
+Authorization: Bearer {{tokenCliente}}
+Content-Type: application/json
+
+{ "estado": "COMPLETADO" }
+
+### 403: un CLIENTE no cancela turnos ajenos (el 3 es de otro cliente en el seed)
+PATCH {{baseUrl}}/api/turnos/3/cancelar
+Authorization: Bearer {{tokenCliente}}
+
+### El CLIENTE cancela el suyo
+PATCH {{baseUrl}}/api/turnos/{{turnoId}}/cancelar
+Authorization: Bearer {{tokenCliente}}
+
+### Reprogramar (EMPLEADO)
+PUT {{baseUrl}}/api/turnos/{{turnoId}}
+Authorization: Bearer {{tokenEmpleado}}
+Content-Type: application/json
+
+{ "hora": "12:00", "estado": "PENDIENTE" }
+
+### 404: turno inexistente
+PATCH {{baseUrl}}/api/turnos/9999/estado
+Authorization: Bearer {{tokenEmpleado}}
+Content-Type: application/json
+
+{ "estado": "CANCELADO" }
+
+### Borrar (EMPLEADO)
+DELETE {{baseUrl}}/api/turnos/{{turnoId}}
 Authorization: Bearer {{tokenEmpleado}}
 
-### ===================================================================
-### ACTIVIDAD GRUPAL CLASE 19 (AG-C19) — ESCRITURA PROTEGIDA Y ERRORES
-### ===================================================================
+### ================================================================
+### LAVADOS — autos que entran sin turno
+### ================================================================
 
-### [AG-C19 - Escritura 1/3] Error 401: POST /api/servicios sin sesión (sin token)
-POST {{baseUrl}}/api/servicios
+### Lavados de hoy (EMPLEADO)
+GET {{baseUrl}}/api/lavados?fecha={{hoy}}
+Authorization: Bearer {{tokenEmpleado}}
+
+### Registrar un ingreso (el empleado es quien está logueado; el precio sale del servicio)
+# @name lavadoNuevo
+POST {{baseUrl}}/api/lavados
+Authorization: Bearer {{tokenEmpleado}}
 Content-Type: application/json
 
-{
-  "nombre": "Lavado Motor Protegido",
-  "precio": 35000,
-  "desc": "Lavado de chasis y motor a vapor con desengrasante biodegradable.",
-  "tipo": "lavadero"
-}
+{ "vehiculoId": 2, "servicioId": 2, "observaciones": "Llegó sin turno" }
 
-### [AG-C19 - Escritura 2/3] Error 403: POST /api/servicios con token de CLIENTE (sin rol permitido)
-POST {{baseUrl}}/api/servicios
+###
+@lavadoId = {{lavadoNuevo.response.body.id}}
+
+### 400: servicio que no es de lavadero
+POST {{baseUrl}}/api/lavados
+Authorization: Bearer {{tokenEmpleado}}
+Content-Type: application/json
+
+{ "vehiculoId": 2, "servicioId": 1 }
+
+### 400: vehículo inexistente (regla en el service, no en Zod)
+POST {{baseUrl}}/api/lavados
+Authorization: Bearer {{tokenEmpleado}}
+Content-Type: application/json
+
+{ "vehiculoId": 9999, "servicioId": 2 }
+
+### 403: un CLIENTE no registra lavados
+POST {{baseUrl}}/api/lavados
 Authorization: Bearer {{tokenCliente}}
 Content-Type: application/json
 
-{
-  "nombre": "Lavado Motor Protegido",
-  "precio": 35000,
-  "desc": "Lavado de chasis y motor a vapor con desengrasante biodegradable.",
-  "tipo": "lavadero"
-}
+{ "vehiculoId": 2, "servicioId": 2 }
 
-### [AG-C19 - Escritura 3/3] Éxito 201: POST /api/servicios con token de ADMIN (rol permitido)
-POST {{baseUrl}}/api/servicios
+### 403: un EMPLEADO no anula lavados (toca la caja)
+DELETE {{baseUrl}}/api/lavados/{{lavadoId}}
+Authorization: Bearer {{tokenEmpleado}}
+
+### Anular (ADMIN)
+DELETE {{baseUrl}}/api/lavados/{{lavadoId}}
+Authorization: Bearer {{tokenAdmin}}
+
+### 404: lavado inexistente
+GET {{baseUrl}}/api/lavados/{{lavadoId}}
+Authorization: Bearer {{tokenEmpleado}}
+
+### ================================================================
+### USUARIOS — alta de personal, solo ADMIN
+### ================================================================
+
+### Listar (nunca devuelve passwordHash)
+GET {{baseUrl}}/api/usuarios
+Authorization: Bearer {{tokenAdmin}}
+
+### Alta de empleado
+# @name usuarioNuevo
+POST {{baseUrl}}/api/usuarios
 Authorization: Bearer {{tokenAdmin}}
 Content-Type: application/json
 
-{
-  "nombre": "Lavado Motor Protegido",
-  "precio": 35000,
-  "desc": "Lavado de chasis y motor a vapor con desengrasante biodegradable.",
-  "tipo": "lavadero"
-}
+{ "nombre": "Pepe Lavador", "email": "pepe@sanjose.test", "password": "Pepe123456", "rol": "EMPLEADO" }
 
-### -------------------------------------------------------------------
-### [AG-C19 - Checklist de Errores Requeridos: 400, 401, 403, 404, 409]
-### -------------------------------------------------------------------
+###
+@usuarioId = {{usuarioNuevo.response.body.id}}
 
-### Error 400 (Bad Request): Validación Zod en body (precio negativo)
-POST {{baseUrl}}/api/servicios
+### 400: el personal no se crea con rol CLIENTE (los clientes se registran solos)
+POST {{baseUrl}}/api/usuarios
 Authorization: Bearer {{tokenAdmin}}
 Content-Type: application/json
 
-{
-  "nombre": "Servicio Inválido",
-  "precio": -100,
-  "desc": "Precio negativo para disparar error 400",
-  "tipo": "lavadero"
-}
+{ "nombre": "Pepe", "email": "otro@sanjose.test", "password": "Pepe123456", "rol": "CLIENTE" }
 
-### Error 401 (Unauthorized): Petición a endpoint protegido sin header Authorization
-GET {{baseUrl}}/api/auth/yo
-
-### Error 403 (Forbidden): Usuario autenticado intentando acceder a operación no permitida por su rol
-GET {{baseUrl}}/api/clientes
-Authorization: Bearer {{tokenCliente}}
-
-### Error 404 (Not Found - Middleware JSON C19): Ruta no existente devuelve JSON
-GET {{baseUrl}}/api/ruta-que-no-existe
-
-### Error 404 (Not Found - Recurso): ID inexistente en la base de datos
-GET {{baseUrl}}/api/servicios/9999
-
-### Error 409 (Conflict): Conflicto de unicidad en BD (patente duplicada)
-POST {{baseUrl}}/api/clientes
+### 409: email repetido
+POST {{baseUrl}}/api/usuarios
 Authorization: Bearer {{tokenAdmin}}
 Content-Type: application/json
 
-{
-  "nombre": "Cliente Patente Duplicada",
-  "vehiculo": "Volkswagen Gol",
-  "patente": "AB123CD",
-  "telefono": "11-9999-8888"
-}
+{ "nombre": "Pepe Bis", "email": "pepe@sanjose.test", "password": "Pepe123456", "rol": "EMPLEADO" }
 
+### 403: un EMPLEADO no administra usuarios
+GET {{baseUrl}}/api/usuarios
+Authorization: Bearer {{tokenEmpleado}}
+
+### 409: borrar un empleado con lavados registrados (el 2 del seed)
+DELETE {{baseUrl}}/api/usuarios/2
+Authorization: Bearer {{tokenAdmin}}
+
+### 400: el ADMIN no se puede borrar a sí mismo
+DELETE {{baseUrl}}/api/usuarios/1
+Authorization: Bearer {{tokenAdmin}}
+
+### Borrar el empleado creado
+DELETE {{baseUrl}}/api/usuarios/{{usuarioId}}
+Authorization: Bearer {{tokenAdmin}}
+
+### ================================================================
+### PANEL — métricas del día, solo ADMIN
+### ================================================================
+
+### Resumen del día: turnos, pendientes, autos atendidos, caja y service atrasado
+GET {{baseUrl}}/api/panel/resumen
+Authorization: Bearer {{tokenAdmin}}
+
+### 403: un EMPLEADO no ve la caja
+GET {{baseUrl}}/api/panel/resumen
+Authorization: Bearer {{tokenEmpleado}}

@@ -1,84 +1,91 @@
 # Frontend — SGI Lavadero y Lubricentro San José
 
-## Descripción
+SPA en React + TypeScript que consume la API del backend. No hay datos de mentira: todas las
+pantallas leen y escriben contra `/api` con el token de la sesión.
 
-Frontend del Sistema de Gestión Integral para el Lavadero y Lubricentro "San José". Permite gestionar servicios, clientes, vehículos, turnos, lavados y usuarios a través de una interfaz web responsiva.
+## Stack
 
-## Stack Tecnológico
+React 19 + TypeScript · Vite · React Router 7 · React Bootstrap · React Hook Form + Zod · React Icons · Vitest + Testing Library
 
-- **React 19** + **TypeScript** — librería de UI con tipado estático
-- **Vite** — bundler y dev server
-- **React Router DOM v7** — navegación SPA sin recarga
-- **React Bootstrap + Bootstrap 5** — componentes UI responsivos
-- **Zod** — validación de esquemas en formularios
-- **React Hook Form** — manejo eficiente de formularios
-- **React Icons** — iconografía
-
-## Estructura del Proyecto
-
-```
-frontend/src/
-├── components/          # Componentes reutilizables
-│   ├── Layout/          #   Header, Footer, Layout wrapper
-│   ├── NavbarSGI.tsx    #   Barra de navegación
-│   ├── ServicioDestacado.tsx
-│   ├── TurnoCard.tsx
-│   └── ResumenCaja.tsx
-├── pages/               # Páginas (una por ruta)
-│   ├── Home.tsx         #   Landing page con servicios destacados
-│   ├── Servicios.tsx    #   Catálogo de servicios
-│   ├── ServicioNuevo.tsx#   Alta de servicio (formulario + Zod)
-│   ├── Clientes.tsx     #   Directorio de clientes
-│   ├── ClienteNuevo.tsx #   Alta de cliente (formulario + Zod)
-│   ├── PerfilCliente.tsx#   Detalle de cliente
-│   ├── VehiculosPage.tsx#   Listado de vehículos
-│   ├── VehiculoNuevo.tsx#   Alta de vehículo
-│   ├── AltaTurno.tsx    #   Alta de turno (formulario + Zod)
-│   ├── AltaLavado.tsx   #   Registro de lavado
-│   ├── AltaUsuario.tsx  #   Alta de usuario/empleado
-│   └── PanelGestion.tsx #   Panel administrativo
-├── hooks/
-│   └── useFetch.ts      # Hook genérico para consumir APIs (data/loading/error)
-├── schemas/             # Esquemas Zod para validación de formularios
-│   ├── clienteSchema.ts
-│   └── servicioSchema.ts
-├── validations/         # Esquemas Zod adicionales
-│   ├── turnoSchema.ts
-│   ├── lavadoSchema.ts
-│   └── usuarioSchema.ts
-├── types/
-│   └── servicio.ts      # Interfaces TypeScript del dominio
-├── data/
-│   └── servicios.ts     # Datos mock hardcodeados
-└── assets/              # Imágenes y recursos estáticos
-```
-
-## Navegación (Rutas)
-
-| Ruta | Página | Descripción |
-|------|--------|-------------|
-| `/` | Home | Landing con servicios destacados |
-| `/servicios` | Servicios | Catálogo completo de servicios |
-| `/servicios/nuevo` | ServicioNuevo | Formulario de alta de servicio |
-| `/clientes` | Clientes | Directorio de clientes |
-| `/clientes/nuevo` | ClienteNuevo | Formulario de alta de cliente |
-| `/perfil-cliente` | PerfilCliente | Detalle/ficha de un cliente |
-| `/vehiculos` | VehiculosPage | Listado de vehículos |
-| `/vehiculos/nuevo` | VehiculoNuevo | Alta de vehículo |
-| `/turnos/nuevo` | AltaTurno | Reserva de turno |
-| `/lavados/nuevo` | AltaLavado | Registro de lavado |
-| `/usuarios/nuevo` | AltaUsuario | Alta de usuario/empleado |
-| `/panel` | PanelGestion | Panel administrativo |
-
-## Datos Mock
-
-Los datos de prueba se encuentran en `public/` como archivos JSON estáticos (`servicios.json`, `clientes.json`) consumidos por el hook `useFetch`. En la versión de producción, estos se reemplazarán por llamadas a la API del backend.
-
-## Cómo ejecutar
+## Cómo correrlo
 
 ```bash
 cd frontend
+cp .env.example .env      # VITE_API_URL=http://localhost:3000/api
 npm install
-npm run dev
-# Abrir http://localhost:5173
+npm run dev               # http://localhost:5173 (el backend tiene que estar levantado)
 ```
+
+| Comando | Qué hace |
+| :--- | :--- |
+| `npx tsc -p tsconfig.app.json --noEmit` | Chequeo de tipos (tiene que dar 0 errores) |
+| `npm run lint` | ESLint |
+| `npm test` | Tests de componentes y formularios (no necesitan el backend) |
+| `npm run build` | Build de producción en `dist/` |
+
+## Usuarios para probar (seed del backend)
+
+| Rol | Email | Contraseña | Entra a |
+| :--- | :--- | :--- | :--- |
+| ADMIN | `admin@sanjose.test` | `AdminPassword123` | `/panel` |
+| EMPLEADO | `empleado@sanjose.test` | `EmpleadoPassword123` | `/agenda` |
+| CLIENTE | `cliente@sanjose.test` | `ClientePassword123` | `/mi-cuenta` |
+
+También se puede crear una cuenta de cliente nueva desde **Crear cuenta**.
+
+## Estructura
+
+```
+src/
+├── App.tsx               # Rutas agrupadas por barrera (PrivateRoute por rol)
+├── context/AuthContext.tsx  # Sesión: login, logout, rehidratación con /auth/yo, 401 global
+├── services/
+│   ├── api.ts            # apiFetch: URL base, Bearer token, ApiError, evento sesion-expirada
+│   └── sesion.ts         # token en localStorage
+├── hooks/
+│   ├── useAuth.ts        # contexto + hook de sesión
+│   ├── useFetch.ts       # GET con data/loading/error + recargar()
+│   └── useDebounce.ts    # buscadores sin pedir en cada tecla
+├── components/
+│   ├── Layout/           # Header (NavBar según rol), Footer, Layout
+│   ├── PrivateRoute.tsx  # 1. ¿cargando?  2. ¿logueado? → /login  3. ¿rol? → /sin-permiso
+│   ├── Badges.tsx        # estado del turno, estado del service, patente
+│   ├── Estado.tsx        # Cargando / ErrorCarga / Vacio
+│   ├── Formulario.tsx    # marco y botón de guardar de los formularios
+│   └── ServicioDestacado.tsx
+├── pages/                # una por ruta (ver tabla)
+├── schemas/              # Zod de cada formulario (+ campos.ts con piezas comunes)
+├── types/                # tipos alineados con las respuestas de la API
+├── utils/                # formato de fechas/pesos/patentes, inicio según rol
+└── test/                 # renderConAuth (AuthContext falso) y usuarios de prueba
+```
+
+## Rutas
+
+| Ruta | Página | Quién |
+| :--- | :--- | :--- |
+| `/` | Inicio con servicios reales | Público |
+| `/servicios` | Catálogo (Editar/Borrar solo ADMIN) | Público |
+| `/login`, `/registro` | Ingreso y alta de cuenta de cliente | Público |
+| `/turnos/nuevo` | Reserva con horarios libres del día | Cualquier logueado |
+| `/mi-cuenta` | Datos, autos con próximo service, turnos (cancelar) | CLIENTE |
+| `/agenda` | Turnos del día con cambio de estado + lavados sin turno | EMPLEADO, ADMIN |
+| `/clientes`, `/clientes/nuevo`, `/clientes/:id` | Directorio con búsqueda, alta con vehículo, ficha | EMPLEADO, ADMIN |
+| `/vehiculos`, `/vehiculos/nuevo`, `/vehiculos/:id` | Directorio con estado del service, alta, historial | EMPLEADO, ADMIN |
+| `/lavados/nuevo` | Ingreso al lavadero sin turno | EMPLEADO, ADMIN |
+| `/panel` | Caja del día, agenda, service atrasado | ADMIN |
+| `/servicios/nuevo`, `/servicios/:id/editar` | Alta y edición de servicio | ADMIN |
+| `/usuarios`, `/usuarios/nuevo` | Personal del sistema | ADMIN |
+
+La matriz completa (endpoint, rol y qué hace la UI) está en
+`Documentación/05 - Diseño de API/Matriz_Permisos.md`.
+
+## Testing
+
+`npm test` corre sin el backend: la sesión se simula con `renderConAuth` y la API con `vi.mock`.
+
+- `PrivateRoute.test.tsx`: invitado → `/login`, rol equivocado → `/sin-permiso`, rol correcto → contenido.
+- `Header.test.tsx`: qué links ve cada rol en la NavBar.
+- `Servicios.test.tsx`: Editar/Borrar solo para ADMIN; el error de la API se muestra.
+- `SinPermiso.test.tsx`: la pantalla del 403.
+- `schemas.test.ts`: contraseñas que no coinciden, vehículo obligatorio si se marca, conversión de los `<select>` a ids.

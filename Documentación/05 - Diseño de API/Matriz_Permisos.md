@@ -13,26 +13,52 @@ Definición de control de acceso basado en roles (RBAC) para los endpoints de la
 
 ## Matriz de Control de Acceso por Endpoint
 
+Cada fila con ❌ 401 / ❌ 403 tiene su test sin base de datos en `backend/src/routes/*.test.ts`
+(las filas nuevas, en `matriz-permisos.test.ts`).
+
 | Entidad | Endpoint | Método | Público | CLIENTE | EMPLEADO | ADMIN | Qué hace la UI |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :--- |
-| **Auth** | `/api/auth/registro` | POST | ✅ 201 | ✅ 201 | ✅ 201 | ✅ 201 | Formulario de registro público. Redirige a login al terminar. |
-| | `/api/auth/login` | POST | ✅ 200 | ✅ 200 | ✅ 200 | ✅ 200 | Formulario de inicio de sesión. Cambia la NavBar a "Hola, {nombre}". |
-| | `/api/auth/yo` | GET | ❌ 401 | ✅ 200 | ✅ 200 | ✅ 200 | Lo llama el `AuthProvider` al recargar la página (F5) para rehidratar el estado. |
-| **Servicios** | `/api/servicios` | GET | ✅ 200 | ✅ 200 | ✅ 200 | ✅ 200 | Catálogo de servicios público. Sin login. |
-| | `/api/servicios/:id` | GET | ✅ 200 | ✅ 200 | ✅ 200 | ✅ 200 | Detalle del servicio público. |
-| | `/api/servicios` | POST | ❌ 401 | ❌ 403 | ❌ 403 | ✅ 201 | Botón "Nuevo Servicio" solo visible para ADMIN. Formulario en ruta protegida con `PrivateRoute rol="ADMIN"`. |
-| | `/api/servicios/:id` | PUT | ❌ 401 | ❌ 403 | ❌ 403 | ✅ 200 | Botón "Editar" solo visible para ADMIN en el listado/detalle. |
-| | `/api/servicios/:id` | DELETE | ❌ 401 | ❌ 403 | ❌ 403 | ✅ 204 | Botón "Borrar" solo visible para ADMIN en el listado/detalle. |
-| **Clientes** | `/api/clientes` | GET | ❌ 401 | ❌ 403 | ✅ 200 | ✅ 200 | Panel interno de clientes protegido para empleados/admins. |
-| | `/api/clientes/:id` | GET | ❌ 401 | ❌ 403 | ✅ 200 | ✅ 200 | Detalle de cliente protegido para empleados/admins. |
-| | `/api/clientes` | POST | ❌ 401 | ❌ 403 | ✅ 201 | ✅ 201 | Botón y formulario protegido para empleados/admins. |
-| | `/api/clientes/:id` | PUT | ❌ 401 | ❌ 403 | ✅ 200 | ✅ 200 | Edición de cliente protegida para empleados/admins. |
-| | `/api/clientes/:id` | DELETE | ❌ 401 | ❌ 403 | ❌ 403 | ✅ 204 | Botón "Borrar Cliente" solo visible para ADMIN. |
-| **Turnos** | `/api/turnos` | GET | ❌ 401 | ❌ 403 | ✅ 200 | ✅ 200 | Calendario/listado de turnos general, visible para empleados/admins. |
-| | `/api/turnos/:id` | GET | ❌ 401 | ❌ 403 | ✅ 200 | ✅ 200 | Detalle del turno. |
-| | `/api/turnos` | POST | ❌ 401 | ✅ 201 | ✅ 201 | ✅ 201 | Botón "Solicitar Turno" visible logueado. Ruta protegida con `PrivateRoute` (sin rol). |
-| | `/api/turnos/:id` | PUT | ❌ 401 | ❌ 403 | ✅ 200 | ✅ 200 | Cambio de estado del turno (ej. "Completado"), visible para empleados/admins. |
-| | `/api/turnos/:id` | DELETE | ❌ 401 | ❌ 403 | ✅ 204 | ✅ 204 | Cancelación del turno, visible para empleados/admins. |
+| **Auth** | `/api/auth/registro` | POST | ✅ 201 | ✅ 201 | ✅ 201 | ✅ 201 | Formulario público `/registro`. Siempre crea un CLIENTE (el `rol` del body se ignora) y lo deja logueado. |
+| | `/api/auth/login` | POST | ✅ 200 | ✅ 200 | ✅ 200 | ✅ 200 | Formulario `/login`. La NavBar pasa a mostrar el nombre, el rol y "Salir". |
+| | `/api/auth/yo` | GET | ❌ 401 | ✅ 200 | ✅ 200 | ✅ 200 | Lo llama el `AuthProvider` al recargar (F5) para rehidratar la sesión. |
+| **Servicios** | `/api/servicios` | GET | ✅ 200 | ✅ 200 | ✅ 200 | ✅ 200 | Catálogo público. |
+| | `/api/servicios/:id` | GET | ✅ 200 | ✅ 200 | ✅ 200 | ✅ 200 | Precarga del formulario de edición. |
+| | `/api/servicios` | POST | ❌ 401 | ❌ 403 | ❌ 403 | ✅ 201 | Botón "Nuevo servicio" solo para ADMIN; ruta `/servicios/nuevo` con `PrivateRoute rol="ADMIN"`. |
+| | `/api/servicios/:id` | PUT | ❌ 401 | ❌ 403 | ❌ 403 | ✅ 200 | Botón "Editar" en cada tarjeta, solo ADMIN; ruta `/servicios/:id/editar` protegida. |
+| | `/api/servicios/:id` | DELETE | ❌ 401 | ❌ 403 | ❌ 403 | ✅ 204 | Botón "Borrar" solo ADMIN, con confirmación. Muestra el 409 si el servicio ya se usó. |
+| **Clientes** | `/api/clientes` | GET | ❌ 401 | ❌ 403 | ✅ 200 | ✅ 200 | Directorio `/clientes` con buscador. |
+| | `/api/clientes/:id` | GET | ❌ 401 | ❌ 403 | ✅ 200 | ✅ 200 | Ficha `/clientes/:id` con autos y turnos. |
+| | `/api/clientes` | POST | ❌ 401 | ❌ 403 | ✅ 201 | ✅ 201 | Formulario `/clientes/nuevo` (con primer vehículo opcional). |
+| | `/api/clientes/:id` | PUT | ❌ 401 | ❌ 403 | ✅ 200 | ✅ 200 | Edición desde la ficha del cliente. |
+| | `/api/clientes/:id` | DELETE | ❌ 401 | ❌ 403 | ❌ 403 | ✅ 204 | Botón "Borrar" solo ADMIN. Muestra el 409 si tiene turnos. |
+| | `/api/clientes/mio` | GET | ❌ 401 | ✅ 200 | ❌ 403 | ❌ 403 | Portal `/mi-cuenta`: datos, autos con próximo service y turnos. Link "Mi cuenta" solo para CLIENTE. |
+| | `/api/clientes/mio` | PUT | ❌ 401 | ✅ 200 | ❌ 403 | ❌ 403 | "Editar datos" en `/mi-cuenta`. |
+| **Vehículos** | `/api/vehiculos` | GET | ❌ 401 | ❌ 403 | ✅ 200 | ✅ 200 | Directorio `/vehiculos` con buscador y estado del service. |
+| | `/api/vehiculos/:id` | GET | ❌ 401 | ❌ 403 | ✅ 200 | ✅ 200 | Historial `/vehiculos/:id`. |
+| | `/api/vehiculos` | POST | ❌ 401 | ✅ 201 | ✅ 201 | ✅ 201 | Personal: `/vehiculos/nuevo` (elige titular). Cliente: "Agregar auto" en `/mi-cuenta` (queda a su nombre). |
+| | `/api/vehiculos/:id` | PUT | ❌ 401 | ❌ 403 | ✅ 200 | ✅ 200 | (API) edición de datos del vehículo. |
+| | `/api/vehiculos/:id/service` | POST | ❌ 401 | ❌ 403 | ✅ 200 | ✅ 200 | "Registrar service" en el historial del vehículo. |
+| | `/api/vehiculos/:id` | DELETE | ❌ 401 | ❌ 403 | ❌ 403 | ✅ 204 | Botón "Borrar" solo ADMIN. |
+| **Turnos** | `/api/turnos/disponibles` | GET | ✅ 200 | ✅ 200 | ✅ 200 | ✅ 200 | El formulario de reserva muestra solo los horarios libres del día elegido. |
+| | `/api/turnos/mios` | GET | ❌ 401 | ✅ 200 | ❌ 403 | ❌ 403 | (API) turnos del cliente; el portal los obtiene con `/clientes/mio`. |
+| | `/api/turnos` | GET | ❌ 401 | ❌ 403 | ✅ 200 | ✅ 200 | Agenda `/agenda` por fecha. |
+| | `/api/turnos/:id` | GET | ❌ 401 | ❌ 403 | ✅ 200 | ✅ 200 | (API) detalle del turno. |
+| | `/api/turnos` | POST | ❌ 401 | ✅ 201 | ✅ 201 | ✅ 201 | `/turnos/nuevo` para cualquier logueado. El cliente elige entre sus autos; el personal elige cliente y auto. |
+| | `/api/turnos/:id` | PUT | ❌ 401 | ❌ 403 | ✅ 200 | ✅ 200 | (API) reprogramar. |
+| | `/api/turnos/:id/estado` | PATCH | ❌ 401 | ❌ 403 | ✅ 200 | ✅ 200 | Selector de estado en cada fila de la agenda. |
+| | `/api/turnos/:id/cancelar` | PATCH | ❌ 401 | ✅ 200* | ✅ 200 | ✅ 200 | "Cancelar" en `/mi-cuenta` (solo turnos propios pendientes o confirmados) y en la agenda. *Turno ajeno → 403. |
+| | `/api/turnos/:id` | DELETE | ❌ 401 | ❌ 403 | ✅ 204 | ✅ 204 | (API) borrado físico. |
+| **Lavados** | `/api/lavados` | GET | ❌ 401 | ❌ 403 | ✅ 200 | ✅ 200 | Lavados del día en `/agenda`. |
+| | `/api/lavados/:id` | GET | ❌ 401 | ❌ 403 | ✅ 200 | ✅ 200 | (API) detalle. |
+| | `/api/lavados` | POST | ❌ 401 | ❌ 403 | ✅ 201 | ✅ 201 | Formulario `/lavados/nuevo` ("Ingreso al lavadero"). |
+| | `/api/lavados/:id` | PUT | ❌ 401 | ❌ 403 | ✅ 200 | ✅ 200 | (API) corrección. |
+| | `/api/lavados/:id` | DELETE | ❌ 401 | ❌ 403 | ❌ 403 | ✅ 204 | Botón "Anular" en la agenda, solo ADMIN. |
+| **Usuarios** | `/api/usuarios` | GET | ❌ 401 | ❌ 403 | ❌ 403 | ✅ 200 | Listado `/usuarios`, link solo ADMIN. |
+| | `/api/usuarios/:id` | GET | ❌ 401 | ❌ 403 | ❌ 403 | ✅ 200 | (API) detalle. |
+| | `/api/usuarios` | POST | ❌ 401 | ❌ 403 | ❌ 403 | ✅ 201 | Formulario `/usuarios/nuevo` (rol ADMIN o EMPLEADO). |
+| | `/api/usuarios/:id` | PUT | ❌ 401 | ❌ 403 | ❌ 403 | ✅ 200 | (API) cambiar rol o contraseña. |
+| | `/api/usuarios/:id` | DELETE | ❌ 401 | ❌ 403 | ❌ 403 | ✅ 204 | Botón "Borrar" en `/usuarios` (no aparece en la fila propia). |
+| **Panel** | `/api/panel/resumen` | GET | ❌ 401 | ❌ 403 | ❌ 403 | ✅ 200 | Panel `/panel`, link solo ADMIN. |
 
 ---
 
@@ -42,10 +68,11 @@ La misma matriz, vista desde el router (`frontend/src/App.tsx`). Cada grupo es u
 
 | Barrera | Qué hace `PrivateRoute` | Rutas |
 | :--- | :--- | :--- |
-| Pública | No pasa por `PrivateRoute`. | `/`, `/login`, `/servicios`, `/sin-permiso` |
-| Login (cualquier rol) | Sin usuario → `/login`. | `/turnos/nuevo`, `/perfil-cliente` |
-| `EMPLEADO` o `ADMIN` | Sin usuario → `/login`. Con `CLIENTE` → `/sin-permiso`. | `/clientes`, `/clientes/nuevo`, `/vehiculos`, `/vehiculos/nuevo`, `/lavados/nuevo` |
-| Solo `ADMIN` | Sin usuario → `/login`. Con `CLIENTE` o `EMPLEADO` → `/sin-permiso`. | `/servicios/nuevo`, `/usuarios/nuevo`, `/panel` |
+| Pública | No pasa por `PrivateRoute`. | `/`, `/login`, `/registro`, `/servicios`, `/sin-permiso` |
+| Login (cualquier rol) | Sin usuario → `/login`. | `/turnos/nuevo` |
+| Solo `CLIENTE` | Sin usuario → `/login`. Personal → `/sin-permiso`. | `/mi-cuenta` |
+| `EMPLEADO` o `ADMIN` | Sin usuario → `/login`. Con `CLIENTE` → `/sin-permiso`. | `/agenda`, `/clientes`, `/clientes/nuevo`, `/clientes/:id`, `/vehiculos`, `/vehiculos/nuevo`, `/vehiculos/:id`, `/lavados/nuevo` |
+| Solo `ADMIN` | Sin usuario → `/login`. Con `CLIENTE` o `EMPLEADO` → `/sin-permiso`. | `/panel`, `/servicios/nuevo`, `/servicios/:id/editar`, `/usuarios`, `/usuarios/nuevo` |
 
 Mientras el `AuthProvider` todavía no sabe quién sos (`cargando`, esperando `GET /api/auth/yo`), `PrivateRoute` muestra un spinner y **no decide nada**: así un F5 en una ruta protegida no "flashea" a `/login`.
 

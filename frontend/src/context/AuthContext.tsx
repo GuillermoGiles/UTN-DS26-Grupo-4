@@ -57,6 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     guardarToken(sesion.token);
     setUsuario(sesion.usuario);
+    return sesion.usuario;
   };
 
   return (

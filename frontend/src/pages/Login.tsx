@@ -2,10 +2,11 @@ import { useState } from 'react';
 import { Container, Form, Button, Alert, Card } from 'react-bootstrap';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { FiAlertCircle } from 'react-icons/fi';
 import { loginSchema, type LoginFormData } from '../schemas/loginSchema';
 import { useAuth } from '../hooks/useAuth';
+import { inicioPorRol } from '../utils/inicioPorRol';
 
 export function Login() {
   const [errorApi, setErrorApi] = useState<string | null>(null);
@@ -15,7 +16,7 @@ export function Login() {
 
   // Si PrivateRoute o la expiración de sesión nos mandó acá, leemos el state
   const state = location.state as { desde?: string; sesionExpirada?: boolean } | null;
-  const desde = state?.desde ?? '/';
+  const desde = state?.desde;
   const sesionExpirada = Boolean(state?.sesionExpirada);
 
   const {
@@ -29,8 +30,9 @@ export function Login() {
   const onSubmit = async (datos: LoginFormData) => {
     try {
       setErrorApi(null);
-      await login(datos);              // el token y el usuario quedan en el AuthProvider
-      navigate(desde, { replace: true });
+      const usuario = await login(datos); // el token y el usuario quedan en el AuthProvider
+      // Vuelve a la pantalla de la que venía; si no venía de ninguna, a la de su rol
+      navigate(desde ?? inicioPorRol(usuario.rol), { replace: true });
     } catch (error) {
       if (error instanceof Error) {
         setErrorApi(error.message);
@@ -91,6 +93,10 @@ export function Login() {
               {isSubmitting ? 'Iniciando sesión...' : 'Ingresar'}
             </Button>
           </Form>
+
+          <p className="text-center text-muted small mt-4 mb-0">
+            ¿Todavía no tenés cuenta? <Link to="/registro">Creá una para reservar turnos</Link>
+          </p>
         </Card.Body>
       </Card>
     </Container>

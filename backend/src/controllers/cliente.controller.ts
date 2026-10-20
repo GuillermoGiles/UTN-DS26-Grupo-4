@@ -1,9 +1,9 @@
 import { Request, Response } from "express";
 import * as clienteService from "../services/cliente.service";
 
-export async function getAll(_req: Request, res: Response) {
-  const clientes = await clienteService.findAll();
-  res.json(clientes);
+export async function getAll(req: Request, res: Response) {
+  const { q } = req.query as { q?: string };
+  res.json(await clienteService.findAll(q));
 }
 
 export async function getById(req: Request, res: Response) {
@@ -13,6 +13,10 @@ export async function getById(req: Request, res: Response) {
     return;
   }
   res.json(cliente);
+}
+
+export async function getMio(req: Request, res: Response) {
+  res.json(await clienteService.findByUsuario(req.usuario!.id));
 }
 
 export async function create(req: Request, res: Response) {
@@ -27,6 +31,10 @@ export async function update(req: Request, res: Response) {
     return;
   }
   res.json(actualizado);
+}
+
+export async function updateMio(req: Request, res: Response) {
+  res.json(await clienteService.updateByUsuario(req.usuario!.id, req.body));
 }
 
 export async function remove(req: Request, res: Response) {

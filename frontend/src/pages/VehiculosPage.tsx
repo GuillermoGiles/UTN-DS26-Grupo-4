@@ -1,70 +1,93 @@
-import { Container, Table } from 'react-bootstrap';
-import { FiPlus, FiClock } from 'react-icons/fi';
-import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { Container, Table, Form, Alert } from 'react-bootstrap';
+import { Link } from 'react-router-dom';
+import { FiPlus } from 'react-icons/fi';
+import { useFetch } from '../hooks/useFetch';
+import { useAuth } from '../hooks/useAuth';
+import { useDebounce } from '../hooks/useDebounce';
+import { apiFetch } from '../services/api';
+import { Cargando, ErrorCarga, Vacio } from '../components/Estado';
+import { Patente, ServiceBadge } from '../components/Badges';
+import { km, mensajeDeError } from '../utils/formato';
+import type { EstadoService, VehiculoListado } from '../types/vehiculo';
 
+const ORDEN_SERVICE: Record<EstadoService, number> = { vencido: 0, proximo: 1, 'sin-datos': 2, ok: 3 };
 
 export function VehiculosPage() {
-  const navigate = useNavigate(); // 2. Inicializar el navegador
+  const { tieneRol } = useAuth();
+  const [busqueda, setBusqueda] = useState('');
+  const [soloAtrasados, setSoloAtrasados] = useState(false);
+  const q = useDebounce(busqueda.trim(), 300);
+  const { data, loading, error, recargar } = useFetch<VehiculoListado[]>(
+    q ? `/vehiculos?q=${encodeURIComponent(q)}` : '/vehiculos',
+  );
+  const [errorBorrado, setErrorBorrado] = useState<string | null>(null);
+
+  const vehiculos = (data ?? [])
+    .filter((v) => !soloAtrasados || v.service.estado === 'vencido' || v.service.estado === 'proximo')
+    .sort((a, b) => ORDEN_SERVICE[a.service.estado] - ORDEN_SERVICE[b.service.estado]);
+
+  const borrar = async (v: VehiculoListado) => {
+    if (!window.confirm(`¿Borrar el vehículo ${v.patente}?`)) return;
+    setErrorBorrado(null);
+    try {
+      await apiFetch(`/vehiculos/${v.id}`, { method: 'DELETE' });
+      recargar();
+    } catch (err) {
+      setErrorBorrado(mensajeDeError(err));
+    }
+  };
 
   return (
     <Container className="py-5 text-start">
-      <h2 className="mb-4 fw-bold">Vehículos Registrados</h2>
-      
+      <h2 className="mb-4 fw-bold">Vehículos</h2>
+      {errorBorrado && <Alert variant="danger" dismissible onClose={() => setErrorBorrado(null)}>{errorBorrado}</Alert>}
       <div className="saas-card-dark p-0">
-        <div className="p-4 border-bottom border-secondary d-flex justify-content-between align-items-center">
-          <div>
-            <h5 className="m-0 fw-bold text-white">Directorio de Vehículos</h5>
-            <p className="text-muted small m-0 mt-1">Listado completo de vehículos y sus clientes titulares.</p>
+        <div className="p-4 border-bottom border-secondary d-flex flex-wrap gap-3 justify-content-between align-items-center">
+          <div className="d-flex flex-wrap gap-3 align-items-center">
+            <Form.Control
+              type="search"
+              placeholder="Patente, marca, modelo o titular"
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
+              style={{ maxWidth: 320 }}
+              aria-label="Buscar vehículos"
+            />
+            <Form.Check type="switch" id="solo-atrasados" label="Solo service vencido o próximo" className="text-white"
+              checked={soloAtrasados} onChange={(e) => setSoloAtrasados(e.target.checked)} />
           </div>
-          {/* 3. Agregar el evento onClick para redirigir al formulario */}
-          <button 
-            className="btn-primary-custom d-flex align-items-center gap-2"
-            onClick={() => navigate('/vehiculos/nuevo')}
-          >
-            <FiPlus /> Nuevo Vehículo
-          </button>
+          <Link to="/vehiculos/nuevo" className="btn-primary-custom text-decoration-none d-flex align-items-center gap-2">
+            <FiPlus /> Nuevo vehículo
+          </Link>
         </div>
-        
-        <Table responsive variant="dark" className="mb-0 align-middle">
-          <thead>
-            <tr>
-              <th className="text-center">Patente</th>
-              <th>Nombre Modelo</th>
-              <th>Cliente Titular</th>
-              <th className="text-center">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td className="text-center">
-                <span className="badge bg-secondary text-white border border-secondary px-3 py-2" style={{ letterSpacing: '1px' }}>
-                  AB 123 CD
-                </span>
-              </td>
-              <td className="fw-bold text-white">Toyota Hilux 2.8 TDI</td>
-              <td className="text-muted">Juan Pérez</td>
-              <td className="text-center">
-                <button className="btn-action-dark d-inline-flex align-items-center gap-1">
-                  <FiClock size={14} /> Historial
-                </button>
-              </td>
-            </tr>
-            <tr>
-              <td className="text-center">
-                <span className="badge bg-secondary text-white border border-secondary px-3 py-2" style={{ letterSpacing: '1px' }}>
-                  XYZ 987
-                </span>
-              </td>
-              <td className="fw-bold text-white">Ford Fiesta Kinetic</td>
-              <td className="text-muted">María Gómez</td>
-              <td className="text-center">
-                <button className="btn-action-dark d-inline-flex align-items-center gap-1">
-                  <FiClock size={14} /> Historial
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </Table>
+
+        {loading && <Cargando />}
+        {error && <ErrorCarga mensaje={error} />}
+        {!loading && !error && (vehiculos.length === 0 ? (
+          <Vacio>{q || soloAtrasados ? 'Ningún vehículo coincide con el filtro.' : 'Todavía no hay vehículos cargados.'}</Vacio>
+        ) : (
+          <Table responsive hover variant="dark" className="mb-0 align-middle">
+            <thead><tr><th>Patente</th><th>Vehículo</th><th>Titular</th><th className="text-end">Km</th><th>Service</th><th></th></tr></thead>
+            <tbody>
+              {vehiculos.map((v) => (
+                <tr key={v.id}>
+                  <td><Patente patente={v.patente} /></td>
+                  <td className="fw-bold">{v.marca} {v.modelo}{v.anio ? <span className="text-muted fw-normal"> ({v.anio})</span> : null}</td>
+                  <td>
+                    <Link to={`/clientes/${v.cliente.id}`} className="text-white">{v.cliente.nombre}</Link>
+                    <div className="small text-muted">{v.cliente.telefono}</div>
+                  </td>
+                  <td className="text-end">{km(v.km)}</td>
+                  <td><ServiceBadge service={v.service} /></td>
+                  <td className="text-end text-nowrap">
+                    <Link to={`/vehiculos/${v.id}`} className="btn-action-dark me-2">Historial</Link>
+                    {tieneRol('ADMIN') && <button type="button" className="btn-action-dark" onClick={() => borrar(v)}>Borrar</button>}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+        ))}
       </div>
     </Container>
   );

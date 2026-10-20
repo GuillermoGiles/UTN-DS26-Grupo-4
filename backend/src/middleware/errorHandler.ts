@@ -1,8 +1,14 @@
 import { Prisma } from "@prisma/client";
 import { Request, Response, NextFunction } from "express";
 import { ZodError } from "zod";
+import { AppError } from "../errors/AppError";
 
 export function errorHandler(err: unknown, _req: Request, res: Response, _next: NextFunction) {
+  // Reglas de negocio que los services validan contra la base
+  if (err instanceof AppError) {
+    return res.status(err.status).json({ error: err.message });
+  }
+
   if (err instanceof ZodError) {
     return res.status(400).json({
       error: "Datos inválidos",

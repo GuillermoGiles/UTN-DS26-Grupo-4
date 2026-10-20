@@ -1,82 +1,115 @@
-# Listado de Operaciones (API Design)
+# Listado de Operaciones y contrato de la API
 
-A partir del Frontend construido, a continuación se detallan las operaciones que necesita cada pantalla y sobre qué entidad actúan. Esto servirá como base para la construcción de los endpoints del Backend.
+## Operaciones por pantalla
 
-| Pantalla | Operación (Verbo) | Entidad |
+| Pantalla | Operación | Entidad |
 | :--- | :--- | :--- |
-| **Inicio (Home)** | Listar servicios destacados | `Servicio` |
-| **Catálogo de Servicios** | Listar todos los servicios | `Servicio` |
-| **Alta de Servicio** | Crear un servicio nuevo | `Servicio` |
-| **Directorio de Clientes** | Listar todos los clientes | `Cliente` |
-| **Alta de Cliente** | Crear un cliente nuevo | `Cliente` |
-| **Perfil Cliente** | Ver el detalle de un cliente | `Cliente` |
+| **Inicio** | Ver servicios destacados | `Servicio` |
+| **Catálogo de Servicios** | Listar; editar y borrar (ADMIN) | `Servicio` |
+| **Alta / Edición de Servicio** | Crear / modificar un servicio | `Servicio` |
+| **Registro** | Crear cuenta de cliente (con su ficha) | `Usuario`, `Cliente` |
+| **Login** | Iniciar sesión / quién soy | `Usuario` |
+| **Mi cuenta (cliente)** | Ver mis datos, autos con próximo service y turnos; editar teléfono; agregar auto; cancelar turno | `Cliente`, `Vehiculo`, `Turno` |
+| **Reservar turno** | Ver horarios libres del día y reservar | `Turno` |
+| **Agenda del día** | Listar turnos por fecha, cambiar estado, cancelar; ver lavados del día | `Turno`, `Lavado` |
+| **Directorio de Clientes** | Listar y buscar; editar; borrar (ADMIN) | `Cliente` |
+| **Alta de Cliente** | Crear cliente con su primer vehículo | `Cliente`, `Vehiculo` |
+| **Ficha de Cliente** | Ver vehículos y turnos de un cliente | `Cliente` |
+| **Directorio de Vehículos** | Listar y buscar con estado del service; borrar (ADMIN) | `Vehiculo` |
+| **Historial de Vehículo** | Ver turnos y lavados; registrar service | `Vehiculo` |
 | **Alta de Vehículo** | Crear un vehículo para un cliente | `Vehiculo` |
-| **Alta de Turno** | Crear un turno nuevo | `Turno` |
-| **Alta de Lavado** | Crear un registro de lavado | `Lavado` |
-| **Alta de Usuario** | Crear un usuario/empleado nuevo | `Usuario` |
+| **Ingreso al lavadero** | Registrar un lavado sin turno | `Lavado` |
+| **Usuarios** | Listar personal, dar de alta, borrar (ADMIN) | `Usuario` |
+| **Panel** | Resumen del día: turnos, caja, service atrasado (ADMIN) | todas |
 
 ---
 
-## Tabla de Endpoints REST
+## Endpoints
 
-A continuación se detalla el contrato de la API REST con los endpoints definidos para cada entidad del dominio.
+Errores comunes a todos: `400` datos inválidos (Zod, body/params/query), `401` sin token o
+token inválido/vencido, `403` rol sin permiso, `404` no existe, `409` conflicto (dato único
+repetido, registro relacionado o regla de negocio). Los permisos por rol están en
+[Matriz_Permisos.md](./Matriz_Permisos.md) y todos los casos se pueden probar con `backend/api.http`.
+
+### Auth (`/api/auth`)
+
+| Método | Ruta | Qué hace | Body | Éxito | Errores |
+| :--- | :--- | :--- | :--- | :---: | :--- |
+| POST | `/registro` | Crea cuenta `CLIENTE` + ficha de cliente (ignora `rol`) | `{nombre, email, telefono, password}` | 201 | 400, 409 |
+| POST | `/login` | Devuelve token y usuario | `{email, password}` | 200 | 400, 401 |
+| GET | `/yo` | Usuario del token (rehidratación) | — | 200 | 401 |
 
 ### Servicios (`/api/servicios`)
 
-| Método | Ruta | Operaciones que cubre | Body | Éxito | Errores |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| GET | `/api/servicios` | Listar todos / Filtrar por tipo | — | 200 | — |
-| GET | `/api/servicios/:id` | Ver detalle de un servicio | — | 200 | 404 |
-| POST | `/api/servicios` | Crear un servicio nuevo | `{nombre, precio, desc, tipo}` | 201 | 400 |
-| PUT | `/api/servicios/:id` | Editar un servicio | `{nombre, precio, desc, tipo}` | 200 | 404 |
-| DELETE | `/api/servicios/:id` | Borrar un servicio | — | 204 | 404 |
+| Método | Ruta | Qué hace | Body | Éxito | Errores |
+| :--- | :--- | :--- | :--- | :---: | :--- |
+| GET | `/` | Catálogo (`?tipo=lavadero\|lubricentro`) | — | 200 | — |
+| GET | `/:id` | Detalle | — | 200 | 400, 404 |
+| POST | `/` | Crear | `{nombre, precio, desc, tipo}` | 201 | 400 |
+| PUT | `/:id` | Editar (parcial) | campos a cambiar | 200 | 400, 404 |
+| DELETE | `/:id` | Borrar | — | 204 | 404, 409 si tiene turnos/lavados |
 
 ### Clientes (`/api/clientes`)
 
-| Método | Ruta | Operaciones que cubre | Body | Éxito | Errores |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| GET | `/api/clientes` | Listar todos los clientes | — | 200 | — |
-| GET | `/api/clientes/:id` | Ver detalle de un cliente | — | 200 | 404 |
-| POST | `/api/clientes` | Crear un cliente nuevo | `{nombre, vehiculo, patente, telefono}` | 201 | 400 |
-| PUT | `/api/clientes/:id` | Editar un cliente | `{nombre, vehiculo, patente, telefono}` | 200 | 404 |
-| DELETE | `/api/clientes/:id` | Borrar un cliente | — | 204 | 404 |
+| Método | Ruta | Qué hace | Body | Éxito | Errores |
+| :--- | :--- | :--- | :--- | :---: | :--- |
+| GET | `/` | Listar (`?q=` nombre, teléfono o patente) | — | 200 | 400 |
+| GET | `/:id` | Ficha con vehículos (y próximo service) y turnos | — | 200 | 400, 404 |
+| POST | `/` | Crear, opcionalmente con su primer vehículo | `{nombre, telefono, email?, vehiculo?: {patente, marca, modelo, anio?, km?}}` | 201 | 400, 409 |
+| PUT | `/:id` | Editar | `{nombre?, telefono?, email?}` | 200 | 400, 404, 409 |
+| DELETE | `/:id` | Borrar (sus vehículos en cascada) | — | 204 | 404, 409 si tiene turnos |
+| GET | `/mio` | Mi ficha (cliente logueado) | — | 200 | 404 si la cuenta no tiene ficha |
+| PUT | `/mio` | Editar mi nombre/teléfono | `{nombre?, telefono?}` | 200 | 400 |
 
 ### Vehículos (`/api/vehiculos`)
 
-| Método | Ruta | Operaciones que cubre | Body | Éxito | Errores |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| GET | `/api/vehiculos` | Listar todos los vehículos | — | 200 | — |
-| GET | `/api/vehiculos/:id` | Ver detalle de un vehículo | — | 200 | 404 |
-| POST | `/api/vehiculos` | Crear un vehículo | `{patente, marca, modelo, clienteId}` | 201 | 400 |
-| PUT | `/api/vehiculos/:id` | Editar un vehículo | `{patente, marca, modelo, clienteId}` | 200 | 404 |
-| DELETE | `/api/vehiculos/:id` | Borrar un vehículo | — | 204 | 404 |
+Cada vehículo se devuelve con `service: { estado, proximoKm, proximaFecha }`.
+
+| Método | Ruta | Qué hace | Body | Éxito | Errores |
+| :--- | :--- | :--- | :--- | :---: | :--- |
+| GET | `/` | Listar (`?q=` patente, marca, modelo o titular) | — | 200 | 400 |
+| GET | `/:id` | Historial: turnos y lavados | — | 200 | 400, 404 |
+| POST | `/` | Crear. El personal indica `clienteId`; un CLIENTE carga a su nombre | `{patente, marca, modelo, anio?, km?, clienteId?}` | 201 | 400, 409 patente repetida |
+| PUT | `/:id` | Editar | campos a cambiar | 200 | 400, 404, 409 |
+| POST | `/:id/service` | Registrar service hoy con esos km | `{km}` | 200 | 400, 404 |
+| DELETE | `/:id` | Borrar | — | 204 | 404, 409 si tiene lavados |
 
 ### Turnos (`/api/turnos`)
 
-| Método | Ruta | Operaciones que cubre | Body | Éxito | Errores |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| GET | `/api/turnos` | Listar todos los turnos | — | 200 | — |
-| GET | `/api/turnos/:id` | Ver detalle de un turno | — | 200 | 404 |
-| POST | `/api/turnos` | Crear un turno nuevo | `{fecha, hora, cliente, tipoServicio}` | 201 | 400 |
-| PUT | `/api/turnos/:id` | Editar un turno | `{fecha, hora, cliente, tipoServicio}` | 200 | 404 |
-| DELETE | `/api/turnos/:id` | Cancelar un turno | — | 204 | 404 |
+| Método | Ruta | Qué hace | Body | Éxito | Errores |
+| :--- | :--- | :--- | :--- | :---: | :--- |
+| GET | `/disponibles?fecha=` | Horarios del día: `{horarios, ocupados, libres}` | — | 200 | 400 |
+| GET | `/mios` | Turnos del cliente logueado | — | 200 | — |
+| GET | `/` | Agenda (`?fecha=`, `?estado=`) | — | 200 | 400 |
+| GET | `/:id` | Detalle | — | 200 | 400, 404 |
+| POST | `/` | Reservar. Un CLIENTE reserva para sí (se ignora `clienteId`) | `{fecha, hora, servicioId, vehiculoId?, clienteId?, nota?}` | 201 | 400, 409 horario ocupado |
+| PUT | `/:id` | Editar / reprogramar | campos a cambiar (incluye `estado`) | 200 | 400, 404, 409 |
+| PATCH | `/:id/estado` | Cambiar estado | `{estado}` | 200 | 400, 404 |
+| PATCH | `/:id/cancelar` | Cancelar (el cliente, solo los suyos sin empezar) | — | 200 | 403, 404, 409 |
+| DELETE | `/:id` | Borrar | — | 204 | 404 |
 
 ### Lavados (`/api/lavados`)
 
-| Método | Ruta | Operaciones que cubre | Body | Éxito | Errores |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| GET | `/api/lavados` | Listar todos los registros | — | 200 | — |
-| GET | `/api/lavados/:id` | Ver detalle de un lavado | — | 200 | 404 |
-| POST | `/api/lavados` | Crear un registro de lavado | `{patente, modelo, tipoLavado, empleado}` | 201 | 400 |
-| PUT | `/api/lavados/:id` | Editar un registro | `{patente, modelo, tipoLavado, empleado}` | 200 | 404 |
-| DELETE | `/api/lavados/:id` | Borrar un registro | — | 204 | 404 |
+| Método | Ruta | Qué hace | Body | Éxito | Errores |
+| :--- | :--- | :--- | :--- | :---: | :--- |
+| GET | `/` | Listar (`?fecha=`) | — | 200 | 400 |
+| GET | `/:id` | Detalle | — | 200 | 400, 404 |
+| POST | `/` | Registrar ingreso (empleado = usuario logueado; precio = el del servicio) | `{vehiculoId, servicioId, observaciones?}` | 201 | 400 vehículo inexistente o servicio que no es de lavadero |
+| PUT | `/:id` | Editar | campos a cambiar | 200 | 400, 404 |
+| DELETE | `/:id` | Anular | — | 204 | 404 |
 
-### Usuarios (`/api/usuarios`)
+### Usuarios (`/api/usuarios`) — personal
 
-| Método | Ruta | Operaciones que cubre | Body | Éxito | Errores |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| GET | `/api/usuarios` | Listar todos los usuarios | — | 200 | — |
-| GET | `/api/usuarios/:id` | Ver detalle de un usuario | — | 200 | 404 |
-| POST | `/api/usuarios` | Crear un usuario/empleado | `{nombre, email, password, rol}` | 201 | 400 |
-| PUT | `/api/usuarios/:id` | Editar un usuario | `{nombre, email, rol}` | 200 | 404 |
-| DELETE | `/api/usuarios/:id` | Borrar un usuario | — | 204 | 404 |
+| Método | Ruta | Qué hace | Body | Éxito | Errores |
+| :--- | :--- | :--- | :--- | :---: | :--- |
+| GET | `/` | Listar (sin `passwordHash`) | — | 200 | — |
+| GET | `/:id` | Detalle | — | 200 | 400, 404 |
+| POST | `/` | Alta de personal | `{nombre, email, password, rol: ADMIN\|EMPLEADO}` | 201 | 400, 409 |
+| PUT | `/:id` | Editar nombre, rol o contraseña | `{nombre?, rol?, password?}` | 200 | 400, 404 |
+| DELETE | `/:id` | Borrar | — | 204 | 400 si es uno mismo, 404, 409 si tiene lavados |
+
+### Panel (`/api/panel`)
+
+| Método | Ruta | Qué hace | Éxito |
+| :--- | :--- | :--- | :---: |
+| GET | `/resumen` | `{turnosDelDia, turnosPendientes, vehiculosAtendidos, ingresosDelDia, agenda, lavados, serviceAtrasado}` del día | 200 |

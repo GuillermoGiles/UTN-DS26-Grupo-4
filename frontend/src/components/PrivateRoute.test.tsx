@@ -33,7 +33,6 @@ describe('PrivateRoute (Dado / Cuando / Entonces)', () => {
       id: 3,
       email: 'cliente@sanjose.test',
       nombre: 'Cliente Frecuente',
-      apellido: '',
       rol: 'CLIENTE',
     };
 
@@ -54,7 +53,6 @@ describe('PrivateRoute (Dado / Cuando / Entonces)', () => {
       id: 1,
       email: 'admin@sanjose.test',
       nombre: 'Admin General',
-      apellido: '',
       rol: 'ADMIN',
     };
 

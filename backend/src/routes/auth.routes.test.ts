@@ -101,6 +101,7 @@ describe("Seguridad y permisos - /api/auth", () => {
       const res = await request(app).post("/api/auth/registro").send({
         nombre: "Intruso",
         email: "intruso@sanjose.test",
+        telefono: "221-555-0000",
         password: "quieroSerAdmin",
         rol: "ADMIN",
       });

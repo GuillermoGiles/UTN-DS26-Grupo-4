@@ -16,3 +16,13 @@ export const validateParams = (schema: ZodType) =>
     req.params = resultado.data as any;
     next();
   };
+
+// En Express 5 req.query es un getter de solo lectura: se redefine la propiedad
+// en la instancia para que el controller lea los valores ya validados y convertidos.
+export const validateQuery = (schema: ZodType) =>
+  (req: Request, _res: Response, next: NextFunction) => {
+    const resultado = schema.safeParse(req.query);
+    if (!resultado.success) return next(resultado.error);
+    Object.defineProperty(req, "query", { value: resultado.data, writable: true });
+    next();
+  };

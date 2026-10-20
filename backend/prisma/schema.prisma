@@ -6,38 +6,38 @@ datasource db {
   provider = "postgresql"
 }
 
-model Cliente {
-  id        Int     @id @default(autoincrement())
-  nombre    String
-  vehiculo  String
-  patente   String  @unique
-  telefono  String
-  turnos    Turno[]
-}
-
-model Servicio {
-  id     Int     @id @default(autoincrement())
-  nombre String
-  precio Float
-  desc   String
-  tipo   String  // "lavadero" | "lubricentro"
-  turnos Turno[]
-}
-
-model Turno {
-  id         Int      @id @default(autoincrement())
-  fecha      String
-  hora       String
-  clienteId  Int
-  cliente    Cliente  @relation(fields: [clienteId], references: [id], onDelete: Restrict)
-  servicioId Int
-  servicio   Servicio @relation(fields: [servicioId], references: [id], onDelete: Restrict)
-}
+// ─────────────────────────────────────────────────────────────
+// Relaciones y onDelete (C17: "decidido a conciencia, no por default")
+//
+//  Usuario 1 ── 0..1 Cliente   onDelete: SetNull  → si se borra la cuenta, la ficha
+//                                                   del cliente y su historial quedan.
+//  Cliente 1 ── N Vehiculo     onDelete: Cascade  → un vehículo no tiene sentido sin
+//                                                   su titular (pero ver Turno abajo).
+//  Cliente 1 ── N Turno        onDelete: Restrict → no se borra un cliente con turnos:
+//                                                   se perdería el historial.
+//  Vehiculo 1 ── N Turno       onDelete: SetNull  → el turno queda en el historial
+//                                                   aunque se dé de baja el auto.
+//  Servicio 1 ── N Turno       onDelete: Restrict → no se borra un servicio usado.
+//  Vehiculo 1 ── N Lavado      onDelete: Restrict → los lavados son la caja del día.
+//  Servicio 1 ── N Lavado      onDelete: Restrict → idem.
+//  Usuario  1 ── N Lavado      onDelete: Restrict → queda registrado quién lo hizo.
+//
+// Combinado: borrar un cliente sin turnos borra sus vehículos (Cascade); si tiene
+// turnos, Postgres frena todo (Restrict) y la API responde 409.
+// ─────────────────────────────────────────────────────────────
 
 enum Rol {
   ADMIN
   EMPLEADO
   CLIENTE
+}
+
+enum EstadoTurno {
+  PENDIENTE
+  CONFIRMADO
+  EN_PROCESO
+  COMPLETADO
+  CANCELADO
 }
 
 model Usuario {
@@ -47,5 +47,74 @@ model Usuario {
   passwordHash String
   rol          Rol      @default(CLIENTE)
   createdAt    DateTime @default(now())
+  cliente      Cliente?
+  lavados      Lavado[]
 }
 
+model Cliente {
+  id        Int        @id @default(autoincrement())
+  nombre    String
+  telefono  String
+  email     String?    @unique
+  createdAt DateTime   @default(now())
+  usuarioId Int?       @unique
+  usuario   Usuario?   @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
+  vehiculos Vehiculo[]
+  turnos    Turno[]
+}
+
+model Vehiculo {
+  id                 Int       @id @default(autoincrement())
+  patente            String    @unique // normalizada: sin espacios ni guiones, en mayúsculas
+  marca              String
+  modelo             String
+  anio               Int?
+  km                 Int       @default(0)
+  kmUltimoService    Int?
+  fechaUltimoService DateTime?
+  createdAt          DateTime  @default(now())
+  clienteId          Int
+  cliente            Cliente   @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  turnos             Turno[]
+  lavados            Lavado[]
+}
+
+model Servicio {
+  id      Int      @id @default(autoincrement())
+  nombre  String
+  precio  Float
+  desc    String
+  tipo    String // "lavadero" | "lubricentro"
+  turnos  Turno[]
+  lavados Lavado[]
+}
+
+model Turno {
+  id         Int         @id @default(autoincrement())
+  fecha      String // "YYYY-MM-DD"
+  hora       String // "HH:MM", uno de los horarios de atención
+  estado     EstadoTurno @default(PENDIENTE)
+  nota       String?
+  createdAt  DateTime    @default(now())
+  clienteId  Int
+  cliente    Cliente     @relation(fields: [clienteId], references: [id], onDelete: Restrict)
+  vehiculoId Int?
+  vehiculo   Vehiculo?   @relation(fields: [vehiculoId], references: [id], onDelete: SetNull)
+  servicioId Int
+  servicio   Servicio    @relation(fields: [servicioId], references: [id], onDelete: Restrict)
+}
+
+// Lavado "en el momento": el auto llega sin turno y se registra al ingresar.
+// precio es una foto del precio del servicio en ese momento (los precios cambian).
+model Lavado {
+  id            Int      @id @default(autoincrement())
+  fecha         DateTime @default(now())
+  precio        Float
+  observaciones String?
+  vehiculoId    Int
+  vehiculo      Vehiculo @relation(fields: [vehiculoId], references: [id], onDelete: Restrict)
+  servicioId    Int
+  servicio      Servicio @relation(fields: [servicioId], references: [id], onDelete: Restrict)
+  empleadoId    Int
+  empleado      Usuario  @relation(fields: [empleadoId], references: [id], onDelete: Restrict)
+}

@@ -1,0 +1,42 @@
+# Blueprint de Render: backend (Docker) + PostgreSQL.
+# En Render: New → Blueprint → elegir este repo. Pide completar FRONTEND_URL.
+# El frontend va en Vercel (ver Documentación/07 - Deploy/Deploy.md).
+
+databases:
+  - name: sgi-sanjose-db
+    plan: free
+    databaseName: sgi_sanjose_db
+    user: sgi
+
+services:
+  - type: web
+    name: sgi-sanjose-api
+    runtime: docker
+    plan: free
+    # Rutas relativas a la raíz del repo (así lo define el schema de Render)
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    buildFilter:
+      paths:
+        - backend/** # un cambio solo en el frontend no redeploya la API
+    # Aplica las migraciones commiteadas (nunca genera nuevas), carga el seed
+    # (idempotente: usuarios de demo y datos de ejemplo) y levanta la API.
+    dockerCommand: sh -c "npx prisma generate && npx prisma migrate deploy && npx prisma db seed && npm start"
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: sgi-sanjose-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true # Render genera una cadena aleatoria: nunca "cambiame" en producción
+      - key: JWT_EXPIRES_IN
+        value: 8h
+      - key: FRONTEND_URL
+        sync: false # se completa en el panel: la URL de Vercel (puede ir más de una, separadas por coma)
+      - key: CHECKPOINT_DISABLE
+        value: "1"
+      - key: PRISMA_HIDE_UPDATE_MESSAGE
+        value: "1"
