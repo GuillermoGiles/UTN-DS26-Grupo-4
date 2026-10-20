@@ -14,20 +14,20 @@ const usuarios = [
 
 const clientes = [
   {
-    nombre: "Blasko Telechea", telefono: "11-1234-5678", email: "blasko@mail.test",
+    nombre: "Blasko Telechea", dni: "28456921", telefono: "11-1234-5678", email: "blasko@mail.test",
     vehiculos: [{ patente: "FGH452", marca: "Fiat", modelo: "Duna", anio: 1998, km: 182_500, kmUltimoService: 171_000, mesesDesdeService: 8 }],
   },
   {
-    nombre: "Lautaro Diguilmi", telefono: "11-9876-5432", email: "lautaro@mail.test",
+    nombre: "Lautaro Diguilmi", dni: "35111222", telefono: "11-9876-5432", email: "lautaro@mail.test",
     vehiculos: [{ patente: "XTZ987", marca: "Toyota", modelo: "Corolla", anio: 2015, km: 96_300, kmUltimoService: 87_000, mesesDesdeService: 4 }],
   },
   {
-    nombre: "Federico Corbalan", telefono: "11-4567-8901", email: "federico@mail.test",
+    nombre: "Federico Corbalan", dni: "40123456", telefono: "11-4567-8901", email: "federico@mail.test",
     vehiculos: [{ patente: "EF456GH", marca: "VW", modelo: "Gol", anio: 2021, km: 41_000, kmUltimoService: 38_000, mesesDesdeService: 2 }],
   },
   {
     // Ficha vinculada a la cuenta cliente@sanjose.test (portal del cliente)
-    nombre: "Cliente Frecuente", telefono: "221-555-1234", email: "cliente@sanjose.test",
+    nombre: "Cliente Frecuente", dni: "32999888", telefono: "221-555-1234", email: "cliente@sanjose.test",
     vehiculos: [
       { patente: "AB123CD", marca: "Toyota", modelo: "Hilux 2.8 TDI", anio: 2021, km: 58_900, kmUltimoService: 50_000, mesesDesdeService: 5 },
       { patente: "AC987ZX", marca: "Ford", modelo: "Fiesta Kinetic", anio: 2018, km: 77_000, kmUltimoService: null, mesesDesdeService: null },
@@ -140,7 +140,35 @@ async function main() {
     }
   }
 
-  console.log("Seed completado: usuarios por rol, clientes con vehículos, servicios, turnos y lavados.");
+  // 6. Insumos con sus recetas (lo que consume cada servicio) y su carga inicial
+  const insumos = [
+    { nombre: "Aceite sintético 5W-30", unidad: "litros", stock: 40, stockMinimo: 12 },
+    { nombre: "Filtro de aceite", unidad: "unidades", stock: 6, stockMinimo: 5 },
+    { nombre: "Filtro de aire", unidad: "unidades", stock: 3, stockMinimo: 4 },
+    { nombre: "Shampoo para autos", unidad: "litros", stock: 18, stockMinimo: 5 },
+    { nombre: "Cera líquida", unidad: "litros", stock: 6, stockMinimo: 2 },
+  ];
+  for (const i of insumos) {
+    const existe = await prisma.insumo.findUnique({ where: { nombre: i.nombre } });
+    if (!existe) {
+      await prisma.insumo.create({ data: { ...i, movimientos: { create: { cantidad: i.stock, motivo: "Carga inicial" } } } });
+    }
+  }
+  const insumo = async (nombre: string) => (await prisma.insumo.findUniqueOrThrow({ where: { nombre } })).id;
+  const recetas: Record<string, [string, number][]> = {
+    "Cambio de Aceite": [["Aceite sintético 5W-30", 4], ["Filtro de aceite", 1], ["Filtro de aire", 1]],
+    "Lavado Premium": [["Shampoo para autos", 0.5], ["Cera líquida", 0.2]],
+    "Lavado Básico": [["Shampoo para autos", 0.3]],
+  };
+  for (const [servicioNombre, items] of Object.entries(recetas)) {
+    const servicioId = await servicio(servicioNombre);
+    if ((await prisma.servicioInsumo.count({ where: { servicioId } })) > 0) continue;
+    for (const [insumoNombre, cantidad] of items) {
+      await prisma.servicioInsumo.create({ data: { servicioId, insumoId: await insumo(insumoNombre), cantidad } });
+    }
+  }
+
+  console.log("Seed completado: usuarios por rol, clientes con vehículos, servicios, turnos, lavados e insumos.");
 }
 
 main()

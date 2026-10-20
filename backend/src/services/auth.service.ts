@@ -27,7 +27,7 @@ export async function registrar(datos: RegistroInput): Promise<UsuarioPublico> {
       cliente: {
         connectOrCreate: {
           where: { email: datos.email },
-          create: { nombre: datos.nombre, email: datos.email, telefono: datos.telefono },
+          create: { nombre: datos.nombre, email: datos.email, telefono: datos.telefono, dni: datos.dni },
         },
       },
     },

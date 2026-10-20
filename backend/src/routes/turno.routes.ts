@@ -1,5 +1,6 @@
 import { Router } from "express";
 import * as turnoController from "../controllers/turno.controller";
+import * as correoController from "../controllers/correo.controller";
 import { validate, validateParams, validateQuery } from "../middleware/validate.middleware";
 import { authenticate, authorize } from "../middleware/auth.middleware";
 import {
@@ -59,6 +60,9 @@ router.patch(
   validateParams(idParamSchema),
   turnoController.cancelar
 );
+
+// Recordatorio por e-mail de un turno puntual
+router.post("/:id/recordatorio", authenticate, authorize("ADMIN", "EMPLEADO"), validateParams(idParamSchema), correoController.recordatorioDeTurno);
 
 router.delete("/:id", authenticate, authorize("ADMIN", "EMPLEADO"), validateParams(idParamSchema), turnoController.remove);
 

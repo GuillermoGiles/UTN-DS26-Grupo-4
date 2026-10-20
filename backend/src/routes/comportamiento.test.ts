@@ -49,6 +49,7 @@ describe("Comportamiento específico (Dado / Cuando / Entonces)", () => {
         nombre: "Carlos Gómez",
         telefono: "2215001122",
         email: "carlos@mail.test",
+        dni: null,
         usuarioId: 3,
         createdAt: new Date("2026-09-01T10:00:00Z"),
       };

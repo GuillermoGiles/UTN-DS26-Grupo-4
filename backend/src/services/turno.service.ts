@@ -4,6 +4,7 @@ import { AppError } from "../errors/AppError";
 import { HORARIOS, CUPOS_POR_HORARIO } from "../config/negocio";
 import { turnoInclude, type TurnoConDetalle } from "../types/turno.types";
 import { yaPaso } from "../utils/fechas";
+import { descontarPorServicio } from "./insumo.service";
 import type { TurnoCreate, TurnoUpdate } from "../validations/turno.validation";
 
 type UsuarioSesion = { id: number; rol: Rol };
@@ -116,19 +117,29 @@ export async function update(id: number, datos: TurnoUpdate): Promise<TurnoConDe
  * queda registrado el service del vehículo con su kilometraje actual.
  */
 export async function cambiarEstado(id: number, estado: EstadoTurno): Promise<TurnoConDetalle | null> {
-  try {
-    const turno = await prisma.turno.update({ where: { id }, data: { estado }, include: turnoInclude });
-    if (estado === "COMPLETADO" && turno.servicio.tipo === "lubricentro" && turno.vehiculo) {
-      await prisma.vehiculo.update({
-        where: { id: turno.vehiculo.id },
-        data: { kmUltimoService: turno.vehiculo.km, fechaUltimoService: new Date() },
-      });
+  const actual = await prisma.turno.findUnique({ where: { id }, include: turnoInclude });
+  if (!actual) return null;
+
+  return prisma.$transaction(async (tx) => {
+    const completa = estado === "COMPLETADO" && !actual.stockDescontado;
+    const turno = await tx.turno.update({
+      where: { id },
+      data: { estado, ...(completa ? { stockDescontado: true } : {}) },
+      include: turnoInclude,
+    });
+    if (completa) {
+      // Descuento automático de insumos (una sola vez por turno)
+      await descontarPorServicio(tx, turno.servicioId, `Turno #${turno.id} · ${turno.servicio.nombre}`);
+      // Service de lubricentro: queda registrado con el kilometraje actual
+      if (turno.servicio.tipo === "lubricentro" && turno.vehiculo) {
+        await tx.vehiculo.update({
+          where: { id: turno.vehiculo.id },
+          data: { kmUltimoService: turno.vehiculo.km, fechaUltimoService: new Date() },
+        });
+      }
     }
     return turno;
-  } catch (e) {
-    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2025") return null;
-    throw e;
-  }
+  });
 }
 
 /** Cancelación: el CLIENTE solo puede cancelar los suyos y solo si todavía no empezaron. */

@@ -57,6 +57,18 @@ const matriz: { metodo: Metodo; ruta: string; prohibido: Rol[] }[] = [
   { metodo: "get", ruta: "/api/turnos/mios", prohibido: ["EMPLEADO", "ADMIN"] },
   { metodo: "patch", ruta: "/api/turnos/1/estado", prohibido: ["CLIENTE"] },
   { metodo: "patch", ruta: "/api/turnos/1/cancelar", prohibido: [] },
+  // Insumos (stock)
+  { metodo: "get", ruta: "/api/insumos", prohibido: ["CLIENTE"] },
+  { metodo: "get", ruta: "/api/insumos/1", prohibido: ["CLIENTE"] },
+  { metodo: "post", ruta: "/api/insumos", prohibido: ["CLIENTE", "EMPLEADO"] },
+  { metodo: "put", ruta: "/api/insumos/1", prohibido: ["CLIENTE", "EMPLEADO"] },
+  { metodo: "post", ruta: "/api/insumos/1/movimientos", prohibido: ["CLIENTE", "EMPLEADO"] },
+  { metodo: "delete", ruta: "/api/insumos/1", prohibido: ["CLIENTE", "EMPLEADO"] },
+  { metodo: "put", ruta: "/api/servicios/1/insumos", prohibido: ["CLIENTE", "EMPLEADO"] },
+  // Recordatorios por e-mail
+  { metodo: "get", ruta: "/api/correos", prohibido: ["CLIENTE", "EMPLEADO"] },
+  { metodo: "post", ruta: "/api/correos/recordatorios", prohibido: ["CLIENTE"] },
+  { metodo: "post", ruta: "/api/turnos/1/recordatorio", prohibido: ["CLIENTE"] },
   // Clientes: portal del cliente
   { metodo: "get", ruta: "/api/clientes/mio", prohibido: ["EMPLEADO", "ADMIN"] },
   { metodo: "put", ruta: "/api/clientes/mio", prohibido: ["EMPLEADO", "ADMIN"] },
