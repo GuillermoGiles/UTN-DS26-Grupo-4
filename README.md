@@ -16,11 +16,11 @@ El negocio "San José" ofrece lavados y servicios de mantenimiento (cambio de ac
 
 | Rol | Puede |
 | :--- | :--- |
-| **Cliente** | Crear su cuenta, reservar turnos eligiendo entre los horarios libres, ver sus autos con el próximo service (cada 10.000 km o 6 meses) y el historial, cancelar turnos pendientes. |
-| **Empleado** | Agenda del día con el estado de cada turno, registrar autos que llegan al lavadero sin turno, alta y búsqueda de clientes y vehículos, historial y registro de service. |
-| **Administrador** | Todo lo anterior, más el panel con la caja del día y los autos con service atrasado, el catálogo de servicios y las cuentas del personal. |
+| **Cliente** | Crear su cuenta, reservar turnos eligiendo entre los horarios libres, ver sus autos con el próximo service (cada 10.000 km o 6 meses) y el historial, cancelar turnos pendientes y recibir el recordatorio por e-mail el día anterior. |
+| **Empleado** | Agenda del día: estado de cada turno, reprogramar y enviar recordatorios. Autos que llegan al lavadero sin turno, alta y búsqueda de clientes (por DNI, nombre o patente) y vehículos, historial y registro de service, consulta de stock. |
+| **Administrador** | Todo lo anterior, más el panel (caja del día y de la semana, stock bajo, service atrasado), el catálogo de precios con los insumos que consume cada servicio, el control de stock, el historial de correos y las cuentas del personal. |
 
-**Stack:** React 19 + TypeScript + Vite + React Bootstrap · Node.js + Express 5 + TypeScript · Prisma 7 + PostgreSQL 16 · Zod en los dos lados · JWT + bcrypt · Docker Compose · Vitest + Supertest + Testing Library.
+**Stack:** React 19 + TypeScript + Vite + React Bootstrap (diseño propio, tipografías Fraunces y DM Sans empaquetadas) · Node.js + Express 5 + TypeScript · Prisma 7 + PostgreSQL 16 · Zod en los dos lados · JWT + bcrypt · Docker Compose · Vitest + Supertest + Testing Library.
 
 ## Cómo levantarlo
 
@@ -43,7 +43,9 @@ cd frontend && npm install && npm run dev  # http://localhost:5173
 | EMPLEADO | `empleado@sanjose.test` | `EmpleadoPassword123` |
 | CLIENTE | `cliente@sanjose.test` | `ClientePassword123` |
 
-El seed crea turnos de ayer, hoy y mañana, así la agenda y el panel tienen datos el día que se corra.
+El seed crea turnos de ayer, hoy y mañana, insumos con sus recetas y DNI de ejemplo, así la agenda, el panel y el stock tienen datos el día que se corra.
+
+**Recordatorios por e-mail:** sin configuración quedan registrados como *simulados* (se ven en la pantalla Correos). Para que salgan de verdad, completar `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER` y `SMTP_PASS` en `backend/.env` (con Gmail, una contraseña de aplicación).
 Para probar la API sin el front está `backend/api.http` (REST Client), que corre entero de arriba hacia abajo con los casos de error de cada entidad.
 
 > **Cambiar el modelo:** después de tocar `schema.prisma`, `npx prisma migrate dev --name <descripcion>` dentro del contenedor genera la migración nueva. `npm run setup` usa `migrate deploy`, que solo aplica las del repo.
@@ -68,19 +70,19 @@ Paso a paso en [Documentación/07 - Deploy](./Documentación/07%20-%20Deploy/Dep
 
 ## 🧪 Testing
 
-**178 tests automatizados**: 162 en el backend (160 sin base de datos + 2 contra PostgreSQL) y 16 en el frontend.
+**230 tests automatizados**: 210 en el backend (208 sin base de datos + 2 contra PostgreSQL) y 20 en el frontend.
 
 ```text
-Suite total: 178 tests
-├── Backend: 162 (160 sin DB en ~3 s + 2 con DB real)
-└── Frontend: 16 (jsdom + Testing Library, sin backend)
+Suite total: 230 tests
+├── Backend: 210 (208 sin DB en ~3 s + 2 con DB real)
+└── Frontend: 20 (jsdom + Testing Library, sin backend)
 ```
 
 ### 1. Comandos
 
 ```bash
 # Backend (desde backend/, en el host o con: docker compose run --rm api <comando>)
-npm run test:sin-db     # 160 tests, no necesita Docker
+npm run test:sin-db     # 208 tests, no necesita Docker
 npm test                # todos, incluidos los *.db.test.ts (necesita la base con el seed)
 npm run test:watch
 npm run coverage
@@ -95,7 +97,7 @@ npm run lint
 
 | Suite | Qué hace falta | Cómo |
 | :--- | :--- | :--- |
-| Sin DB (160 back + 16 front) | **Nada** | `supertest` usa `app` sin `listen`; Prisma está mockeado con `vi.mock`; el JWT se firma con el secreto de prueba de `vitest.config.mts`. El front corre en jsdom con la API mockeada. |
+| Sin DB (208 back + 20 front) | **Nada** | `supertest` usa `app` sin `listen`; Prisma está mockeado con `vi.mock`; el JWT se firma con el secreto de prueba de `vitest.config.mts`. El front corre en jsdom con la API mockeada. |
 | Con DB (`*.db.test.ts`) | PostgreSQL con migraciones y seed | `docker compose up -d db` + `npm run setup`. Si la base está apagada solo fallan esos 2 archivos; el resto sigue verde. |
 
 ### 3. Qué cubren
@@ -106,19 +108,21 @@ npm run lint
 | :--- | :---: | :--- |
 | `app.test.ts` | 2 | La API carga sin puerto; 404 en JSON. |
 | `middleware/auth.middleware.test.ts` | 4 | `authorize` corta con 403 y deja pasar al rol correcto; `authenticate` carga `req.usuario` y responde 401 con token vencido. |
-| `validations/validations.test.ts` | 7 | Precio negativo, trim, patente normalizada (`" ae 987-xz "` → `AE987XZ`), formato argentino, ids coercionados. |
-| `utils/utils.test.ts` | 11 | Próximo service (ok / próximo / vencido por km o por fecha), fechas en hora de Argentina, "ya pasó", patentes y horarios. |
+| `validations/validations.test.ts` | 10 | Precio negativo, trim, patente normalizada (`" ae 987-xz "` → `AE987XZ`), formato argentino, ids coercionados, DNI normalizado, insumo y receta inválidos. |
+| `utils/utils.test.ts` | 12 | Próximo service (ok / próximo / vencido por km o por fecha), fechas en hora de Argentina, "ya pasó", domingos, patentes y horarios. |
+| `services/insumo.service.test.ts` | 3 | Descuento automático de insumos según la receta; si no alcanza queda en 0 sin frenar el trabajo; sin movimientos vacíos. |
 | `routes/{auth,servicio,cliente,turno}.routes.test.ts` | 38 | Matriz de permisos original (401/403/400), incluida la **escalada de privilegios**: registrarse mandando `rol: ADMIN` crea igual un CLIENTE. |
-| `routes/matriz-permisos.test.ts` | 89 | Cada celda de los endpoints nuevos (vehículos, lavados, usuarios, panel, turnos y portal del cliente): 401 sin token, 403 para cada rol sin permiso, y que los roles permitidos sí pasan la barrera. |
-| `routes/comportamiento.test.ts` | 9 | Dado/Cuando/Entonces: el cliente reserva a nombre de su ficha aunque mande otro `clienteId`; horario ocupado → 409; día pasado → 400; alta de cliente con su auto; login con mensaje genérico; registro sin `passwordHash`. |
+| `routes/matriz-permisos.test.ts` | 129 | Cada celda de los endpoints nuevos (vehículos, lavados, usuarios, panel, insumos, recetas, correos, turnos y portal del cliente): 401 sin token, 403 para cada rol sin permiso, y que los roles permitidos sí pasan la barrera. |
+| `routes/comportamiento.test.ts` | 10 | Dado/Cuando/Entonces: el cliente reserva a nombre de su ficha aunque mande otro `clienteId`; horario ocupado → 409; día pasado → 400; domingo → 400; alta de cliente con su auto; login con mensaje genérico; registro sin `passwordHash`. |
 | `routes/*.db.test.ts` | 2 | Contra PostgreSQL: catálogo del seed; login real → reserva → el horario deja de estar libre → repetir da 409. |
 
 **Frontend (`frontend/src/`)**
 
 | Archivo | Tests | Qué verifica |
 | :--- | :---: | :--- |
-| `components/PrivateRoute.test.tsx` | 3 | Invitado → `/login`; rol equivocado → `/sin-permiso`; rol correcto → contenido. |
+| `components/PrivateRoute.test.tsx` | 4 | Invitado → `/login`; rol equivocado → `/sin-permiso`; rol correcto → contenido; después de "Salir" → inicio. |
 | `components/Layout/Header.test.tsx` | 4 | Qué links ve cada rol (invitado, cliente, empleado, admin) y el botón Salir. |
+| `pages/Insumos.test.tsx` | 3 | Alerta de stock mínimo; el EMPLEADO ve el stock pero no carga; el ADMIN tiene Cargar / ajustar y Nuevo insumo. |
 | `pages/Servicios.test.tsx` | 3 | Editar/Borrar solo para ADMIN; Reservar para el cliente; el error de la API se muestra. |
 | `pages/SinPermiso.test.tsx` | 2 | La pantalla del 403 con el rol actual. |
 | `schemas/schemas.test.ts` | 4 | Contraseñas que no coinciden; vehículo obligatorio si se marca; body final del alta de cliente; `<select>` → ids numéricos. |

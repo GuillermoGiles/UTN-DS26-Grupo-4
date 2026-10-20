@@ -53,6 +53,16 @@ Cada fila con ❌ 401 / ❌ 403 tiene su test sin base de datos en `backend/src/
 | | `/api/lavados` | POST | ❌ 401 | ❌ 403 | ✅ 201 | ✅ 201 | Formulario `/lavados/nuevo` ("Ingreso al lavadero"). |
 | | `/api/lavados/:id` | PUT | ❌ 401 | ❌ 403 | ✅ 200 | ✅ 200 | (API) corrección. |
 | | `/api/lavados/:id` | DELETE | ❌ 401 | ❌ 403 | ❌ 403 | ✅ 204 | Botón "Anular" en la agenda, solo ADMIN. |
+| **Servicios** (receta) | `/api/servicios/:id/insumos` | PUT | ❌ 401 | ❌ 403 | ❌ 403 | ✅ 200 | "Insumos que consume" en `/servicios/:id/editar`, solo ADMIN. |
+| **Insumos** | `/api/insumos` | GET | ❌ 401 | ❌ 403 | ✅ 200 | ✅ 200 | Pantalla `/insumos` con alertas; contador rojo en el menú cuando hay insumos en el mínimo. |
+| | `/api/insumos/:id` | GET | ❌ 401 | ❌ 403 | ✅ 200 | ✅ 200 | "Movimientos" en cada tarjeta de insumo. |
+| | `/api/insumos` | POST | ❌ 401 | ❌ 403 | ❌ 403 | ✅ 201 | Botón "Nuevo insumo", solo ADMIN. |
+| | `/api/insumos/:id` | PUT | ❌ 401 | ❌ 403 | ❌ 403 | ✅ 200 | (API) cambiar nombre, unidad o mínimo. |
+| | `/api/insumos/:id/movimientos` | POST | ❌ 401 | ❌ 403 | ❌ 403 | ✅ 200 | Botón "Cargar / ajustar", solo ADMIN (el empleado no lo ve). |
+| | `/api/insumos/:id` | DELETE | ❌ 401 | ❌ 403 | ❌ 403 | ✅ 204 | (API) baja de un insumo. |
+| **Correos** | `/api/correos` | GET | ❌ 401 | ❌ 403 | ❌ 403 | ✅ 200 | Pantalla `/correos`, link solo ADMIN. |
+| | `/api/correos/recordatorios` | POST | ❌ 401 | ❌ 403 | ✅ 200 | ✅ 200 | Botón "Enviar los de mañana" en `/correos`. El servidor lo hace solo cada hora. |
+| | `/api/turnos/:id/recordatorio` | POST | ❌ 401 | ❌ 403 | ✅ 201 | ✅ 201 | "Enviar recordatorio" en el detalle del turno de la agenda. |
 | **Usuarios** | `/api/usuarios` | GET | ❌ 401 | ❌ 403 | ❌ 403 | ✅ 200 | Listado `/usuarios`, link solo ADMIN. |
 | | `/api/usuarios/:id` | GET | ❌ 401 | ❌ 403 | ❌ 403 | ✅ 200 | (API) detalle. |
 | | `/api/usuarios` | POST | ❌ 401 | ❌ 403 | ❌ 403 | ✅ 201 | Formulario `/usuarios/nuevo` (rol ADMIN o EMPLEADO). |
@@ -71,12 +81,12 @@ La misma matriz, vista desde el router (`frontend/src/App.tsx`). Cada grupo es u
 | Pública | No pasa por `PrivateRoute`. | `/`, `/login`, `/registro`, `/servicios`, `/sin-permiso` |
 | Login (cualquier rol) | Sin usuario → `/login`. | `/turnos/nuevo` |
 | Solo `CLIENTE` | Sin usuario → `/login`. Personal → `/sin-permiso`. | `/mi-cuenta` |
-| `EMPLEADO` o `ADMIN` | Sin usuario → `/login`. Con `CLIENTE` → `/sin-permiso`. | `/agenda`, `/clientes`, `/clientes/nuevo`, `/clientes/:id`, `/vehiculos`, `/vehiculos/nuevo`, `/vehiculos/:id`, `/lavados/nuevo` |
-| Solo `ADMIN` | Sin usuario → `/login`. Con `CLIENTE` o `EMPLEADO` → `/sin-permiso`. | `/panel`, `/servicios/nuevo`, `/servicios/:id/editar`, `/usuarios`, `/usuarios/nuevo` |
+| `EMPLEADO` o `ADMIN` | Sin usuario → `/login`. Con `CLIENTE` → `/sin-permiso`. | `/agenda`, `/clientes`, `/clientes/nuevo`, `/clientes/:id`, `/vehiculos`, `/vehiculos/nuevo`, `/vehiculos/:id`, `/lavados/nuevo`, `/insumos` |
+| Solo `ADMIN` | Sin usuario → `/login`. Con `CLIENTE` o `EMPLEADO` → `/sin-permiso`. | `/panel`, `/servicios/nuevo`, `/servicios/:id/editar`, `/usuarios`, `/usuarios/nuevo`, `/correos` |
 
 Mientras el `AuthProvider` todavía no sabe quién sos (`cargando`, esperando `GET /api/auth/yo`), `PrivateRoute` muestra un spinner y **no decide nada**: así un F5 en una ruta protegida no "flashea" a `/login`.
 
-Las redirecciones usan `replace` para que "atrás" no vuelva a la ruta protegida y atrape al usuario. Al mandar a `/login` se guarda la ruta de origen (`state.desde`) y el login devuelve al usuario ahí.
+Las redirecciones usan `replace` para que "atrás" no vuelva a la ruta protegida y atrape al usuario. Al mandar a `/login` se guarda la ruta de origen (`state.desde`) y el login devuelve al usuario ahí. La excepción es cuando el usuario tocó **Salir**: `AuthContext` marca la salida como voluntaria y `PrivateRoute` lo manda al inicio, así el próximo que entre no cae en la pantalla del anterior.
 
 > **Esconder ≠ proteger.** Se esconde el link (renderizado por rol) **y** se protege la ruta (`PrivateRoute`). Si alguien escribe la URL a mano, `PrivateRoute` lo para; si saltea la UI entera con `curl`, el back responde 401/403. La regla vive en la API.
 
