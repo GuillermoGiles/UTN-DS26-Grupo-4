@@ -9,6 +9,7 @@ export const servicioCreateSchema = z.object({
 
 export const servicioUpdateSchema = servicioCreateSchema.partial();
 
-export const idParamSchema = z.object({
-  id: z.coerce.number().int().positive("El id debe ser un número positivo"),
-});
+export { idParamSchema } from "./common.validation";
+
+export type ServicioCreate = z.infer<typeof servicioCreateSchema>;
+export type ServicioUpdate = z.infer<typeof servicioUpdateSchema>;
