@@ -50,6 +50,17 @@ https://utn-ds26-grupo-4.vercel.app,http://localhost:5173
 
 Guardar: Render reinicia el servicio solo.
 
+## 3 bis. Recordatorios por e-mail (opcional)
+
+Sin configuración, los recordatorios quedan registrados como *simulados* (se ven en la pantalla Correos).
+Para que lleguen de verdad con Gmail:
+
+1. En la cuenta de Gmail del taller: activar la **verificación en 2 pasos** y crear una **contraseña de aplicación**.
+2. En Render → `sgi-sanjose-api` → **Environment**: completar `SMTP_USER` (el Gmail) y `SMTP_PASS` (la contraseña de aplicación). `SMTP_HOST` y `SMTP_PORT` ya vienen del blueprint.
+3. Guardar. En **Correos** desaparece el aviso de "no configurado".
+
+> En el plan free el servicio se duerme: los recordatorios automáticos solo salen mientras está despierto. Para la demo alcanza con el botón "Enviar los de mañana".
+
 ## 4. Verificación (Entrega 4)
 
 | Prueba | Esperado |
@@ -59,6 +70,7 @@ Guardar: Render reinicia el servicio solo.
 | F5 en `/panel` | Sigue logueado (rehidratación con `/auth/yo`) |
 | Crear cuenta nueva y reservar un turno | Aparece en Mi cuenta y en la agenda del empleado |
 | Escribir `/usuarios` logueado como cliente | `/sin-permiso` |
+| Completar un cambio de aceite en la agenda | En Insumos baja el aceite y aparece la alerta del filtro |
 | En la consola del navegador | Sin errores de CORS |
 
 Si aparece **"blocked by CORS policy"**: `FRONTEND_URL` no coincide exacto con la URL de Vercel (sin `/` al final, con `https`).

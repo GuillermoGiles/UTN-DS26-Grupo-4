@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Badge } from 'react-bootstrap';
+import { FiDroplet, FiTool } from 'react-icons/fi';
 import type { TipoServicio } from '../types/servicio';
 import { pesos } from '../utils/formato';
 
@@ -8,29 +8,32 @@ export interface ServicioDestacadoProps {
   precio: number;
   descripcion: string;
   tipo: TipoServicio;
-  /** Botón principal (ej. "Reservar turno") */
+  /** Botón principal (ej. "Reservar") */
   accion?: ReactNode;
   /** Botones de gestión, solo los recibe un ADMIN */
   acciones?: ReactNode;
 }
 
 export function ServicioDestacado({ nombre, precio, descripcion, tipo, accion, acciones }: ServicioDestacadoProps) {
+  const lubricentro = tipo === 'lubricentro';
   return (
-    <div className="saas-card-dark h-100 d-flex flex-column w-100">
-      <div className="p-4 d-flex flex-column h-100">
+    <article className="card-sgi h-100 w-100 d-flex flex-column">
+      <div className="card-sgi-body d-flex flex-column h-100">
         <div className="d-flex justify-content-between align-items-center mb-3">
-          <Badge bg={tipo === 'lubricentro' ? 'danger' : 'info'} text={tipo === 'lubricentro' ? undefined : 'dark'} pill>
-            {tipo === 'lubricentro' ? 'Lubricentro' : 'Lavadero'}
-          </Badge>
-          {acciones && <div className="d-flex gap-2">{acciones}</div>}
+          <span className={`icon-circle${lubricentro ? ' terracota' : ''}`}>{lubricentro ? <FiTool /> : <FiDroplet />}</span>
+          {acciones ? <div className="d-flex gap-2">{acciones}</div> : <span className={`estado ${lubricentro ? 'estado-pendiente' : 'estado-confirmado'}`}>{lubricentro ? 'Lubricentro' : 'Lavadero'}</span>}
         </div>
-        <h4 className="fw-bold mb-2">{nombre}</h4>
-        <p className="text-muted small lh-lg">{descripcion}</p>
-        <div className="mt-auto pt-3 border-top border-secondary d-flex justify-content-between align-items-center gap-2">
-          <span className="fs-3 fw-bold">{pesos(precio)}</span>
+        <span className="eyebrow" style={{ color: lubricentro ? 'var(--primary)' : 'var(--teal)' }}>{lubricentro ? 'LUBRICENTRO' : 'LAVADERO'}</span>
+        <h3 className="fs-4 mb-2">{nombre}</h3>
+        <p className="text-muted small mb-0">{descripcion}</p>
+        <div className="mt-auto pt-3 d-flex justify-content-between align-items-end gap-2">
+          <div>
+            <small className="text-muted fw-bold d-block" style={{ fontSize: '.68rem', letterSpacing: '.06em' }}>PRECIO</small>
+            <span className="display fs-3">{pesos(precio)}</span>
+          </div>
           {accion}
         </div>
       </div>
-    </div>
+    </article>
   );
 }

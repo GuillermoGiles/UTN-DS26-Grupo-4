@@ -13,10 +13,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const logout = useCallback(() => {
+  // true cuando el usuario tocó "Salir": PrivateRoute lo manda al inicio en vez de a /login
+  // (no tiene sentido guardar "de dónde venía" para devolverlo ahí en el próximo login).
+  const [salioPorSuCuenta, setSalioPorSuCuenta] = useState(false);
+
+  const cerrarSesion = useCallback(() => {
     borrarToken();
     setUsuario(null);
   }, []);
+
+  const logout = useCallback(() => {
+    setSalioPorSuCuenta(true);
+    cerrarSesion();
+  }, [cerrarSesion]);
 
   // Rehidratación al montar: F5 borra el estado de React pero no el token.
   // Le preguntamos al back (fuente de verdad) en vez de decodificar el token en el front.
@@ -32,7 +41,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // se cierra la sesión y se redirige a /login con aviso y ruta previa.
   useEffect(() => {
     const manejarSesionExpirada = () => {
-      logout();
+      setSalioPorSuCuenta(false);
+      cerrarSesion();
       if (location.pathname !== '/login') {
         navigate('/login', {
           replace: true,
@@ -48,7 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       window.removeEventListener(EVENTO_SESION_EXPIRADA, manejarSesionExpirada);
     };
-  }, [logout, navigate, location.pathname]);
+  }, [cerrarSesion, navigate, location.pathname]);
 
   const login = async (credenciales: Credenciales) => {
     const sesion = await apiFetch<Sesion>('/auth/login', {
@@ -56,6 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       body: JSON.stringify(credenciales),
     });
     guardarToken(sesion.token);
+    setSalioPorSuCuenta(false);
     setUsuario(sesion.usuario);
     return sesion.usuario;
   };
@@ -67,6 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         cargando,
         estaAutenticado: usuario !== null,
         tieneRol: (rol) => usuario?.rol === rol,
+        salioPorSuCuenta,
         login,
         logout,
       }}

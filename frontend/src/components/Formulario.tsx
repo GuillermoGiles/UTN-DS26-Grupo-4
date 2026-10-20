@@ -1,27 +1,17 @@
 import type { ReactNode } from 'react';
-import { Container, Alert, Spinner } from 'react-bootstrap';
+import { Alert, Spinner } from 'react-bootstrap';
 
-/** Marco común de los formularios de alta: tarjeta oscura, título y error del servidor. */
+/** Marco común de los formularios: tarjeta clara con título y error del servidor. */
 export function MarcoFormulario({
-  titulo,
-  subtitulo,
-  error,
-  onCerrarError,
-  ancho = 640,
-  children,
+  titulo, subtitulo, error, onCerrarError, ancho = 640, children,
 }: {
-  titulo: string;
-  subtitulo?: string;
-  error?: string | null;
-  onCerrarError?: () => void;
-  ancho?: number;
-  children: ReactNode;
+  titulo: string; subtitulo?: string; error?: string | null; onCerrarError?: () => void; ancho?: number; children: ReactNode;
 }) {
   return (
-    <Container className="py-5" style={{ maxWidth: ancho }}>
-      <div className="saas-card-dark p-4 p-md-5 text-start">
-        <h2 className="fw-bold mb-1">{titulo}</h2>
-        {subtitulo && <p className="text-muted mb-4">{subtitulo}</p>}
+    <div className="page" style={{ maxWidth: ancho + 80 }}>
+      <div className="card-sgi p-4 p-md-5">
+        <h2 className="mb-1" style={{ fontSize: '2rem' }}>{titulo}</h2>
+        {subtitulo && <p className="text-muted mb-3">{subtitulo}</p>}
         {error && (
           <Alert variant="danger" dismissible={!!onCerrarError} onClose={onCerrarError} className="mt-3">
             {error}
@@ -29,24 +19,28 @@ export function MarcoFormulario({
         )}
         <div className="mt-3">{children}</div>
       </div>
-    </Container>
+    </div>
   );
 }
 
 export function BotonGuardar({ guardando, texto, textoGuardando = 'Guardando...' }: { guardando: boolean; texto: string; textoGuardando?: string }) {
   return (
-    <button
-      type="submit"
-      className="btn-primary-custom w-100 fw-bold d-flex align-items-center justify-content-center gap-2"
-      disabled={guardando}
-    >
-      {guardando ? (
-        <>
-          <Spinner size="sm" animation="border" /> {textoGuardando}
-        </>
-      ) : (
-        texto
-      )}
+    <button type="submit" className="btn-sgi w-100" disabled={guardando}>
+      {guardando ? (<><Spinner size="sm" animation="border" /> {textoGuardando}</>) : texto}
     </button>
+  );
+}
+
+/** Encabezado de página: bajada chica, título grande y acciones a la derecha. */
+export function EncabezadoPagina({ eyebrow, titulo, texto, acciones }: { eyebrow?: string; titulo: string; texto?: ReactNode; acciones?: ReactNode }) {
+  return (
+    <div className="page-head">
+      <div>
+        {eyebrow && <span className="eyebrow">{eyebrow}</span>}
+        <h1>{titulo}</h1>
+        {texto && <p>{texto}</p>}
+      </div>
+      {acciones && <div className="d-flex flex-wrap gap-2">{acciones}</div>}
+    </div>
   );
 }

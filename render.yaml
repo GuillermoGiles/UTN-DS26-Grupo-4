@@ -36,6 +36,15 @@ services:
         value: 8h
       - key: FRONTEND_URL
         sync: false # se completa en el panel: la URL de Vercel (puede ir más de una, separadas por coma)
+      # Recordatorios por e-mail (opcional: sin estas, los correos quedan como SIMULADOS)
+      - key: SMTP_HOST
+        value: smtp.gmail.com
+      - key: SMTP_PORT
+        value: "465"
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
       - key: CHECKPOINT_DISABLE
         value: "1"
       - key: PRISMA_HIDE_UPDATE_MESSAGE

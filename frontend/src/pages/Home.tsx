@@ -1,6 +1,8 @@
 import { Container, Row, Col } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
-import { FiClock, FiMapPin } from 'react-icons/fi';
+import { FiCalendar, FiClock, FiDroplet, FiShield } from 'react-icons/fi';
+import { BsSpeedometer2 } from 'react-icons/bs';
+import foto from '../assets/taller.jpg';
 import { useAuth } from '../hooks/useAuth';
 import { useFetch } from '../hooks/useFetch';
 import { ServicioDestacado } from '../components/ServicioDestacado';
@@ -8,10 +10,10 @@ import { Cargando, ErrorCarga } from '../components/Estado';
 import { inicioPorRol } from '../utils/inicioPorRol';
 import type { Servicio } from '../types/servicio';
 
-const PASOS = [
-  { titulo: 'Creá tu cuenta', texto: 'Con tu nombre, email y teléfono. Si ya viniste, tu historial aparece solo.' },
-  { titulo: 'Elegí día y horario', texto: 'Ves los horarios libres del día y reservás el que te quede cómodo.' },
-  { titulo: 'Traé el auto', texto: 'Te avisamos cuando está listo y anotamos los km para el próximo service.' },
+const VENTAJAS = [
+  { icono: <FiCalendar />, titulo: 'Reservá online', texto: 'Ves los horarios libres del día y elegís el que te quede cómodo. Sin llamar.' },
+  { icono: <BsSpeedometer2 />, titulo: 'Próximo service', texto: 'Anotamos los km de cada visita y te avisamos cuándo le toca al auto.' },
+  { icono: <FiShield />, titulo: 'Tu historial', texto: 'Todos los trabajos de cada vehículo en un solo lugar, siempre a mano.' },
 ];
 
 export function Home() {
@@ -26,76 +28,55 @@ export function Home() {
 
   return (
     <>
-      <Container className="py-5">
-        <Row className="align-items-center g-5 py-lg-4">
-          <Col lg={7}>
-            <h1 className="display-5 fw-bold mb-3">Lavadero y lubricentro San José</h1>
-            <p className="lead text-muted mb-4" style={{ maxWidth: '36rem' }}>
-              Cambio de aceite, filtros, alineación y lavado de tu auto. Reservá online y llevá el control del
-              service de cada vehículo sin anotar nada en un cuaderno.
-            </p>
-            <div className="d-flex flex-wrap gap-2">
-              <Link to={cta.to} className="btn-primary-custom text-decoration-none">{cta.texto}</Link>
-              <Link to="/servicios" className="btn-outline-custom text-decoration-none">Ver servicios y precios</Link>
-            </div>
-          </Col>
-          <Col lg={5}>
-            <div className="saas-card-dark p-4">
-              <h5 className="fw-bold mb-3">Cómo reservar</h5>
-              <ol className="list-unstyled mb-0 d-flex flex-column gap-3">
-                {PASOS.map((p, i) => (
-                  <li key={p.titulo} className="d-flex gap-3">
-                    <span
-                      className="d-inline-flex align-items-center justify-content-center rounded-circle flex-shrink-0 fw-bold"
-                      style={{ width: 32, height: 32, background: 'var(--primary-color)', color: '#fff' }}
-                      aria-hidden="true"
-                    >
-                      {i + 1}
-                    </span>
-                    <div>
-                      <div className="fw-bold">{p.titulo}</div>
-                      <small className="text-muted">{p.texto}</small>
-                    </div>
-                  </li>
-                ))}
-              </ol>
-            </div>
-          </Col>
-        </Row>
+      <Container className="py-4 py-md-5">
+        <section className="hero" style={{ backgroundImage: `url(${foto})` }}>
+          <span className="chip mb-3 align-self-start" style={{ background: 'rgba(255,255,255,.12)', color: '#fff', borderColor: 'rgba(255,255,255,.3)' }}>LAVADERO Y LUBRICENTRO · LA PLATA</span>
+          <h1>El cuidado que tu vehículo merece, sin vueltas.</h1>
+          <p>Cambio de aceite, filtros, alineación y lavado. Reservá tu turno online y llevá el control del service de cada auto.</p>
+          <div className="d-flex flex-wrap gap-2 mt-3">
+            <Link to={cta.to} className="btn-sgi">{cta.texto}</Link>
+            <Link to="/servicios" className="btn-sgi-outline">Ver servicios y precios</Link>
+          </div>
+        </section>
       </Container>
 
-      <div className="bg-light border-top py-5">
-        <Container>
-          <div className="d-flex justify-content-between align-items-end mb-4">
-            <h2 className="mb-0">Servicios más pedidos</h2>
-            <Link to="/servicios">Ver todos</Link>
-          </div>
-          {loading && <Cargando />}
-          {error && <ErrorCarga mensaje={error} />}
-          <Row className="g-4">
-            {(servicios ?? []).slice(0, 3).map((s) => (
-              <Col key={s.id} md={4} className="d-flex">
-                <ServicioDestacado nombre={s.nombre} precio={s.precio} descripcion={s.desc} tipo={s.tipo} />
-              </Col>
-            ))}
-          </Row>
-        </Container>
-      </div>
+      <Container className="pb-5">
+        <Row className="g-4 mb-5">
+          {VENTAJAS.map((v) => (
+            <Col key={v.titulo} md={4}>
+              <div className="d-flex gap-3">
+                <span className="icon-circle">{v.icono}</span>
+                <div><h3 className="fs-5 mb-1">{v.titulo}</h3><p className="text-muted mb-0">{v.texto}</p></div>
+              </div>
+            </Col>
+          ))}
+        </Row>
 
-      <Container className="py-5">
-        <Row className="g-4 text-muted">
-          <Col md={6} className="d-flex gap-3">
-            <FiClock size={24} className="text-primary flex-shrink-0" />
-            <div>
-              <div className="fw-bold text-dark">Horarios</div>
-              Lunes a sábado de 08:00 a 18:00. Turnos cada 30 minutos.
+        <div className="d-flex justify-content-between align-items-end mb-3">
+          <div><span className="eyebrow">CATÁLOGO</span><h2 className="mb-0">Servicios más pedidos</h2></div>
+          <Link to="/servicios" className="fw-bold">Ver todos</Link>
+        </div>
+        {loading && <Cargando />}
+        {error && <ErrorCarga mensaje={error} />}
+        <Row className="g-4 mb-5">
+          {(servicios ?? []).slice(0, 3).map((s) => (
+            <Col key={s.id} md={4} className="d-flex">
+              <ServicioDestacado nombre={s.nombre} precio={s.precio} descripcion={s.desc} tipo={s.tipo} />
+            </Col>
+          ))}
+        </Row>
+
+        <Row className="g-4">
+          <Col md={6}>
+            <div className="card-sgi card-sgi-body d-flex gap-3 h-100">
+              <span className="icon-circle"><FiClock /></span>
+              <div><h3 className="fs-5 mb-1">Horarios</h3><p className="text-muted mb-0">Lunes a sábado de 08:00 a 18:00. Turnos cada 30 minutos.</p></div>
             </div>
           </Col>
-          <Col md={6} className="d-flex gap-3">
-            <FiMapPin size={24} className="text-primary flex-shrink-0" />
-            <div>
-              <div className="fw-bold text-dark">Sin turno</div>
-              Para lavados también podés venir directamente: te registramos al llegar.
+          <Col md={6}>
+            <div className="card-sgi card-sgi-body d-flex gap-3 h-100">
+              <span className="icon-circle terracota"><FiDroplet /></span>
+              <div><h3 className="fs-5 mb-1">Lavados sin turno</h3><p className="text-muted mb-0">También podés venir directamente: te registramos al llegar.</p></div>
             </div>
           </Col>
         </Row>

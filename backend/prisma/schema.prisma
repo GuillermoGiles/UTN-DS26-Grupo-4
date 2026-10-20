@@ -54,6 +54,7 @@ model Usuario {
 model Cliente {
   id        Int        @id @default(autoincrement())
   nombre    String
+  dni       String?    @unique // búsqueda rápida por DNI (Visión y Alcance 5.1)
   telefono  String
   email     String?    @unique
   createdAt DateTime   @default(now())
@@ -80,28 +81,32 @@ model Vehiculo {
 }
 
 model Servicio {
-  id      Int      @id @default(autoincrement())
+  id      Int              @id @default(autoincrement())
   nombre  String
   precio  Float
   desc    String
   tipo    String // "lavadero" | "lubricentro"
   turnos  Turno[]
   lavados Lavado[]
+  insumos ServicioInsumo[] // "receta": qué insumos consume cada vez que se hace
 }
 
 model Turno {
-  id         Int         @id @default(autoincrement())
-  fecha      String // "YYYY-MM-DD"
-  hora       String // "HH:MM", uno de los horarios de atención
-  estado     EstadoTurno @default(PENDIENTE)
-  nota       String?
-  createdAt  DateTime    @default(now())
-  clienteId  Int
-  cliente    Cliente     @relation(fields: [clienteId], references: [id], onDelete: Restrict)
-  vehiculoId Int?
-  vehiculo   Vehiculo?   @relation(fields: [vehiculoId], references: [id], onDelete: SetNull)
-  servicioId Int
-  servicio   Servicio    @relation(fields: [servicioId], references: [id], onDelete: Restrict)
+  id                  Int         @id @default(autoincrement())
+  fecha               String // "YYYY-MM-DD"
+  hora                String // "HH:MM", uno de los horarios de atención
+  estado              EstadoTurno @default(PENDIENTE)
+  nota                String?
+  createdAt           DateTime    @default(now())
+  clienteId           Int
+  cliente             Cliente     @relation(fields: [clienteId], references: [id], onDelete: Restrict)
+  vehiculoId          Int?
+  vehiculo            Vehiculo?   @relation(fields: [vehiculoId], references: [id], onDelete: SetNull)
+  servicioId          Int
+  servicio            Servicio    @relation(fields: [servicioId], references: [id], onDelete: Restrict)
+  stockDescontado     Boolean     @default(false) // evita descontar dos veces si se re-completa
+  recordatorioEnviado Boolean     @default(false) // el recordatorio automático sale una sola vez
+  correos             Correo[]
 }
 
 // Lavado "en el momento": el auto llega sin turno y se registra al ingresar.
@@ -117,4 +122,62 @@ model Lavado {
   servicio      Servicio @relation(fields: [servicioId], references: [id], onDelete: Restrict)
   empleadoId    Int
   empleado      Usuario  @relation(fields: [empleadoId], references: [id], onDelete: Restrict)
+}
+
+// ─────────────────────────────────────────────────────────────
+// Control de insumos (Visión y Alcance 5.1)
+//  Insumo 1 ── N ServicioInsumo  onDelete: Cascade  → si se borra un insumo, sale de las recetas.
+//  Servicio 1 ── N ServicioInsumo onDelete: Cascade  → la receta es parte del servicio.
+//  Insumo 1 ── N MovimientoStock onDelete: Cascade  → el historial es del insumo.
+// ─────────────────────────────────────────────────────────────
+
+model Insumo {
+  id          Int               @id @default(autoincrement())
+  nombre      String            @unique
+  unidad      String // "litros" | "unidades"
+  stock       Float             @default(0)
+  stockMinimo Float             @default(0)
+  createdAt   DateTime          @default(now())
+  servicios   ServicioInsumo[]
+  movimientos MovimientoStock[]
+}
+
+model ServicioInsumo {
+  servicioId Int
+  servicio   Servicio @relation(fields: [servicioId], references: [id], onDelete: Cascade)
+  insumoId   Int
+  insumo     Insumo   @relation(fields: [insumoId], references: [id], onDelete: Cascade)
+  cantidad   Float
+
+  @@id([servicioId, insumoId])
+}
+
+model MovimientoStock {
+  id       Int      @id @default(autoincrement())
+  insumoId Int
+  insumo   Insumo   @relation(fields: [insumoId], references: [id], onDelete: Cascade)
+  cantidad Float // positivo = carga, negativo = consumo
+  motivo   String
+  fecha    DateTime @default(now())
+}
+
+// Recordatorios por e-mail (Visión y Alcance 5.1). Si no hay SMTP configurado
+// el envío queda SIMULADO: se registra igual, para poder mostrarlo.
+//  Turno 1 ── N Correo  onDelete: SetNull → el registro del envío queda aunque se borre el turno.
+enum EstadoCorreo {
+  ENVIADO
+  SIMULADO
+  FALLIDO
+}
+
+model Correo {
+  id           Int          @id @default(autoincrement())
+  destinatario String
+  asunto       String
+  cuerpo       String
+  estado       EstadoCorreo
+  error        String?
+  createdAt    DateTime     @default(now())
+  turnoId      Int?
+  turno        Turno?       @relation(fields: [turnoId], references: [id], onDelete: SetNull)
 }

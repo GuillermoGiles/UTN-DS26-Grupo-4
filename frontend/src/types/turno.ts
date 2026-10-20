@@ -16,6 +16,7 @@ export interface Turno {
   clienteId: number;
   vehiculoId: number | null;
   servicioId: number;
+  recordatorioEnviado?: boolean;
 }
 
 /** GET /api/turnos, POST /api/turnos */
@@ -28,6 +29,7 @@ export interface TurnoConDetalle extends Turno {
 /** GET /api/turnos/disponibles?fecha= */
 export interface Disponibilidad {
   fecha: string;
+  cerrado?: boolean;
   horarios: string[];
   ocupados: string[];
   libres: string[];

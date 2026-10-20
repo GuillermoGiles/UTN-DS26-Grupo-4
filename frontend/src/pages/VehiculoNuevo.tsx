@@ -86,7 +86,7 @@ export function VehiculoNuevo() {
         </Row>
         <div className="d-flex gap-2 mt-4">
           <BotonGuardar guardando={isSubmitting} texto="Guardar vehículo" />
-          <button type="button" className="btn-outline-custom w-100" onClick={() => navigate(-1)}>Cancelar</button>
+          <button type="button" className="btn-sgi-outline w-100" onClick={() => navigate(-1)}>Cancelar</button>
         </div>
       </Form>
     </MarcoFormulario>

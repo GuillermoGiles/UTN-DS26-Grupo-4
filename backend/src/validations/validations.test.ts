@@ -1,6 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { servicioCreateSchema, idParamSchema } from "./servicio.validation";
 import { vehiculoCreateSchema } from "./vehiculo.validation";
+import { clienteCreateSchema } from "./cliente.validation";
+import { insumoCreateSchema, recetaSchema } from "./insumo.validation";
 import { turnoCreateSchema } from "./turno.validation";
 
 describe("Validaciones de dominio (Dado / Cuando / Entonces)", () => {
@@ -110,6 +112,25 @@ describe("Validaciones de dominio (Dado / Cuando / Entonces)", () => {
 
       // Entonces
       expect(resultado.success).toBe(false);
+    });
+  });
+
+  describe("DNI e insumos", () => {
+    it("normaliza el DNI quitando puntos y rechaza los que no tienen 7 u 8 números", () => {
+      const base = { nombre: "Ana", telefono: "221-555-1234" };
+      const ok = clienteCreateSchema.safeParse({ ...base, dni: "28.456.921" });
+      expect(ok.success && ok.data.dni).toBe("28456921");
+      expect(clienteCreateSchema.safeParse({ ...base, dni: "123" }).success).toBe(false);
+    });
+
+    it("rechaza un insumo con stock negativo o unidad desconocida", () => {
+      expect(insumoCreateSchema.safeParse({ nombre: "Aceite", unidad: "litros", stock: -1, stockMinimo: 0 }).success).toBe(false);
+      expect(insumoCreateSchema.safeParse({ nombre: "Aceite", unidad: "kilos", stock: 1, stockMinimo: 0 }).success).toBe(false);
+    });
+
+    it("rechaza una receta con el mismo insumo dos veces", () => {
+      const r = recetaSchema.safeParse({ insumos: [{ insumoId: 1, cantidad: 1 }, { insumoId: 1, cantidad: 2 }] });
+      expect(r.success).toBe(false);
     });
   });
 });

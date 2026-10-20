@@ -7,7 +7,8 @@ export interface AuthContextType {
   estaAutenticado: boolean;           // usuario !== null, para leer más cómodo
   tieneRol: (rol: Rol) => boolean;    // usuario?.rol === rol
   login: (credenciales: Credenciales) => Promise<Usuario>;
-  logout: () => void;
+  logout: () => void;                 // salida voluntaria (botón Salir)
+  salioPorSuCuenta: boolean;          // true después de logout(): las rutas privadas mandan al inicio
 }
 
 // El contexto y el hook viven acá (y no en AuthContext.tsx) para que ese archivo

@@ -9,6 +9,8 @@ import vehiculoRoutes from "./routes/vehiculo.routes";
 import lavadoRoutes from "./routes/lavado.routes";
 import usuarioRoutes from "./routes/usuario.routes";
 import panelRoutes from "./routes/panel.routes";
+import insumoRoutes from "./routes/insumo.routes";
+import correoRoutes from "./routes/correo.routes";
 import { errorHandler } from "./middleware/errorHandler";
 
 // Arma la app de Express (middlewares, rutas y errorHandler) SIN escuchar en un puerto.
@@ -40,6 +42,8 @@ app.use("/api/vehiculos", vehiculoRoutes);
 app.use("/api/lavados", lavadoRoutes);
 app.use("/api/usuarios", usuarioRoutes);
 app.use("/api/panel", panelRoutes);
+app.use("/api/insumos", insumoRoutes);
+app.use("/api/correos", correoRoutes);
 
 // Manejo de rutas inexistentes (404) para devolver JSON en lugar de HTML
 app.use((_req, res) => {

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Container, Table, Form, Alert } from 'react-bootstrap';
+import { Table, Form, Alert } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { FiPlus } from 'react-icons/fi';
 import { useFetch } from '../hooks/useFetch';
@@ -9,6 +9,7 @@ import { apiFetch } from '../services/api';
 import { Cargando, ErrorCarga, Vacio } from '../components/Estado';
 import { Patente } from '../components/Badges';
 import { mensajeDeError } from '../utils/formato';
+import { EncabezadoPagina } from '../components/Formulario';
 import type { ClienteListado } from '../types/cliente';
 
 export function Clientes() {
@@ -32,20 +33,20 @@ export function Clientes() {
   };
 
   return (
-    <Container className="py-5">
-      <h2 className="mb-4 fw-bold">Clientes</h2>
+    <div className="page">
+      <EncabezadoPagina eyebrow="DIRECTORIO" titulo="Clientes" texto="Buscá por nombre, DNI, teléfono o patente." />
       {errorBorrado && <Alert variant="danger" dismissible onClose={() => setErrorBorrado(null)}>{errorBorrado}</Alert>}
-      <div className="saas-card-dark p-0">
-        <div className="p-4 border-bottom border-secondary d-flex flex-wrap gap-3 justify-content-between align-items-center">
+      <div className="card-sgi p-0">
+        <div className="p-4 border-bottom  d-flex flex-wrap gap-3 justify-content-between align-items-center">
           <Form.Control
             type="search"
-            placeholder="Buscar por nombre, teléfono o patente"
+            placeholder="Buscar por nombre, DNI, teléfono o patente"
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
             style={{ maxWidth: 360 }}
             aria-label="Buscar clientes"
           />
-          <Link to="/clientes/nuevo" className="btn-primary-custom text-decoration-none d-flex align-items-center gap-2">
+          <Link to="/clientes/nuevo" className="btn-sgi text-decoration-none d-flex align-items-center gap-2">
             <FiPlus /> Nuevo cliente
           </Link>
         </div>
@@ -55,14 +56,15 @@ export function Clientes() {
         {!loading && !error && clientes && (clientes.length === 0 ? (
           <Vacio>{q ? `Ningún cliente coincide con “${q}”.` : 'Todavía no hay clientes cargados.'}</Vacio>
         ) : (
-          <Table responsive hover variant="dark" className="align-middle mb-0">
+          <Table responsive hover className="table-sgi align-middle mb-0">
             <thead>
-              <tr><th>Nombre</th><th>Teléfono</th><th>Vehículos</th><th className="text-center">Turnos</th><th>Cuenta web</th><th></th></tr>
+              <tr><th>Nombre</th><th>DNI</th><th>Teléfono</th><th>Vehículos</th><th className="text-center">Turnos</th><th>Cuenta web</th><th></th></tr>
             </thead>
             <tbody>
               {clientes.map((c) => (
                 <tr key={c.id}>
-                  <td className="fw-bold"><Link to={`/clientes/${c.id}`} className="text-white">{c.nombre}</Link></td>
+                  <td className="fw-bold"><Link to={`/clientes/${c.id}`} className="text-reset fw-bold">{c.nombre}</Link></td>
+                  <td>{c.dni ?? <span className="text-muted">—</span>}</td>
                   <td>{c.telefono}</td>
                   <td>
                     <div className="d-flex flex-wrap gap-1">
@@ -72,9 +74,9 @@ export function Clientes() {
                   <td className="text-center">{c._count.turnos}</td>
                   <td>{c.usuarioId ? 'Sí' : <span className="text-muted">No</span>}</td>
                   <td className="text-end text-nowrap">
-                    <Link to={`/clientes/${c.id}`} className="btn-action-dark me-2">Ver ficha</Link>
+                    <Link to={`/clientes/${c.id}`} className="btn-sgi-ghost me-2">Ver ficha</Link>
                     {tieneRol('ADMIN') && (
-                      <button type="button" className="btn-action-dark" onClick={() => borrar(c)}>Borrar</button>
+                      <button type="button" className="btn-sgi-ghost" onClick={() => borrar(c)}>Borrar</button>
                     )}
                   </td>
                 </tr>
@@ -83,6 +85,6 @@ export function Clientes() {
           </Table>
         ))}
       </div>
-    </Container>
+    </div>
   );
 }

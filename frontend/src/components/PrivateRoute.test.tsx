@@ -8,6 +8,7 @@ import type { Rol, Usuario } from '../types/sesion';
 function RutasDePrueba({ rolRequerido }: { rolRequerido?: Rol | Rol[] }) {
   return (
     <Routes>
+      <Route path="/" element={<div>Inicio</div>} />
       <Route path="/login" element={<div>Pantalla de Login</div>} />
       <Route path="/sin-permiso" element={<div>Pantalla Sin Permiso</div>} />
       <Route element={<PrivateRoute rol={rolRequerido} />}>
@@ -64,5 +65,14 @@ describe('PrivateRoute (Dado / Cuando / Entonces)', () => {
 
     // Entonces
     expect(screen.getByText('Contenido Protegido')).toBeInTheDocument();
+  });
+
+  it('Dado un usuario que acaba de tocar Salir, Cuando la ruta protegida se re-renderiza sin sesión, Entonces va al inicio y no a /login', () => {
+    // Dado: sin usuario, pero por salida voluntaria
+    renderConAuth(<RutasDePrueba />, { usuario: null, ruta: '/protegida', salioPorSuCuenta: true });
+
+    // Entonces: no se guarda la pantalla para "volver" en el próximo login
+    expect(screen.getByText('Inicio')).toBeInTheDocument();
+    expect(screen.queryByText('Pantalla de Login')).not.toBeInTheDocument();
   });
 });

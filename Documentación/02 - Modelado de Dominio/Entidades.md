@@ -18,6 +18,10 @@ erDiagram
     VEHICULO ||--o{ LAVADO : "ingresa a"
     SERVICIO ||--o{ LAVADO : "se presta en"
     USUARIO ||--o{ LAVADO : "registra (empleado)"
+    SERVICIO ||--o{ SERVICIO_INSUMO : "receta"
+    INSUMO ||--o{ SERVICIO_INSUMO : "se usa en"
+    INSUMO ||--o{ MOVIMIENTO_STOCK : "historial"
+    TURNO |o--o{ CORREO : "recordatorio"
 ```
 
 ## Entidades
@@ -29,7 +33,7 @@ Cuenta para entrar al sistema. Roles: `ADMIN`, `EMPLEADO`, `CLIENTE`.
 ### Cliente
 Ficha de la persona que trae autos. Puede existir sin cuenta (la carga el personal en el
 mostrador) o estar vinculada a una cuenta `CLIENTE` (se registró en la web).
-- **id**, **nombre**, **telefono**, **email** (único, opcional), **createdAt**
+- **id**, **nombre**, **dni** (único, opcional; se guarda sin puntos), **telefono**, **email** (único, opcional), **createdAt**
 - **usuarioId** (único, opcional) → `Usuario`
 
 Si alguien se registra con un email que el lubricentro ya tenía cargado, la cuenta se
@@ -52,6 +56,8 @@ Reserva anticipada.
 - **id**, **fecha** (AAAA-MM-DD), **hora** (uno de los horarios de atención: cada 30 minutos de 08:00 a 17:30)
 - **estado**: `PENDIENTE → CONFIRMADO → EN_PROCESO → COMPLETADO`, o `CANCELADO` (ver *Diagrama de Estado.jpeg*)
 - **nota** (opcional), **createdAt**
+- **stockDescontado**: evita descontar insumos dos veces si el turno se vuelve a completar
+- **recordatorioEnviado**: el recordatorio automático sale una sola vez
 - **clienteId** → `Cliente`, **vehiculoId** (opcional) → `Vehiculo`, **servicioId** → `Servicio`
 
 Reglas: un horario admite un solo turno activo (los cancelados liberan el lugar); el vehículo
@@ -66,6 +72,24 @@ Auto que entra al lavadero **sin turno** y se registra al ingresar.
 - **vehiculoId** → `Vehiculo`, **servicioId** → `Servicio` (tiene que ser de tipo lavadero),
   **empleadoId** → `Usuario` (quien estaba logueado al registrarlo)
 
+### Insumo
+Productos que consume el taller (Visión y Alcance 5.1, control de insumos).
+- **id**, **nombre** (único), **unidad** (`litros` | `unidades`), **stock**, **stockMinimo**, **createdAt**
+- Está "bajo" cuando `stock <= stockMinimo`: aparece la alerta en Insumos, en el menú y en el panel.
+
+### ServicioInsumo (receta)
+Qué insumos consume un servicio cada vez que se hace. Clave compuesta (**servicioId**, **insumoId**) + **cantidad**.
+Al completar un turno o registrar un lavado se descuenta según la receta; si no alcanza, el stock queda
+en 0 (el trabajo ya se hizo, no se frena) y el insumo queda en alerta.
+
+### MovimientoStock
+Historial de cada insumo: **cantidad** (positiva = carga, negativa = consumo o ajuste), **motivo**, **fecha**.
+El stock no se edita directo: siempre se mueve con un movimiento, así queda registrado por qué cambió.
+
+### Correo
+Registro de cada recordatorio: **destinatario**, **asunto**, **cuerpo**, **estado** (`ENVIADO` | `SIMULADO` | `FALLIDO`),
+**error**, **createdAt**, **turnoId** (opcional). Sin SMTP configurado queda `SIMULADO`.
+
 ## Relaciones y `onDelete` (decididos a conciencia, C17)
 
 | Relación | Tipo | onDelete | Por qué |
@@ -78,6 +102,10 @@ Auto que entra al lavadero **sin turno** y se registra al ingresar.
 | Vehiculo → Lavado | 1:N | Restrict | Los lavados son la caja del día. |
 | Servicio → Lavado | 1:N | Restrict | Idem. |
 | Usuario → Lavado | 1:N | Restrict | Queda registrado qué empleado lo hizo. |
+| Servicio → ServicioInsumo | 1:N | Cascade | La receta es parte del servicio. |
+| Insumo → ServicioInsumo | 1:N | Cascade | Si se borra un insumo, sale de las recetas. |
+| Insumo → MovimientoStock | 1:N | Cascade | El historial pertenece al insumo. |
+| Turno → Correo | 1:N | SetNull | El registro del envío queda aunque se borre el turno. |
 
 Combinadas: borrar un cliente **sin** turnos borra sus vehículos (Cascade); si **tiene** turnos,
 Postgres frena toda la operación (Restrict) y la API responde `409`.
@@ -87,3 +115,7 @@ Postgres frena toda la operación (Restrict) y la API responde `409`.
 La base ya tenía clientes con el vehículo como texto. La migración, antes de borrar esas columnas,
 crea un `Vehiculo` por cliente (patente normalizada; "Marca Modelo" partido en el primer espacio)
 y vincula cada turno existente al vehículo de su cliente, en estado `PENDIENTE`.
+
+La migración `20261021120000_insumos_dni_recordatorios` agrega las tablas de insumos y correos, el DNI del
+cliente y los dos indicadores del turno. Como son columnas nuevas con valor por defecto o tablas nuevas,
+no hay datos existentes que transformar.

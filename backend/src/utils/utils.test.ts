@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { calcularProximoService } from "./service";
-import { hoyAR, sumarDias, rangoDelDia, yaPaso } from "./fechas";
+import { esDomingo, hoyAR, sumarDias, rangoDelDia, yaPaso } from "./fechas";
 import { normalizarPatente, PATENTE_REGEX } from "./patente";
 import { HORARIOS } from "../config/negocio";
 
@@ -55,6 +55,11 @@ describe("Fechas en hora de Argentina", () => {
     expect(yaPaso("2026-10-20", "09:30", ahora)).toBe(true);
     expect(yaPaso("2026-10-20", "10:30", ahora)).toBe(false);
     expect(yaPaso("2026-10-21", "08:00", ahora)).toBe(false);
+  });
+
+  it("esDomingo reconoce el día de cierre", () => {
+    expect(esDomingo("2026-10-25")).toBe(true);
+    expect(esDomingo("2026-10-24")).toBe(false);
   });
 
   it("rangoDelDia va de 00:00 a 00:00 del día siguiente en -03:00", () => {

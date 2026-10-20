@@ -17,7 +17,7 @@ type PrivateRouteProps = {
  * Si pasa las tres, renderiza la hija en el <Outlet />.
  */
 export function PrivateRoute({ rol }: PrivateRouteProps) {
-  const { usuario, cargando } = useAuth();
+  const { usuario, cargando, salioPorSuCuenta } = useAuth();
   const location = useLocation();
 
   // 1. Todavía no llegó la respuesta de /auth/yo: esperar, no redirigir con datos viejos
@@ -33,7 +33,9 @@ export function PrivateRoute({ rol }: PrivateRouteProps) {
 
   // 2. Nadie logueado: a login. `replace` para que "atrás" no vuelva a la ruta protegida.
   //    Guardamos de dónde venía para que el login pueda devolverlo ahí.
+  //    Si acaba de tocar "Salir", va al inicio: no hay pantalla a la que devolverlo.
   if (!usuario) {
+    if (salioPorSuCuenta) return <Navigate to="/" replace />;
     return <Navigate to="/login" replace state={{ desde: location.pathname }} />;
   }
 

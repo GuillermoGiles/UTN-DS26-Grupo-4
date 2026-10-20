@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { enteroOpcional, patente, telefono } from './campos';
+import { dniOpcional, enteroOpcional, patente, telefono } from './campos';
 
 const anioMax = new Date().getFullYear() + 1;
 
@@ -21,6 +21,7 @@ export const clienteDatosSchema = z.object({
   nombre: z.string().trim().min(1, 'El nombre es obligatorio'),
   telefono,
   email: emailOpcional,
+  dni: dniOpcional,
 });
 
 /**
@@ -37,7 +38,7 @@ export const clienteNuevoSchema = clienteDatosSchema
     km: z.string(),
   })
   .transform((d, ctx) => {
-    const cliente = { nombre: d.nombre, telefono: d.telefono, email: d.email };
+    const cliente = { nombre: d.nombre, telefono: d.telefono, email: d.email, dni: d.dni };
     if (!d.conVehiculo) return cliente;
     const v = vehiculoCamposSchema.safeParse(d);
     if (!v.success) {

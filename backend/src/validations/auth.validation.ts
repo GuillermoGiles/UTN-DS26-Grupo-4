@@ -1,9 +1,11 @@
 import { z } from "zod";
+import { dniSchema } from "./cliente.validation";
 
 export const registroSchema = z.object({
   nombre: z.string().trim().min(2, "El nombre debe tener al menos 2 caracteres").max(100),
   email: z.string().trim().toLowerCase().email("El formato de email no es válido"),
   telefono: z.string().trim().min(6, "El teléfono debe tener al menos 6 caracteres").max(20),
+  dni: dniSchema.optional(),
   password: z
     .string()
     .min(6, "La contraseña debe tener al menos 6 caracteres"),

@@ -49,6 +49,7 @@ describe("Comportamiento específico (Dado / Cuando / Entonces)", () => {
         nombre: "Carlos Gómez",
         telefono: "2215001122",
         email: "carlos@mail.test",
+        dni: null,
         usuarioId: 3,
         createdAt: new Date("2026-09-01T10:00:00Z"),
       };
@@ -139,6 +140,16 @@ describe("Comportamiento específico (Dado / Cuando / Entonces)", () => {
       expect(res.status).toBe(400);
       expect(res.body).toEqual({ error: "No se pueden reservar turnos en un día u horario que ya pasó" });
       expect(prisma.turno.create).not.toHaveBeenCalled();
+    });
+
+    it("Dado un domingo, Cuando se intenta reservar, Entonces responde 400 porque el taller no atiende", async () => {
+      const res = await request(app)
+        .post("/api/turnos")
+        .set("Authorization", `Bearer ${tokenEmpleado}`)
+        .send({ fecha: "2030-10-20", hora: "10:00", clienteId: 1, servicioId: 2 }); // 20/10/2030 es domingo
+
+      expect(res.status).toBe(400);
+      expect(res.body).toEqual({ error: "El taller no atiende los domingos" });
     });
 
     it("Dado un cliente autenticado con un body sin horario, Cuando envía POST /api/turnos, Entonces responde 400 y no toca la DB", async () => {

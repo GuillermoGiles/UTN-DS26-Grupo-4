@@ -2,6 +2,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "../config/prisma";
 import { AppError } from "../errors/AppError";
 import { rangoDelDia } from "../utils/fechas";
+import { descontarPorServicio } from "./insumo.service";
 import type { LavadoCreate, LavadoUpdate } from "../validations/lavado.validation";
 
 export const lavadoInclude = {
@@ -45,9 +46,13 @@ async function verificarVehiculo(vehiculoId: number) {
 export async function create(datos: LavadoCreate, empleadoId: number): Promise<LavadoConDetalle> {
   const servicio = await servicioDeLavadero(datos.servicioId);
   await verificarVehiculo(datos.vehiculoId);
-  return prisma.lavado.create({
-    data: { ...datos, precio: servicio.precio, empleadoId },
-    include: lavadoInclude,
+  return prisma.$transaction(async (tx) => {
+    const lavado = await tx.lavado.create({
+      data: { ...datos, precio: servicio.precio, empleadoId },
+      include: lavadoInclude,
+    });
+    await descontarPorServicio(tx, servicio.id, `Lavado #${lavado.id} · ${servicio.nombre}`);
+    return lavado;
   });
 }
 

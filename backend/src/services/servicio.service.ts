@@ -10,8 +10,11 @@ export async function findAll(tipo?: string): Promise<Servicio[]> {
   return prisma.servicio.findMany({ where: { tipo } });
 }
 
-export async function findById(id: number): Promise<Servicio | null> {
-  return prisma.servicio.findUnique({ where: { id } });
+export async function findById(id: number) {
+  return prisma.servicio.findUnique({
+    where: { id },
+    include: { insumos: { include: { insumo: { select: { id: true, nombre: true, unidad: true } } } } },
+  });
 }
 
 export async function create(datos: Omit<Servicio, "id">): Promise<Servicio> {

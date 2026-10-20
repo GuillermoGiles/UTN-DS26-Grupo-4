@@ -6,6 +6,7 @@ export interface Cliente {
   id: number;
   nombre: string;
   telefono: string;
+  dni: string | null;
   email: string | null;
   createdAt: string;
   usuarioId: number | null;

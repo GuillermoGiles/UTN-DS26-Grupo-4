@@ -529,3 +529,89 @@ Authorization: Bearer {{tokenAdmin}}
 ### 403: un EMPLEADO no ve la caja
 GET {{baseUrl}}/api/panel/resumen
 Authorization: Bearer {{tokenEmpleado}}
+
+### ================================================================
+### INSUMOS — stock con descuento automático (consulta el personal, administra el ADMIN)
+### ================================================================
+
+### Stock con alerta "bajo" cuando llega al mínimo
+GET {{baseUrl}}/api/insumos
+Authorization: Bearer {{tokenEmpleado}}
+
+### Alta con carga inicial
+# @name insumoNuevo
+POST {{baseUrl}}/api/insumos
+Authorization: Bearer {{tokenAdmin}}
+Content-Type: application/json
+
+{ "nombre": "Líquido refrigerante", "unidad": "litros", "stock": 10, "stockMinimo": 3 }
+
+###
+@insumoId = {{insumoNuevo.response.body.id}}
+
+### Carga de stock (compra al proveedor)
+POST {{baseUrl}}/api/insumos/{{insumoId}}/movimientos
+Authorization: Bearer {{tokenAdmin}}
+Content-Type: application/json
+
+{ "cantidad": 5, "motivo": "Compra al proveedor" }
+
+### 400: un ajuste que dejaría el stock negativo
+POST {{baseUrl}}/api/insumos/{{insumoId}}/movimientos
+Authorization: Bearer {{tokenAdmin}}
+Content-Type: application/json
+
+{ "cantidad": -1000, "motivo": "Ajuste de inventario" }
+
+### Historial de movimientos del insumo
+GET {{baseUrl}}/api/insumos/{{insumoId}}
+Authorization: Bearer {{tokenEmpleado}}
+
+### Receta: qué consume la Alineación (se descuenta sola al completar el turno)
+PUT {{baseUrl}}/api/servicios/3/insumos
+Authorization: Bearer {{tokenAdmin}}
+Content-Type: application/json
+
+{ "insumos": [{ "insumoId": {{insumoId}}, "cantidad": 0.5 }] }
+
+### 403: un EMPLEADO no carga stock
+POST {{baseUrl}}/api/insumos/{{insumoId}}/movimientos
+Authorization: Bearer {{tokenEmpleado}}
+Content-Type: application/json
+
+{ "cantidad": 5, "motivo": "Compra" }
+
+### 409: nombre de insumo repetido
+POST {{baseUrl}}/api/insumos
+Authorization: Bearer {{tokenAdmin}}
+Content-Type: application/json
+
+{ "nombre": "Líquido refrigerante", "unidad": "litros", "stock": 1, "stockMinimo": 1 }
+
+### Borrar (sale también de las recetas)
+DELETE {{baseUrl}}/api/insumos/{{insumoId}}
+Authorization: Bearer {{tokenAdmin}}
+
+### ================================================================
+### RECORDATORIOS POR E-MAIL (sin SMTP configurado quedan SIMULADOS)
+### ================================================================
+
+### Recordatorio de un turno puntual (el 6 del seed es de mañana)
+POST {{baseUrl}}/api/turnos/6/recordatorio
+Authorization: Bearer {{tokenEmpleado}}
+
+### Disparar a mano los recordatorios de mañana (el servidor lo hace solo cada hora)
+POST {{baseUrl}}/api/correos/recordatorios
+Authorization: Bearer {{tokenEmpleado}}
+
+### Historial de envíos (ADMIN)
+GET {{baseUrl}}/api/correos
+Authorization: Bearer {{tokenAdmin}}
+
+### 403: un EMPLEADO no ve el historial de correos
+GET {{baseUrl}}/api/correos
+Authorization: Bearer {{tokenEmpleado}}
+
+### Buscar cliente por DNI (con o sin puntos)
+GET {{baseUrl}}/api/clientes?q=28.456
+Authorization: Bearer {{tokenEmpleado}}

@@ -3,7 +3,8 @@ import { prisma } from "../config/prisma";
 import { AppError } from "../errors/AppError";
 import { HORARIOS, CUPOS_POR_HORARIO } from "../config/negocio";
 import { turnoInclude, type TurnoConDetalle } from "../types/turno.types";
-import { yaPaso } from "../utils/fechas";
+import { esDomingo, yaPaso } from "../utils/fechas";
+import { descontarPorServicio } from "./insumo.service";
 import type { TurnoCreate, TurnoUpdate } from "../validations/turno.validation";
 
 type UsuarioSesion = { id: number; rol: Rol };
@@ -24,6 +25,7 @@ export async function findById(id: number): Promise<TurnoConDetalle | null> {
 
 /** Horarios del día con su disponibilidad (los cancelados liberan el lugar). */
 export async function disponibles(fecha: string) {
+  if (esDomingo(fecha)) return { fecha, cerrado: true, horarios: HORARIOS, ocupados: [...HORARIOS], libres: [] };
   const turnos = await prisma.turno.findMany({
     where: { fecha, estado: { in: ESTADOS_QUE_OCUPAN } },
     select: { hora: true },
@@ -34,6 +36,7 @@ export async function disponibles(fecha: string) {
   const ocupados = HORARIOS.filter((h) => (usados.get(h) ?? 0) >= CUPOS_POR_HORARIO);
   return {
     fecha,
+    cerrado: false,
     horarios: HORARIOS,
     ocupados,
     libres: HORARIOS.filter((h) => !ocupados.includes(h)),
@@ -41,6 +44,7 @@ export async function disponibles(fecha: string) {
 }
 
 async function verificarHorarioLibre(fecha: string, hora: string, excluirTurnoId?: number) {
+  if (esDomingo(fecha)) throw new AppError(400, "El taller no atiende los domingos");
   if (yaPaso(fecha, hora)) {
     throw new AppError(400, "No se pueden reservar turnos en un día u horario que ya pasó");
   }
@@ -116,19 +120,29 @@ export async function update(id: number, datos: TurnoUpdate): Promise<TurnoConDe
  * queda registrado el service del vehículo con su kilometraje actual.
  */
 export async function cambiarEstado(id: number, estado: EstadoTurno): Promise<TurnoConDetalle | null> {
-  try {
-    const turno = await prisma.turno.update({ where: { id }, data: { estado }, include: turnoInclude });
-    if (estado === "COMPLETADO" && turno.servicio.tipo === "lubricentro" && turno.vehiculo) {
-      await prisma.vehiculo.update({
-        where: { id: turno.vehiculo.id },
-        data: { kmUltimoService: turno.vehiculo.km, fechaUltimoService: new Date() },
-      });
+  const actual = await prisma.turno.findUnique({ where: { id }, include: turnoInclude });
+  if (!actual) return null;
+
+  return prisma.$transaction(async (tx) => {
+    const completa = estado === "COMPLETADO" && !actual.stockDescontado;
+    const turno = await tx.turno.update({
+      where: { id },
+      data: { estado, ...(completa ? { stockDescontado: true } : {}) },
+      include: turnoInclude,
+    });
+    if (completa) {
+      // Descuento automático de insumos (una sola vez por turno)
+      await descontarPorServicio(tx, turno.servicioId, `Turno #${turno.id} · ${turno.servicio.nombre}`);
+      // Service de lubricentro: queda registrado con el kilometraje actual
+      if (turno.servicio.tipo === "lubricentro" && turno.vehiculo) {
+        await tx.vehiculo.update({
+          where: { id: turno.vehiculo.id },
+          data: { kmUltimoService: turno.vehiculo.km, fechaUltimoService: new Date() },
+        });
+      }
     }
     return turno;
-  } catch (e) {
-    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2025") return null;
-    throw e;
-  }
+  });
 }
 
 /** Cancelación: el CLIENTE solo puede cancelar los suyos y solo si todavía no empezaron. */

@@ -16,6 +16,7 @@ export async function findAll(q?: string): Promise<ClienteListado[]> {
         OR: [
           { nombre: { contains: q, mode: "insensitive" } },
           { telefono: { contains: q } },
+          { dni: { startsWith: q.replace(/\D/g, "") || q } },
           { vehiculos: { some: { patente: { contains: q.replace(/[\s-]/g, "").toUpperCase() } } } },
         ],
       }
@@ -61,7 +62,7 @@ export async function update(id: number, datos: ClienteUpdate): Promise<Cliente 
   }
 }
 
-export async function updateByUsuario(usuarioId: number, datos: Pick<ClienteUpdate, "nombre" | "telefono">): Promise<Cliente> {
+export async function updateByUsuario(usuarioId: number, datos: Pick<ClienteUpdate, "nombre" | "telefono" | "dni">): Promise<Cliente> {
   try {
     return await prisma.cliente.update({ where: { usuarioId }, data: datos });
   } catch (e) {
