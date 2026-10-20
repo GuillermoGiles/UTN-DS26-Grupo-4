@@ -15,14 +15,12 @@ export interface UsuarioPublico {
 
 export async function registrar(datos: RegistroInput): Promise<UsuarioPublico> {
   const hash = await bcrypt.hash(datos.password, SALT_ROUNDS);
-  const rol = datos.rol ?? "CLIENTE";
-
   const usuario = await prisma.usuario.create({
     data: {
       nombre: datos.nombre,
       email: datos.email,
       passwordHash: hash,
-      rol,
+      rol: "CLIENTE", // el registro público nunca asigna otro rol
     },
     select: {
       id: true,
