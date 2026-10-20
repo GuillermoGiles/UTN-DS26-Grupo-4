@@ -3,7 +3,7 @@ import { prisma } from "../config/prisma";
 import { AppError } from "../errors/AppError";
 import { HORARIOS, CUPOS_POR_HORARIO } from "../config/negocio";
 import { turnoInclude, type TurnoConDetalle } from "../types/turno.types";
-import { yaPaso } from "../utils/fechas";
+import { esDomingo, yaPaso } from "../utils/fechas";
 import { descontarPorServicio } from "./insumo.service";
 import type { TurnoCreate, TurnoUpdate } from "../validations/turno.validation";
 
@@ -25,6 +25,7 @@ export async function findById(id: number): Promise<TurnoConDetalle | null> {
 
 /** Horarios del día con su disponibilidad (los cancelados liberan el lugar). */
 export async function disponibles(fecha: string) {
+  if (esDomingo(fecha)) return { fecha, cerrado: true, horarios: HORARIOS, ocupados: [...HORARIOS], libres: [] };
   const turnos = await prisma.turno.findMany({
     where: { fecha, estado: { in: ESTADOS_QUE_OCUPAN } },
     select: { hora: true },
@@ -35,6 +36,7 @@ export async function disponibles(fecha: string) {
   const ocupados = HORARIOS.filter((h) => (usados.get(h) ?? 0) >= CUPOS_POR_HORARIO);
   return {
     fecha,
+    cerrado: false,
     horarios: HORARIOS,
     ocupados,
     libres: HORARIOS.filter((h) => !ocupados.includes(h)),
@@ -42,6 +44,7 @@ export async function disponibles(fecha: string) {
 }
 
 async function verificarHorarioLibre(fecha: string, hora: string, excluirTurnoId?: number) {
+  if (esDomingo(fecha)) throw new AppError(400, "El taller no atiende los domingos");
   if (yaPaso(fecha, hora)) {
     throw new AppError(400, "No se pueden reservar turnos en un día u horario que ya pasó");
   }

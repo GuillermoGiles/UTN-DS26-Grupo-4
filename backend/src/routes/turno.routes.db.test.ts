@@ -6,7 +6,7 @@ import { describe, it, expect, afterAll } from "vitest";
 import request from "supertest";
 import app from "../app";
 import { prisma } from "../config/prisma";
-import { hoyAR, sumarDias } from "../utils/fechas";
+import { esDomingo, hoyAR, sumarDias } from "../utils/fechas";
 
 const creados: number[] = [];
 
@@ -25,7 +25,8 @@ describe("Reserva de turno de punta a punta (con DB)", () => {
     const auth = { Authorization: `Bearer ${login.body.token}` };
 
     // Un día lejano para no chocar con los turnos del seed
-    const fecha = sumarDias(hoyAR(), 60);
+    let fecha = sumarDias(hoyAR(), 60);
+    if (esDomingo(fecha)) fecha = sumarDias(fecha, 1);
     const antes = await request(app).get(`/api/turnos/disponibles?fecha=${fecha}`);
     const hora = antes.body.libres[0];
     const servicio = await prisma.servicio.findFirstOrThrow();

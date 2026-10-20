@@ -42,3 +42,8 @@ export function yaPaso(fecha: string, hora: string, base: Date = new Date()): bo
   const hoy = hoyAR(base);
   return fecha < hoy || (fecha === hoy && hora <= horaActualAR(base));
 }
+
+/** El taller atiende de lunes a sábado. */
+export function esDomingo(fecha: string): boolean {
+  return new Date(`${fecha}T12:00:00Z`).getUTCDay() === 0;
+}

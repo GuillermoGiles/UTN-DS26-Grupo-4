@@ -142,6 +142,16 @@ describe("Comportamiento específico (Dado / Cuando / Entonces)", () => {
       expect(prisma.turno.create).not.toHaveBeenCalled();
     });
 
+    it("Dado un domingo, Cuando se intenta reservar, Entonces responde 400 porque el taller no atiende", async () => {
+      const res = await request(app)
+        .post("/api/turnos")
+        .set("Authorization", `Bearer ${tokenEmpleado}`)
+        .send({ fecha: "2030-10-20", hora: "10:00", clienteId: 1, servicioId: 2 }); // 20/10/2030 es domingo
+
+      expect(res.status).toBe(400);
+      expect(res.body).toEqual({ error: "El taller no atiende los domingos" });
+    });
+
     it("Dado un cliente autenticado con un body sin horario, Cuando envía POST /api/turnos, Entonces responde 400 y no toca la DB", async () => {
       // Dado (Arrange)
       const turnoIncompleto = {

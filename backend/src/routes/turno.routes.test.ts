@@ -22,7 +22,7 @@ const tokenCliente = jwt.sign({ id: 3, rol: "CLIENTE" }, JWT_SECRET, { expiresIn
 const tokenAdulterado = jwt.sign({ id: 3, rol: "CLIENTE" }, "secreto-incorrecto", { expiresIn: "1h" });
 
 const turnoValido = {
-  fecha: "2030-10-20",
+  fecha: "2030-10-21",
   hora: "10:00",
   clienteId: 1,
   servicioId: 1,
