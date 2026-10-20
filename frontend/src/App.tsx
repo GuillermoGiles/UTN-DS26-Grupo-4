@@ -22,6 +22,8 @@ import { PanelGestion } from './pages/PanelGestion';
 import { ServicioForm } from './pages/ServicioForm';
 import { Usuarios } from './pages/Usuarios';
 import { AltaUsuario } from './pages/AltaUsuario';
+import { Insumos } from './pages/Insumos';
+import { Correos } from './pages/Correos';
 
 // Las barreras replican la Matriz de Permisos (Documentación/05 - Diseño de API).
 function App() {
@@ -56,6 +58,7 @@ function App() {
             <Route path="/vehiculos/nuevo" element={<VehiculoNuevo />} />
             <Route path="/vehiculos/:id" element={<VehiculoDetalle />} />
             <Route path="/lavados/nuevo" element={<AltaLavado />} />
+            <Route path="/insumos" element={<Insumos />} />
           </Route>
 
           {/* ---------- Administración: solo ADMIN ---------- */}
@@ -65,6 +68,7 @@ function App() {
             <Route path="/servicios/:id/editar" element={<ServicioForm />} />
             <Route path="/usuarios" element={<Usuarios />} />
             <Route path="/usuarios/nuevo" element={<AltaUsuario />} />
+            <Route path="/correos" element={<Correos />} />
           </Route>
 
           <Route path="*" element={<NoEncontrada />} />

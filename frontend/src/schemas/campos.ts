@@ -37,3 +37,11 @@ export const textoOpcional = (max: number) =>
     .trim()
     .max(max, `Máximo ${max} caracteres`)
     .transform((v) => (v === '' ? undefined : v));
+
+/** DNI opcional: "28.456.921" → "28456921"; vacío → undefined */
+export const dniOpcional = z
+  .string()
+  .trim()
+  .transform((v) => v.replace(/\D/g, ''))
+  .refine((v) => v === '' || /^\d{7,8}$/.test(v), 'El DNI debe tener 7 u 8 números')
+  .transform((v) => (v === '' ? undefined : v));

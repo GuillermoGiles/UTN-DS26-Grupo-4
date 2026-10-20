@@ -13,7 +13,7 @@ import type { Rol, Usuario } from '../types/sesion';
  */
 export function renderConAuth(
   ui: ReactElement,
-  { usuario = null, ruta = '/' }: { usuario?: Usuario | null; ruta?: string } = {},
+  { usuario = null, ruta = '/', salioPorSuCuenta = false }: { usuario?: Usuario | null; ruta?: string; salioPorSuCuenta?: boolean } = {},
 ) {
   const auth: AuthContextType = {
     usuario,
@@ -22,6 +22,7 @@ export function renderConAuth(
     tieneRol: (rol: Rol) => usuario?.rol === rol,
     login: vi.fn().mockResolvedValue(usuario),
     logout: vi.fn(),
+    salioPorSuCuenta,
   };
 
   return {

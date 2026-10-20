@@ -16,7 +16,7 @@ export function ClienteNuevo() {
 
   const { register, handleSubmit, control, formState: { errors, isSubmitting } } = useForm({
     resolver: zodResolver(clienteNuevoSchema),
-    defaultValues: { nombre: '', telefono: '', email: '', conVehiculo: true, patente: '', marca: '', modelo: '', anio: '', km: '' },
+    defaultValues: { nombre: '', telefono: '', email: '', dni: '', conVehiculo: true, patente: '', marca: '', modelo: '', anio: '', km: '' },
   });
   const conVehiculo = useWatch({ control, name: 'conVehiculo' });
 
@@ -33,11 +33,22 @@ export function ClienteNuevo() {
   return (
     <MarcoFormulario titulo="Nuevo cliente" error={errorApi} onCerrarError={() => setErrorApi(null)} ancho={680}>
       <Form onSubmit={onSubmit} noValidate>
-        <Form.Group className="mb-3" controlId="nombre">
-          <Form.Label>Nombre y apellido</Form.Label>
-          <Form.Control {...register('nombre')} isInvalid={!!errors.nombre} placeholder="Ej. Juan Pérez" />
-          <Form.Control.Feedback type="invalid">{errors.nombre?.message}</Form.Control.Feedback>
-        </Form.Group>
+        <Row>
+          <Col md={8}>
+            <Form.Group className="mb-3" controlId="nombre">
+              <Form.Label>Nombre y apellido</Form.Label>
+              <Form.Control {...register('nombre')} isInvalid={!!errors.nombre} placeholder="Ej. Juan Pérez" />
+              <Form.Control.Feedback type="invalid">{errors.nombre?.message}</Form.Control.Feedback>
+            </Form.Group>
+          </Col>
+          <Col md={4}>
+            <Form.Group className="mb-3" controlId="dni">
+              <Form.Label>DNI (opcional)</Form.Label>
+              <Form.Control inputMode="numeric" {...register('dni')} isInvalid={!!errors.dni} placeholder="28.456.921" />
+              <Form.Control.Feedback type="invalid">{errors.dni?.message}</Form.Control.Feedback>
+            </Form.Group>
+          </Col>
+        </Row>
         <Row>
           <Col md={6}>
             <Form.Group className="mb-3" controlId="telefono">
@@ -56,7 +67,7 @@ export function ClienteNuevo() {
           </Col>
         </Row>
 
-        <Form.Check type="switch" id="conVehiculo" label="Cargar su vehículo ahora" className="mb-3 text-white" {...register('conVehiculo')} />
+        <Form.Check type="switch" id="conVehiculo" label="Cargar su vehículo ahora" className="mb-3" {...register('conVehiculo')} />
 
         {conVehiculo && (
           <Row className="g-3 mb-2">
@@ -100,7 +111,7 @@ export function ClienteNuevo() {
 
         <div className="d-flex gap-2 mt-4">
           <BotonGuardar guardando={isSubmitting} texto="Guardar cliente" />
-          <button type="button" className="btn-outline-custom w-100" onClick={() => navigate('/clientes')}>Cancelar</button>
+          <button type="button" className="btn-sgi-outline w-100" onClick={() => navigate('/clientes')}>Cancelar</button>
         </div>
       </Form>
     </MarcoFormulario>

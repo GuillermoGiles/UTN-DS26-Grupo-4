@@ -1,23 +1,42 @@
 import { useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Form, Row, Col, Alert } from 'react-bootstrap';
+import { Form, Row, Col, Alert, Spinner } from 'react-bootstrap';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { turnoSchema } from '../schemas/turnoSchema';
 import { useAuth } from '../hooks/useAuth';
 import { useFetch } from '../hooks/useFetch';
 import { apiFetch } from '../services/api';
-import { MarcoFormulario, BotonGuardar } from '../components/Formulario';
 import { Cargando } from '../components/Estado';
-import { horaActualAR, hoyAR, mensajeDeError, mostrarPatente, pesos } from '../utils/formato';
+import { EncabezadoPagina } from '../components/Formulario';
+import { fechaCorta, horaActualAR, hoyAR, mensajeDeError, mostrarPatente, pesos, sumarDias } from '../utils/formato';
+
+const ULTIMO_HORARIO = '17:30';
+
+/** Primer día con horarios por delante: hoy, o mañana si el taller ya cerró. */
+function primerDiaDisponible(): string {
+  let dia = horaActualAR() >= ULTIMO_HORARIO ? sumarDias(hoyAR(), 1) : hoyAR();
+  if (new Date(`${dia}T12:00:00`).getDay() === 0) dia = sumarDias(dia, 1); // los domingos no se atiende
+  return dia;
+}
 import type { Servicio } from '../types/servicio';
 import type { ClienteDetalle, ClienteListado } from '../types/cliente';
 import type { Disponibilidad, TurnoConDetalle } from '../types/turno';
 
+/** Próximos 6 días de atención (lunes a sábado) para elegir rápido. */
+function proximosDias(desde: string): string[] {
+  const dias: string[] = [];
+  for (let i = 0; dias.length < 6 && i < 10; i++) {
+    const f = sumarDias(desde, i);
+    if (new Date(`${f}T12:00:00`).getDay() !== 0) dias.push(f);
+  }
+  return dias;
+}
+
 /**
- * Reserva de turno. El cliente elige entre sus autos (y la API lo reserva siempre a su nombre);
- * el personal elige primero el cliente y después uno de sus autos.
- * Solo se ofrecen los horarios libres del día elegido (GET /turnos/disponibles).
+ * Reserva de turno en tres pasos. El cliente elige entre sus autos (la API lo reserva
+ * siempre a su nombre); el personal elige primero el cliente. Solo se ofrecen los
+ * horarios libres del día (GET /turnos/disponibles) y nunca los que ya pasaron.
  */
 export function AltaTurno() {
   const navigate = useNavigate();
@@ -29,7 +48,7 @@ export function AltaTurno() {
   const { register, handleSubmit, control, setValue, formState: { errors, isSubmitting } } = useForm({
     resolver: zodResolver(turnoSchema),
     defaultValues: {
-      fecha: params.get('fecha') ?? hoyAR(),
+      fecha: params.get('fecha') ?? primerDiaDisponible(),
       hora: '',
       servicioId: params.get('servicio') ?? '',
       vehiculoId: '',
@@ -37,23 +56,23 @@ export function AltaTurno() {
       nota: '',
     },
   });
-
-  const [fecha, hora, clienteId] = useWatch({ control, name: ['fecha', 'hora', 'clienteId'] });
+  const [fecha, hora, clienteId, servicioId, vehiculoId] = useWatch({ control, name: ['fecha', 'hora', 'clienteId', 'servicioId', 'vehiculoId'] });
 
   const servicios = useFetch<Servicio[]>('/servicios');
   const disponibilidad = useFetch<Disponibilidad>(fecha ? `/turnos/disponibles?fecha=${fecha}` : null);
-  // Cliente: sus autos salen de su ficha. Personal: lista de clientes con sus autos.
   const miFicha = useFetch<ClienteDetalle>(esCliente ? '/clientes/mio' : null);
   const clientes = useFetch<ClienteListado[]>(esCliente ? null : '/clientes');
+
+  const vehiculos = esCliente
+    ? miFicha.data?.vehiculos ?? []
+    : clientes.data?.find((c) => String(c.id) === clienteId)?.vehiculos ?? [];
+  const servicio = (servicios.data ?? []).find((s) => String(s.id) === servicioId);
+  const vehiculo = vehiculos.find((v) => String(v.id) === vehiculoId);
 
   // Hoy no se ofrecen los horarios que ya pasaron (la API igual los rechaza con 400)
   const ahora = fecha === hoyAR() ? horaActualAR() : null;
   const pasado = (h: string) => ahora !== null && h <= ahora;
   const libres = (disponibilidad.data?.libres ?? []).filter((h) => !pasado(h));
-
-  const vehiculos = esCliente
-    ? miFicha.data?.vehiculos ?? []
-    : clientes.data?.find((c) => String(c.id) === clienteId)?.vehiculos ?? [];
 
   const onSubmit = handleSubmit(async (datos) => {
     setErrorApi(null);
@@ -67,122 +86,108 @@ export function AltaTurno() {
   });
 
   return (
-    <MarcoFormulario
-      titulo="Reservar turno"
-      subtitulo="Elegí el día y uno de los horarios libres."
-      error={errorApi}
-      onCerrarError={() => setErrorApi(null)}
-      ancho={720}
-    >
-      <Form onSubmit={onSubmit} noValidate>
-        {!esCliente && (
-          <Form.Group className="mb-3" controlId="clienteId">
-            <Form.Label>Cliente</Form.Label>
-            <Form.Select
-              {...register('clienteId', { onChange: () => setValue('vehiculoId', '') })}
-              isInvalid={!!errors.clienteId}
-            >
-              <option value="">{clientes.loading ? 'Cargando clientes...' : 'Elegí el cliente'}</option>
-              {(clientes.data ?? []).map((c) => (
-                <option key={c.id} value={c.id}>{c.nombre} — {c.telefono}</option>
-              ))}
-            </Form.Select>
-            <Form.Text className="text-muted">
-              ¿No está? <Link to="/clientes/nuevo">Dalo de alta primero</Link>.
-            </Form.Text>
-          </Form.Group>
-        )}
+    <div className="page">
+      <EncabezadoPagina eyebrow="TURNOS" titulo="Reservar turno" texto="Elegí el vehículo, el servicio y uno de los horarios libres." />
+      {errorApi && <Alert variant="danger" dismissible onClose={() => setErrorApi(null)}>{errorApi}</Alert>}
 
-        <Row>
-          <Col md={6}>
-            <Form.Group className="mb-3" controlId="servicioId">
-              <Form.Label>Servicio</Form.Label>
-              <Form.Select {...register('servicioId')} isInvalid={!!errors.servicioId}>
-                <option value="">Elegí el servicio</option>
-                {(servicios.data ?? []).map((s) => (
-                  <option key={s.id} value={s.id}>{s.nombre} ({pesos(s.precio)})</option>
-                ))}
-              </Form.Select>
-              <Form.Control.Feedback type="invalid">{errors.servicioId?.message}</Form.Control.Feedback>
-            </Form.Group>
-          </Col>
-          <Col md={6}>
-            <Form.Group className="mb-3" controlId="vehiculoId">
-              <Form.Label>Vehículo</Form.Label>
-              <Form.Select {...register('vehiculoId')} disabled={!esCliente && !clienteId}>
-                <option value="">{vehiculos.length ? 'Elegí el vehículo' : 'Sin vehículos cargados'}</option>
-                {vehiculos.map((v) => (
-                  <option key={v.id} value={v.id}>{mostrarPatente(v.patente)} — {v.marca} {v.modelo}</option>
-                ))}
-              </Form.Select>
-              {esCliente && miFicha.data && vehiculos.length === 0 && (
-                <Form.Text className="text-muted">
-                  Podés <Link to="/mi-cuenta">cargar tu auto en Mi cuenta</Link> o reservar igual.
-                </Form.Text>
+      <Form onSubmit={onSubmit} noValidate>
+        <Row className="g-4">
+          <Col lg={5} className="d-flex flex-column gap-4">
+            <section className="card-sgi card-sgi-body">
+              <h5 className="display fs-5 mb-3"><span className="paso">1</span>{esCliente ? 'Tu vehículo' : 'Cliente y vehículo'}</h5>
+              {!esCliente && (
+                <Form.Group className="mb-3" controlId="clienteId">
+                  <Form.Label>Cliente</Form.Label>
+                  <Form.Select {...register('clienteId', { onChange: () => setValue('vehiculoId', '') })}>
+                    <option value="">{clientes.loading ? 'Cargando clientes...' : 'Elegí el cliente'}</option>
+                    {(clientes.data ?? []).map((c) => <option key={c.id} value={c.id}>{c.nombre}{c.dni ? ` · DNI ${c.dni}` : ''}</option>)}
+                  </Form.Select>
+                  <Form.Text>¿No está? <Link to="/clientes/nuevo">Dalo de alta primero</Link>.</Form.Text>
+                </Form.Group>
               )}
-            </Form.Group>
+              <Form.Group controlId="vehiculoId">
+                <Form.Label>Vehículo</Form.Label>
+                <Form.Select {...register('vehiculoId')} disabled={!esCliente && !clienteId}>
+                  <option value="">{vehiculos.length ? 'Elegí el vehículo' : 'Sin vehículos cargados'}</option>
+                  {vehiculos.map((v) => <option key={v.id} value={v.id}>{mostrarPatente(v.patente)} · {v.marca} {v.modelo}</option>)}
+                </Form.Select>
+                {esCliente && miFicha.data && vehiculos.length === 0 && (
+                  <Form.Text>Podés <Link to="/mi-cuenta">cargar tu auto en Mi cuenta</Link> o reservar igual.</Form.Text>
+                )}
+              </Form.Group>
+            </section>
+
+            <section className="card-sgi card-sgi-body">
+              <h5 className="display fs-5 mb-3"><span className="paso">3</span>Día y horario</h5>
+              <Form.Label as="div">Día</Form.Label>
+              <div className="d-flex flex-wrap gap-2 mb-2">
+                {proximosDias(primerDiaDisponible()).map((d) => (
+                  <button key={d} type="button" className={`opcion text-center py-2 px-3${fecha === d ? ' elegida' : ''}`} style={{ width: 'auto' }}
+                    onClick={() => { setValue('fecha', d, { shouldValidate: true }); setValue('hora', ''); }} aria-pressed={fecha === d}>
+                    <div className="fw-bold small">{fechaCorta(d).toUpperCase()}</div>
+                  </button>
+                ))}
+              </div>
+              <Form.Control type="date" min={hoyAR()} aria-label="Otra fecha" className="mb-3" style={{ maxWidth: 220 }}
+                {...register('fecha', { onChange: () => setValue('hora', '') })} isInvalid={!!errors.fecha} />
+
+              <Form.Label as="div">Horarios libres</Form.Label>
+              {disponibilidad.loading && <Cargando texto="Buscando horarios libres..." />}
+              {disponibilidad.data && (libres.length === 0
+                ? <Alert variant="warning" className="mb-0">{disponibilidad.data.cerrado ? 'Los domingos el taller está cerrado. Elegí otro día.' : 'No quedan horarios libres ese día. Probá con otro.'}</Alert>
+                : (
+                  <div className="d-grid gap-2" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(78px, 1fr))' }} role="radiogroup" aria-label="Horarios disponibles">
+                    {libres.map((h) => (
+                      <button key={h} type="button" role="radio" aria-checked={hora === h} className={`opcion text-center py-2${hora === h ? ' elegida' : ''}`}
+                        onClick={() => setValue('hora', h, { shouldValidate: true })}>{h}</button>
+                    ))}
+                  </div>
+                ))}
+              {errors.hora && <div className="text-danger small mt-2">{errors.hora.message}</div>}
+            </section>
+          </Col>
+
+          <Col lg={7} className="d-flex flex-column gap-4">
+            <section className="card-sgi card-sgi-body">
+              <h5 className="display fs-5 mb-3"><span className="paso">2</span>Servicio</h5>
+              {servicios.loading && <Cargando />}
+              <Row className="g-3">
+                {(servicios.data ?? []).map((s) => (
+                  <Col key={s.id} sm={6}>
+                    <button type="button" className={`opcion h-100${servicioId === String(s.id) ? ' elegida' : ''}`} aria-pressed={servicioId === String(s.id)}
+                      onClick={() => setValue('servicioId', String(s.id), { shouldValidate: true })}>
+                      <span className={`estado ${s.tipo === 'lubricentro' ? 'estado-pendiente' : 'estado-confirmado'} mb-2`}>{s.tipo === 'lubricentro' ? 'Lubricentro' : 'Lavadero'}</span>
+                      <div className="fw-bold display fs-5">{s.nombre}</div>
+                      <div className="small text-muted mb-2">{s.desc}</div>
+                      <div className="opcion-precio">{pesos(s.precio)}</div>
+                    </button>
+                  </Col>
+                ))}
+              </Row>
+              {errors.servicioId && <div className="text-danger small mt-2">{errors.servicioId.message}</div>}
+              <Form.Group className="mt-3" controlId="nota">
+                <Form.Label>Nota para el taller (opcional)</Form.Label>
+                <Form.Control as="textarea" rows={2} {...register('nota')} isInvalid={!!errors.nota} placeholder="Ej: hace un ruido al frenar en frío" />
+                <Form.Control.Feedback type="invalid">{errors.nota?.message}</Form.Control.Feedback>
+              </Form.Group>
+            </section>
+
+            <section className="resumen-turno">
+              <div>
+                <small className="fw-bold">RESUMEN DEL TURNO</small>
+                <h4 className="mt-1">{servicio ? servicio.nombre : 'Elegí un servicio'}</h4>
+                <small>{fechaCorta(fecha)}{hora ? ` · ${hora} hs` : ' · elegí un horario'}{vehiculo ? ` · ${mostrarPatente(vehiculo.patente)}` : ''}</small>
+              </div>
+              <div className="d-flex align-items-center gap-3">
+                <div className="text-end"><small className="d-block">Total estimado</small><span className="resumen-total">{pesos(servicio?.precio ?? 0)}</span></div>
+                <button type="submit" className="btn-sgi" disabled={isSubmitting}>
+                  {isSubmitting ? <><Spinner size="sm" animation="border" /> Reservando...</> : hora ? `Confirmar turno a las ${hora}` : 'Confirmar turno'}
+                </button>
+              </div>
+            </section>
           </Col>
         </Row>
-
-        <Form.Group className="mb-3" controlId="fecha" style={{ maxWidth: 260 }}>
-          <Form.Label>Día</Form.Label>
-          <Form.Control
-            type="date"
-            min={hoyAR()}
-            {...register('fecha', { onChange: () => setValue('hora', '') })}
-            isInvalid={!!errors.fecha}
-          />
-          <Form.Control.Feedback type="invalid">{errors.fecha?.message}</Form.Control.Feedback>
-        </Form.Group>
-
-        <fieldset className="mb-3">
-          <legend className="form-label fs-6">Horario</legend>
-          {disponibilidad.loading && <Cargando texto="Buscando horarios libres..." />}
-          {disponibilidad.error && <Alert variant="danger">{disponibilidad.error}</Alert>}
-          {disponibilidad.data && (
-            libres.length === 0 ? (
-              <Alert variant="warning">No quedan horarios libres ese día. Probá con otra fecha.</Alert>
-            ) : (
-              <div className="d-flex flex-wrap gap-2" role="radiogroup" aria-label="Horarios disponibles">
-                {disponibilidad.data.horarios.map((h) => {
-                  const ocupado = disponibilidad.data!.ocupados.includes(h) || pasado(h);
-                  const elegido = hora === h;
-                  return (
-                    <button
-                      key={h}
-                      type="button"
-                      role="radio"
-                      aria-checked={elegido}
-                      disabled={ocupado}
-                      onClick={() => setValue('hora', h, { shouldValidate: true })}
-                      className={elegido ? 'btn-primary-custom py-1 px-3' : 'btn-action-dark text-dark border-secondary'}
-                      style={
-                        ocupado
-                          ? { textDecoration: 'line-through', opacity: 0.45 }
-                          : elegido
-                            ? { backgroundColor: 'var(--primary-color)', color: '#fff' }
-                            : undefined
-                      }
-                      title={pasado(h) ? 'Ya pasó' : ocupado ? 'Ocupado' : undefined}
-                    >
-                      {h}
-                    </button>
-                  );
-                })}
-              </div>
-            )
-          )}
-          {errors.hora && <div className="text-danger small mt-2">{errors.hora.message}</div>}
-        </fieldset>
-
-        <Form.Group className="mb-4" controlId="nota">
-          <Form.Label>Nota para el taller (opcional)</Form.Label>
-          <Form.Control as="textarea" rows={2} {...register('nota')} isInvalid={!!errors.nota} placeholder="Ej: hace un ruido al frenar" />
-          <Form.Control.Feedback type="invalid">{errors.nota?.message}</Form.Control.Feedback>
-        </Form.Group>
-
-        <BotonGuardar guardando={isSubmitting} texto={hora ? `Confirmar turno a las ${hora}` : 'Confirmar turno'} textoGuardando="Reservando..." />
       </Form>
-    </MarcoFormulario>
+    </div>
   );
 }

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Container, Form, Button, Alert, Card } from 'react-bootstrap';
+import { Form, Alert } from 'react-bootstrap';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
@@ -7,6 +7,7 @@ import { FiAlertCircle } from 'react-icons/fi';
 import { loginSchema, type LoginFormData } from '../schemas/loginSchema';
 import { useAuth } from '../hooks/useAuth';
 import { inicioPorRol } from '../utils/inicioPorRol';
+import { AuthSplit } from '../components/AuthSplit';
 
 export function Login() {
   const [errorApi, setErrorApi] = useState<string | null>(null);
@@ -19,11 +20,7 @@ export function Login() {
   const desde = state?.desde;
   const sesionExpirada = Boolean(state?.sesionExpirada);
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<LoginFormData>({
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
   });
 
@@ -34,71 +31,46 @@ export function Login() {
       // Vuelve a la pantalla de la que venía; si no venía de ninguna, a la de su rol
       navigate(desde ?? inicioPorRol(usuario.rol), { replace: true });
     } catch (error) {
-      if (error instanceof Error) {
-        setErrorApi(error.message);
-      } else {
-        setErrorApi('Ocurrió un error inesperado al iniciar sesión');
-      }
+      setErrorApi(error instanceof Error ? error.message : 'Ocurrió un error inesperado al iniciar sesión');
     }
   };
 
   return (
-    <Container className="py-5 d-flex justify-content-center">
-      <Card style={{ width: '100%', maxWidth: '400px' }} className="shadow-sm">
-        <Card.Body className="p-4">
-          <h2 className="text-center mb-4 fw-bold">Iniciar Sesión</h2>
-          
-          {sesionExpirada && !errorApi && (
-            <Alert variant="warning" className="d-flex align-items-center gap-2">
-              <FiAlertCircle className="flex-shrink-0" />
-              <span>Tu sesión ha expirado. Por favor, iniciá sesión nuevamente.</span>
-            </Alert>
-          )}
+    <AuthSplit
+      titulo="El cuidado que tu vehículo merece, sin vueltas."
+      texto="Reservá tu turno online y llevá el historial de service y lavados de cada auto, siempre a mano."
+    >
+      <div className="text-center"><span className="chip">TURNOS ONLINE</span></div>
+      <h2>Iniciar sesión</h2>
+      <p className="text-center text-muted mb-4">Clientes y personal del taller entran por acá.</p>
 
-          {errorApi && <Alert variant="danger">{errorApi}</Alert>}
-          
-          <Form onSubmit={handleSubmit(onSubmit)}>
-            <Form.Group className="mb-3" controlId="email">
-              <Form.Label>Email</Form.Label>
-              <Form.Control
-                type="email"
-                placeholder="Ingresá tu email"
-                isInvalid={!!errors.email}
-                {...register('email')}
-              />
-              <Form.Control.Feedback type="invalid">
-                {errors.email?.message}
-              </Form.Control.Feedback>
-            </Form.Group>
+      {sesionExpirada && !errorApi && (
+        <Alert variant="warning" className="d-flex align-items-center gap-2">
+          <FiAlertCircle className="flex-shrink-0" />
+          <span>Tu sesión ha expirado. Por favor, iniciá sesión nuevamente.</span>
+        </Alert>
+      )}
+      {errorApi && <Alert variant="danger">{errorApi}</Alert>}
 
-            <Form.Group className="mb-4" controlId="password">
-              <Form.Label>Contraseña</Form.Label>
-              <Form.Control
-                type="password"
-                placeholder="Ingresá tu contraseña"
-                isInvalid={!!errors.password}
-                {...register('password')}
-              />
-              <Form.Control.Feedback type="invalid">
-                {errors.password?.message}
-              </Form.Control.Feedback>
-            </Form.Group>
+      <Form onSubmit={handleSubmit(onSubmit)} noValidate>
+        <Form.Group className="mb-3" controlId="email">
+          <Form.Label>Email</Form.Label>
+          <Form.Control type="email" placeholder="juan.perez@gmail.com" autoComplete="email" isInvalid={!!errors.email} {...register('email')} />
+          <Form.Control.Feedback type="invalid">{errors.email?.message}</Form.Control.Feedback>
+        </Form.Group>
+        <Form.Group className="mb-4" controlId="password">
+          <Form.Label>Contraseña</Form.Label>
+          <Form.Control type="password" autoComplete="current-password" isInvalid={!!errors.password} {...register('password')} />
+          <Form.Control.Feedback type="invalid">{errors.password?.message}</Form.Control.Feedback>
+        </Form.Group>
+        <button type="submit" className="btn-sgi" disabled={isSubmitting}>
+          {isSubmitting ? 'Iniciando sesión...' : 'Ingresar'}
+        </button>
+      </Form>
 
-            <Button
-              variant="primary"
-              type="submit"
-              className="w-100 py-2"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? 'Iniciando sesión...' : 'Ingresar'}
-            </Button>
-          </Form>
-
-          <p className="text-center text-muted small mt-4 mb-0">
-            ¿Todavía no tenés cuenta? <Link to="/registro">Creá una para reservar turnos</Link>
-          </p>
-        </Card.Body>
-      </Card>
-    </Container>
+      <p className="text-center small mt-4 mb-0">
+        ¿No tenés cuenta? <Link to="/registro" className="fw-bold">Registrate para reservar turnos</Link>
+      </p>
+    </AuthSplit>
   );
 }

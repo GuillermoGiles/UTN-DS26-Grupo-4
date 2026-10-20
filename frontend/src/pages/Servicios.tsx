@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Container, Row, Col, Alert, ButtonGroup } from 'react-bootstrap';
+import { Row, Col, Alert } from 'react-bootstrap';
+import { EncabezadoPagina } from '../components/Formulario';
 import { Link } from 'react-router-dom';
 import { FiPlus, FiEdit2, FiTrash2 } from 'react-icons/fi';
 import { ServicioDestacado } from '../components/ServicioDestacado';
@@ -34,32 +35,26 @@ export function Servicios() {
   const destinoReserva = (id: number) => (usuario ? `/turnos/nuevo?servicio=${id}` : '/registro');
 
   return (
-    <Container className="py-5">
-      <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-3 mb-4">
-        <div>
-          <h2 className="mb-1">Servicios</h2>
-          <p className="text-muted mb-0">Lavadero y lubricentro. Los precios incluyen mano de obra.</p>
-        </div>
-        <div className="d-flex gap-2 flex-wrap">
-          <ButtonGroup aria-label="Filtrar por tipo">
-            {(['', 'lavadero', 'lubricentro'] as const).map((t) => (
-              <button
-                key={t || 'todos'}
-                type="button"
-                className={tipo === t ? 'btn-primary-custom' : 'btn-outline-custom'}
-                onClick={() => setTipo(t)}
-              >
-                {t === '' ? 'Todos' : t === 'lavadero' ? 'Lavadero' : 'Lubricentro'}
-              </button>
-            ))}
-          </ButtonGroup>
-          {esAdmin && (
-            <Link to="/servicios/nuevo" className="btn-primary-custom d-flex align-items-center gap-2 text-decoration-none">
-              <FiPlus /> Nuevo servicio
-            </Link>
-          )}
-        </div>
-      </div>
+    <div className="page">
+      <EncabezadoPagina
+        eyebrow="CATÁLOGO"
+        titulo="Servicios"
+        texto="Lavadero y lubricentro. Los precios incluyen mano de obra."
+        acciones={
+          <>
+            <div className="d-flex gap-1 p-1 rounded-pill" style={{ background: 'var(--surface-2)' }} role="group" aria-label="Filtrar por tipo">
+              {(['', 'lavadero', 'lubricentro'] as const).map((t) => (
+                <button key={t || 'todos'} type="button" aria-pressed={tipo === t}
+                  className={tipo === t ? 'btn-sgi btn-sm-sgi' : 'btn-sgi-ghost'} style={tipo === t ? undefined : { background: 'transparent' }}
+                  onClick={() => setTipo(t)}>
+                  {t === '' ? 'Todos' : t === 'lavadero' ? 'Lavadero' : 'Lubricentro'}
+                </button>
+              ))}
+            </div>
+            {esAdmin && <Link to="/servicios/nuevo" className="btn-sgi"><FiPlus /> Nuevo servicio</Link>}
+          </>
+        }
+      />
 
       {errorBorrado && (
         <Alert variant="danger" dismissible onClose={() => setErrorBorrado(null)}>
@@ -81,7 +76,7 @@ export function Servicios() {
                   tipo={srv.tipo}
                   accion={
                     !esAdmin && (
-                      <Link to={destinoReserva(srv.id)} className="btn-outline-custom text-decoration-none py-1">
+                      <Link to={destinoReserva(srv.id)} className="btn-sgi btn-sm-sgi">
                         Reservar
                       </Link>
                     )
@@ -89,10 +84,10 @@ export function Servicios() {
                   acciones={
                     esAdmin && (
                       <>
-                        <Link to={`/servicios/${srv.id}/editar`} className="btn-action-dark" aria-label={`Editar ${srv.nombre}`}>
+                        <Link to={`/servicios/${srv.id}/editar`} className="btn-sgi-ghost" aria-label={`Editar ${srv.nombre}`}>
                           <FiEdit2 /> Editar
                         </Link>
-                        <button type="button" className="btn-action-dark" onClick={() => borrar(srv)} aria-label={`Borrar ${srv.nombre}`}>
+                        <button type="button" className="btn-sgi-ghost" onClick={() => borrar(srv)} aria-label={`Borrar ${srv.nombre}`}>
                           <FiTrash2 /> Borrar
                         </button>
                       </>
@@ -106,6 +101,6 @@ export function Servicios() {
           <Vacio>No hay servicios cargados todavía.</Vacio>
         )
       )}
-    </Container>
+    </div>
   );
 }

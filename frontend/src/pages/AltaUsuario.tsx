@@ -66,7 +66,7 @@ export function AltaUsuario() {
         </Form.Group>
         <div className="d-flex gap-2">
           <BotonGuardar guardando={isSubmitting} texto="Crear usuario" />
-          <button type="button" className="btn-outline-custom w-100" onClick={() => navigate('/usuarios')}>Cancelar</button>
+          <button type="button" className="btn-sgi-outline w-100" onClick={() => navigate('/usuarios')}>Cancelar</button>
         </div>
       </Form>
     </MarcoFormulario>
