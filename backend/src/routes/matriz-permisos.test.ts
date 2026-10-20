@@ -62,8 +62,15 @@ const matriz: { metodo: Metodo; ruta: string; prohibido: Rol[] }[] = [
   { metodo: "put", ruta: "/api/clientes/mio", prohibido: ["EMPLEADO", "ADMIN"] },
 ];
 
-describe("Matriz de permisos (cada fila 401/403 es un test sin DB)", () => {
-  beforeEach(() => vi.clearAllMocks());
+const ROLES: Rol[] = ["CLIENTE", "EMPLEADO", "ADMIN"];
+
+describe("Matriz de permisos (cada celda es un test sin DB)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    // Los roles permitidos llegan al controller con un Prisma vacío y pueden dar 500:
+    // acá solo importa que pasaron authenticate/authorize. Se silencia ese log.
+    vi.spyOn(console, "error").mockImplementation(() => {});
+  });
 
   describe.each(matriz)("$metodo $ruta", ({ metodo, ruta, prohibido }) => {
     it("responde 401 sin token", async () => {
@@ -71,13 +78,18 @@ describe("Matriz de permisos (cada fila 401/403 es un test sin DB)", () => {
       expect(res.status).toBe(401);
     });
 
-    it.each(prohibido.length ? prohibido : ["(ninguno)"])("responde 403 con rol %s", async (rol) => {
-      if (rol === "(ninguno)") return; // todos los roles logueados pueden: no hay 403 que probar
+    it.each(ROLES)("rol %s", async (rol) => {
       const res = await request(app)[metodo](ruta)
-        .set("Authorization", `Bearer ${token(rol as Rol)}`)
+        .set("Authorization", `Bearer ${token(rol)}`)
         .send({});
-      expect(res.status).toBe(403);
-      expect(res.body).toEqual({ error: "No tenés permiso para esta operación" });
+
+      if (prohibido.includes(rol)) {
+        expect(res.status).toBe(403);
+        expect(res.body).toEqual({ error: "No tenés permiso para esta operación" });
+      } else {
+        // Permitido: pasó la barrera (después puede ser 400 por el body vacío, 404, etc.)
+        expect([401, 403]).not.toContain(res.status);
+      }
     });
   });
 });

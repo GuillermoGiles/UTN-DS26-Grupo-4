@@ -9,7 +9,7 @@
 * **Diagrama Contextual:** [Diagrama Contextual del Sistema](./01%20-%20Análisis%20Inicial/Diagrama%20Contextual.jpeg).
 
 ## [02 - Modelado de Dominio](./02%20-%20Modelado%20de%20Dominio)
-* **2.1 Modelo de Dominio:** Representación conceptual de las entidades del sistema ([Entidades.md](./02%20-%20Modelado%20de%20Dominio/Entidades.md)).
+* **2.1 Modelo de Dominio:** Entidades, diagrama de relaciones, `onDelete` justificados y migración de datos ([Entidades.md](./02%20-%20Modelado%20de%20Dominio/Entidades.md)).
 * **2.2 Requisitos Funcionales:** Detalle de las capacidades del software ([Fase 2.pdf](./02%20-%20Modelado%20de%20Dominio/Fase%202.pdf)).
 * **2.3 Reglas de Negocio:** Normas y lógica operativa del lavadero y lubricentro.
 * **2.4 Diagramas Complementarios:** Diagramas de estado y flujos de gestión ([Diagrama de Estado](./02%20-%20Modelado%20de%20Dominio/Diagrama%20de%20Estado.jpeg)).
@@ -27,7 +27,12 @@
 
 ## [05 - Diseño de API](./05%20-%20Diseño%20de%20API)
 * **Listado de Operaciones:** Mapeo de pantallas a operaciones y entidades ([Operaciones.md](./05%20-%20Diseño%20de%20API/Operaciones.md)).
-* **Contrato de API REST:** Endpoints definidos para Servicios, Clientes, Vehículos, Turnos, Lavados y Usuarios.
+* **Contrato de API REST:** Endpoints de Auth, Servicios, Clientes, Vehículos, Turnos, Lavados, Usuarios y Panel, con body, éxito y errores de cada uno.
 * **Matriz de Permisos (RBAC):** Control de acceso por endpoint para roles ADMIN, EMPLEADO, CLIENTE y Público ([Matriz_Permisos.md](./05%20-%20Diseño%20de%20API/Matriz_Permisos.md)).
 
+## [06 - Exposición](./06%20-%20Exposición)
+* **Guía de exposición:** guion de la demo por rol, dónde está cada tema de la cursada y preguntas probables ([Guia_Exposicion.md](./06%20-%20Exposición/Guia_Exposicion.md)).
+
+## [07 - Deploy](./07%20-%20Deploy)
+* **Deploy paso a paso:** API y base en Render (`render.yaml`), frontend en Vercel (`frontend/vercel.json`), CORS y verificación ([Deploy.md](./07%20-%20Deploy/Deploy.md)).
 
