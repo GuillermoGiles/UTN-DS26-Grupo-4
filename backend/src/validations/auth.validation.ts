@@ -6,7 +6,9 @@ export const registroSchema = z.object({
   password: z
     .string()
     .min(6, "La contraseña debe tener al menos 6 caracteres"),
-  rol: z.enum(["ADMIN", "EMPLEADO", "CLIENTE"]).optional(),
+  // ⚠ Sin campo "rol": el registro es público y siempre crea un CLIENTE.
+  // Si alguien manda "rol": "ADMIN" en el body, Zod lo descarta (strip por defecto).
+  // El personal (EMPLEADO / ADMIN) lo da de alta un ADMIN desde /api/usuarios.
 });
 
 export const loginSchema = z.object({

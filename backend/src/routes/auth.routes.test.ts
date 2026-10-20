@@ -85,4 +85,30 @@ describe("Seguridad y permisos - /api/auth", () => {
       expect(prisma.usuario.findUnique).toHaveBeenCalledTimes(1);
     });
   });
+
+  describe("POST /api/auth/registro - escalada de privilegios", () => {
+    it("Dado un visitante que manda rol ADMIN en el body, Cuando se registra, Entonces el usuario se crea igual como CLIENTE", async () => {
+      // Dado
+      vi.mocked(prisma.usuario.create).mockResolvedValueOnce({
+        id: 20,
+        nombre: "Intruso",
+        email: "intruso@sanjose.test",
+        rol: "CLIENTE",
+        createdAt: new Date("2026-10-20T12:00:00Z"),
+      } as never);
+
+      // Cuando
+      const res = await request(app).post("/api/auth/registro").send({
+        nombre: "Intruso",
+        email: "intruso@sanjose.test",
+        password: "quieroSerAdmin",
+        rol: "ADMIN",
+      });
+
+      // Entonces: se guardó con rol CLIENTE, sin importar lo que vino en el body
+      expect(res.status).toBe(201);
+      const llamada = vi.mocked(prisma.usuario.create).mock.calls[0][0];
+      expect(llamada.data.rol).toBe("CLIENTE");
+    });
+  });
 });

@@ -22,3 +22,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Variables de entorno (nunca a Git: usar .env.example)
+.env
+
+# Cache de Vite
+.vite
