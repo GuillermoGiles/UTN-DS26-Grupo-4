@@ -8,9 +8,14 @@ vi.mock("../config/prisma", () => ({
     turno: {
       create: vi.fn(),
       findMany: vi.fn(),
+      count: vi.fn(),
     },
     cliente: {
       create: vi.fn(),
+      findUnique: vi.fn(),
+    },
+    vehiculo: {
+      findUnique: vi.fn(),
     },
     servicio: {
       create: vi.fn(),
@@ -37,24 +42,31 @@ describe("Comportamiento específico (Dado / Cuando / Entonces)", () => {
   });
 
   describe("POST /api/turnos - Reserva de turno", () => {
-    it("Dado un cliente autenticado con datos válidos, Cuando solicita un turno por POST, Entonces responde 201 con el turno creado", async () => {
-      // Dado (Arrange)
+    it("Dado un cliente autenticado con datos válidos, Cuando solicita un turno por POST, Entonces responde 201 con el turno creado a nombre de su propia ficha", async () => {
+      // Dado (Arrange): el usuario 3 (CLIENTE) tiene la ficha de cliente 1 con el vehículo 4
+      const fichaPropia = {
+        id: 1,
+        nombre: "Carlos Gómez",
+        telefono: "2215001122",
+        email: "carlos@mail.test",
+        usuarioId: 3,
+        createdAt: new Date("2026-09-01T10:00:00Z"),
+      };
       const payloadTurno = {
         fecha: "2026-10-25",
         hora: "10:30",
-        clienteId: 1,
+        vehiculoId: 4,
         servicioId: 2,
       };
       const turnoCreado = {
         id: 10,
         ...payloadTurno,
-        cliente: {
-          id: 1,
-          nombre: "Carlos Gómez",
-          vehiculo: "Ford Fiesta",
-          patente: "AA123BB",
-          telefono: "2215001122",
-        },
+        clienteId: 1,
+        estado: "PENDIENTE",
+        nota: null,
+        createdAt: new Date("2026-10-20T12:00:00Z"),
+        cliente: fichaPropia,
+        vehiculo: { id: 4, patente: "AA123BB", marca: "Ford", modelo: "Fiesta" },
         servicio: {
           id: 2,
           nombre: "Cambio de aceite y filtro",
@@ -63,7 +75,10 @@ describe("Comportamiento específico (Dado / Cuando / Entonces)", () => {
           tipo: "lubricentro",
         },
       };
-      vi.mocked(prisma.turno.create).mockResolvedValueOnce(turnoCreado);
+      vi.mocked(prisma.cliente.findUnique).mockResolvedValueOnce(fichaPropia);
+      vi.mocked(prisma.vehiculo.findUnique).mockResolvedValueOnce({ id: 4, clienteId: 1 } as never);
+      vi.mocked(prisma.turno.count).mockResolvedValueOnce(0); // horario libre
+      vi.mocked(prisma.turno.create).mockResolvedValueOnce(turnoCreado as never);
 
       // Cuando (Act)
       const res = await request(app)
@@ -73,11 +88,44 @@ describe("Comportamiento específico (Dado / Cuando / Entonces)", () => {
 
       // Entonces (Assert)
       expect(res.status).toBe(201);
-      expect(res.body).toEqual(turnoCreado);
+      expect(res.body).toMatchObject({ id: 10, clienteId: 1, estado: "PENDIENTE" });
       expect(prisma.turno.create).toHaveBeenCalledWith({
-        data: payloadTurno,
-        include: { cliente: true, servicio: true },
+        data: { ...payloadTurno, clienteId: 1 },
+        include: { cliente: true, servicio: true, vehiculo: true },
       });
+    });
+
+    it("Dado un cliente que manda el clienteId de otra persona, Cuando reserva, Entonces el turno queda igual a nombre de su propia ficha", async () => {
+      // Dado
+      vi.mocked(prisma.cliente.findUnique).mockResolvedValueOnce({ id: 1, usuarioId: 3 } as never);
+      vi.mocked(prisma.turno.count).mockResolvedValueOnce(0);
+      vi.mocked(prisma.turno.create).mockResolvedValueOnce({ id: 11 } as never);
+
+      // Cuando
+      const res = await request(app)
+        .post("/api/turnos")
+        .set("Authorization", `Bearer ${tokenCliente}`)
+        .send({ fecha: "2026-10-25", hora: "11:00", servicioId: 2, clienteId: 99 });
+
+      // Entonces
+      expect(res.status).toBe(201);
+      expect(vi.mocked(prisma.turno.create).mock.calls[0][0].data.clienteId).toBe(1);
+    });
+
+    it("Dado un horario que ya está ocupado, Cuando un empleado intenta reservarlo, Entonces responde 409 y no crea el turno", async () => {
+      // Dado
+      vi.mocked(prisma.turno.count).mockResolvedValueOnce(1); // ya hay un turno en ese horario
+
+      // Cuando
+      const res = await request(app)
+        .post("/api/turnos")
+        .set("Authorization", `Bearer ${tokenEmpleado}`)
+        .send({ fecha: "2026-10-25", hora: "09:00", clienteId: 1, servicioId: 2 });
+
+      // Entonces
+      expect(res.status).toBe(409);
+      expect(res.body).toEqual({ error: "El horario 09:00 del 2026-10-25 ya está ocupado" });
+      expect(prisma.turno.create).not.toHaveBeenCalled();
     });
 
     it("Dado un cliente autenticado con un body sin horario, Cuando envía POST /api/turnos, Entonces responde 400 y no toca la DB", async () => {
@@ -106,23 +154,25 @@ describe("Comportamiento específico (Dado / Cuando / Entonces)", () => {
     });
   });
 
-  describe("POST /api/clientes - Alta de cliente y normalización de patente", () => {
-    it("Dado un empleado con los datos de un cliente cuya patente está en minúsculas, Cuando envía POST /api/clientes, Entonces la guarda en mayúsculas y responde 201", async () => {
+  describe("POST /api/clientes - Alta de cliente con su primer vehículo", () => {
+    it("Dado un empleado con los datos de un cliente cuya patente está en minúsculas y con espacios, Cuando envía POST /api/clientes, Entonces crea cliente y vehículo juntos con la patente normalizada y responde 201", async () => {
       // Dado (Arrange)
       const nuevoCliente = {
         nombre: "María López",
-        vehiculo: "Peugeot 208",
-        patente: " ab456cd ",
         telefono: "2216112233",
+        vehiculo: { patente: " ab 456-cd ", marca: "Peugeot", modelo: "208" },
       };
       const clientePersistido = {
         id: 5,
         nombre: "María López",
-        vehiculo: "Peugeot 208",
-        patente: "AB456CD",
         telefono: "2216112233",
+        email: null,
+        usuarioId: null,
+        createdAt: new Date("2026-10-20T12:00:00Z"),
+        vehiculos: [{ id: 9, patente: "AB456CD", marca: "Peugeot", modelo: "208" }],
+        _count: { turnos: 0 },
       };
-      vi.mocked(prisma.cliente.create).mockResolvedValueOnce(clientePersistido);
+      vi.mocked(prisma.cliente.create).mockResolvedValueOnce(clientePersistido as never);
 
       // Cuando (Act)
       const res = await request(app)
@@ -132,14 +182,12 @@ describe("Comportamiento específico (Dado / Cuando / Entonces)", () => {
 
       // Entonces (Assert)
       expect(res.status).toBe(201);
-      expect(res.body).toEqual(clientePersistido);
-      expect(prisma.cliente.create).toHaveBeenCalledWith({
-        data: {
-          nombre: "María López",
-          vehiculo: "Peugeot 208",
-          patente: "AB456CD",
-          telefono: "2216112233",
-        },
+      expect(res.body.vehiculos[0].patente).toBe("AB456CD");
+      const { data } = vi.mocked(prisma.cliente.create).mock.calls[0][0];
+      expect(data).toMatchObject({
+        nombre: "María López",
+        telefono: "2216112233",
+        vehiculos: { create: { patente: "AB456CD", marca: "Peugeot", modelo: "208", km: 0 } },
       });
     });
   });
@@ -210,6 +258,7 @@ describe("Comportamiento específico (Dado / Cuando / Entonces)", () => {
         .send({
           nombre: "Lucía Fernández",
           email: "lucia@sanjose.test",
+          telefono: "221-600-7788",
           password: "miPassword123",
         });
 

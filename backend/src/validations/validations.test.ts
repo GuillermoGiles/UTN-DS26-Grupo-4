@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { servicioCreateSchema, idParamSchema } from "./servicio.validation";
-import { clienteCreateSchema } from "./cliente.validation";
+import { vehiculoCreateSchema } from "./vehiculo.validation";
 import { turnoCreateSchema } from "./turno.validation";
 
 describe("Validaciones de dominio (Dado / Cuando / Entonces)", () => {
@@ -41,18 +41,15 @@ describe("Validaciones de dominio (Dado / Cuando / Entonces)", () => {
     });
   });
 
-  describe("clienteCreateSchema", () => {
-    it("normaliza la patente quitando espacios y pasándola a mayúsculas", () => {
+  describe("vehiculoCreateSchema (patente)", () => {
+    const vehiculoBase = { marca: "Renault", modelo: "Kangoo" };
+
+    it("normaliza la patente quitando espacios y guiones y pasándola a mayúsculas", () => {
       // Dado
-      const cliente = {
-        nombre: "Martín Gómez",
-        vehiculo: "Renault Kangoo",
-        patente: "  ae987xz  ",
-        telefono: "2214005566",
-      };
+      const vehiculo = { ...vehiculoBase, patente: "  ae 987-xz  " };
 
       // Cuando
-      const resultado = clienteCreateSchema.safeParse(cliente);
+      const resultado = vehiculoCreateSchema.safeParse(vehiculo);
 
       // Entonces
       expect(resultado.success).toBe(true);
@@ -63,18 +60,24 @@ describe("Validaciones de dominio (Dado / Cuando / Entonces)", () => {
 
     it("rechaza una patente de menos de 6 caracteres", () => {
       // Dado
-      const clienteInvalido = {
-        nombre: "Martín Gómez",
-        vehiculo: "Renault Kangoo",
-        patente: "AB12",
-        telefono: "2214005566",
-      };
+      const vehiculoInvalido = { ...vehiculoBase, patente: "AB12" };
 
       // Cuando
-      const resultado = clienteCreateSchema.safeParse(clienteInvalido);
+      const resultado = vehiculoCreateSchema.safeParse(vehiculoInvalido);
 
       // Entonces
       expect(resultado.success).toBe(false);
+    });
+
+    it("rechaza una patente con formato que no es argentino", () => {
+      // Dado: 6 o más caracteres, pero ni AAA123 ni AA123BB
+      const resultado = vehiculoCreateSchema.safeParse({ ...vehiculoBase, patente: "1234AB" });
+
+      // Entonces
+      expect(resultado.success).toBe(false);
+      if (!resultado.success) {
+        expect(resultado.error.issues[0].message).toBe("La patente debe ser AAA123 o AA123BB");
+      }
     });
   });
 
