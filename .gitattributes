@@ -1,0 +1,4 @@
+# Los scripts de shell corren dentro del contenedor Linux: siempre con saltos de línea LF.
+# Sin esto, en Windows git los baja con CRLF y "npm run setup" falla con "set: illegal option -".
+*.sh text eol=lf
+Dockerfile text eol=lf
