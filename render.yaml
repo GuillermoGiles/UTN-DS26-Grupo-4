@@ -19,9 +19,11 @@ services:
     buildFilter:
       paths:
         - backend/** # un cambio solo en el frontend no redeploya la API
-    # Aplica las migraciones commiteadas (nunca genera nuevas), carga el seed
-    # (idempotente: usuarios de demo y datos de ejemplo) y levanta la API.
-    dockerCommand: sh -c "npx prisma generate && npx prisma migrate deploy && npx prisma db seed && npm start"
+    # "npm run start:render" (backend/package.json): aplica las migraciones commiteadas
+    # (nunca genera nuevas), carga el seed idempotente y levanta la API.
+    # Va como script de npm porque Render ya ejecuta este comando dentro de una shell:
+    # un "sh -c '...'" acá le llega con las comillas literales y falla.
+    dockerCommand: npm run start:render
     healthCheckPath: /
     envVars:
       - key: NODE_ENV
