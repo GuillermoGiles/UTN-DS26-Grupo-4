@@ -15,7 +15,7 @@ Las dos URLs se apuntan entre sí, por eso el orden es: **1)** backend, **2)** f
    - `sgi-sanjose-api`: servicio web Docker con `backend/Dockerfile`.
 3. Pide el valor de `FRONTEND_URL`. Por ahora poner `http://localhost:5173` (se corrige en el paso 3).
 4. **Apply**. El primer deploy tarda unos minutos. Al arrancar, el contenedor corre
-   `prisma generate → prisma migrate deploy → prisma db seed → npm start`.
+   `npm run start:render`: `prisma generate → prisma migrate deploy → prisma db seed → tsx src/index.ts`.
 5. Probar: abrir `https://sgi-sanjose-api.onrender.com/` → `{"mensaje":"API SGI San José 🐳"}`.
    Y `.../api/servicios` → el catálogo del seed.
 
@@ -78,4 +78,4 @@ Si el login da **"Failed to fetch"**: `VITE_API_URL` está mal o la API está do
 
 ## Alternativa sin Blueprint
 
-En Render se puede crear a mano: **New → PostgreSQL**, después **New → Web Service** (Docker), Dockerfile `backend/Dockerfile`, contexto `backend`, *Docker Command* el mismo de `render.yaml`, y las mismas variables.
+En Render se puede crear a mano: **New → PostgreSQL**, después **New → Web Service** (Docker), Dockerfile `backend/Dockerfile`, contexto `backend`, *Docker Command* `npm run start:render` (el mismo de `render.yaml`), y las mismas variables.

@@ -4,6 +4,7 @@
   "main": "src/index.ts",
   "scripts": {
     "start": "tsx src/index.ts",
+    "start:render": "prisma generate && prisma migrate deploy && prisma db seed && tsx src/index.ts",
     "dev": "npx prisma generate && tsx watch src/index.ts",
     "setup": "sh src/setup.sh",
     "test": "vitest run",
