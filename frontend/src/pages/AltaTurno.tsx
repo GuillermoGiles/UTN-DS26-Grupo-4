@@ -50,13 +50,13 @@ export function AltaTurno() {
     defaultValues: {
       fecha: params.get('fecha') ?? primerDiaDisponible(),
       hora: '',
-      servicioId: params.get('servicio') ?? '',
+      servicioIds: params.get('servicio') ? [params.get('servicio') as string] : [],
       vehiculoId: '',
       clienteId: params.get('cliente') ?? '',
       nota: '',
     },
   });
-  const [fecha, hora, clienteId, servicioId, vehiculoId] = useWatch({ control, name: ['fecha', 'hora', 'clienteId', 'servicioId', 'vehiculoId'] });
+  const [fecha, hora, clienteId, servicioIds, vehiculoId] = useWatch({ control, name: ['fecha', 'hora', 'clienteId', 'servicioIds', 'vehiculoId'] });
 
   const servicios = useFetch<Servicio[]>('/servicios');
   const disponibilidad = useFetch<Disponibilidad>(fecha ? `/turnos/disponibles?fecha=${fecha}` : null);
@@ -66,7 +66,19 @@ export function AltaTurno() {
   const vehiculos = esCliente
     ? miFicha.data?.vehiculos ?? []
     : clientes.data?.find((c) => String(c.id) === clienteId)?.vehiculos ?? [];
-  const servicio = (servicios.data ?? []).find((s) => String(s.id) === servicioId);
+  const elegidos = (servicios.data ?? []).filter((s) => servicioIds.includes(String(s.id)));
+  const total = elegidos.reduce((suma, s) => suma + s.precio, 0);
+
+  // Se pueden combinar varios servicios, pero un solo lavado: elegir uno de lavadero
+  // reemplaza al lavado que estuviera elegido. Los de lubricentro se suman o se quitan.
+  const alternarServicio = (s: Servicio) => {
+    const id = String(s.id);
+    const lista = (servicios.data ?? []);
+    const siguiente = servicioIds.includes(id)
+      ? servicioIds.filter((x) => x !== id)
+      : [...servicioIds.filter((x) => s.tipo !== 'lavadero' || lista.find((o) => String(o.id) === x)?.tipo !== 'lavadero'), id];
+    setValue('servicioIds', siguiente, { shouldValidate: true });
+  };
   const vehiculo = vehiculos.find((v) => String(v.id) === vehiculoId);
 
   // Hoy no se ofrecen los horarios que ya pasaron (la API igual los rechaza con 400)
@@ -87,7 +99,7 @@ export function AltaTurno() {
 
   return (
     <div className="page">
-      <EncabezadoPagina eyebrow="TURNOS" titulo="Reservar turno" texto="Elegí el vehículo, el servicio y uno de los horarios libres." />
+      <EncabezadoPagina eyebrow="TURNOS" titulo="Reservar turno" texto="Elegí el vehículo, los servicios y uno de los horarios libres." />
       {errorApi && <Alert variant="danger" dismissible onClose={() => setErrorApi(null)}>{errorApi}</Alert>}
 
       <Form onSubmit={onSubmit} noValidate>
@@ -149,13 +161,14 @@ export function AltaTurno() {
 
           <Col lg={7} className="d-flex flex-column gap-4">
             <section className="card-sgi card-sgi-body">
-              <h5 className="display fs-5 mb-3"><span className="paso">2</span>Servicio</h5>
+              <h5 className="display fs-5 mb-1"><span className="paso">2</span>Servicios</h5>
+              <p className="small text-muted mb-3">Podés combinar varios. De lavadero, uno solo por turno.</p>
               {servicios.loading && <Cargando />}
               <Row className="g-3">
                 {(servicios.data ?? []).map((s) => (
                   <Col key={s.id} sm={6}>
-                    <button type="button" className={`opcion h-100${servicioId === String(s.id) ? ' elegida' : ''}`} aria-pressed={servicioId === String(s.id)}
-                      onClick={() => setValue('servicioId', String(s.id), { shouldValidate: true })}>
+                    <button type="button" className={`opcion h-100${servicioIds.includes(String(s.id)) ? ' elegida' : ''}`} aria-pressed={servicioIds.includes(String(s.id))}
+                      onClick={() => alternarServicio(s)}>
                       <span className={`estado ${s.tipo === 'lubricentro' ? 'estado-pendiente' : 'estado-confirmado'} mb-2`}>{s.tipo === 'lubricentro' ? 'Lubricentro' : 'Lavadero'}</span>
                       <div className="fw-bold display fs-5">{s.nombre}</div>
                       <div className="small text-muted mb-2">{s.desc}</div>
@@ -164,7 +177,7 @@ export function AltaTurno() {
                   </Col>
                 ))}
               </Row>
-              {errors.servicioId && <div className="text-danger small mt-2">{errors.servicioId.message}</div>}
+              {errors.servicioIds && <div className="text-danger small mt-2">{errors.servicioIds.message}</div>}
               <Form.Group className="mt-3" controlId="nota">
                 <Form.Label>Nota para el taller (opcional)</Form.Label>
                 <Form.Control as="textarea" rows={2} {...register('nota')} isInvalid={!!errors.nota} placeholder="Ej: hace un ruido al frenar en frío" />
@@ -175,11 +188,11 @@ export function AltaTurno() {
             <section className="resumen-turno">
               <div>
                 <small className="fw-bold">RESUMEN DEL TURNO</small>
-                <h4 className="mt-1">{servicio ? servicio.nombre : 'Elegí un servicio'}</h4>
+                <h4 className="mt-1">{elegidos.length ? elegidos.map((s) => s.nombre).join(' + ') : 'Elegí uno o más servicios'}</h4>
                 <small>{fechaCorta(fecha)}{hora ? ` · ${hora} hs` : ' · elegí un horario'}{vehiculo ? ` · ${mostrarPatente(vehiculo.patente)}` : ''}</small>
               </div>
               <div className="d-flex align-items-center gap-3">
-                <div className="text-end"><small className="d-block">Total estimado</small><span className="resumen-total">{pesos(servicio?.precio ?? 0)}</span></div>
+                <div className="text-end"><small className="d-block">Total estimado</small><span className="resumen-total">{pesos(total)}</span></div>
                 <button type="submit" className="btn-sgi" disabled={isSubmitting}>
                   {isSubmitting ? <><Spinner size="sm" animation="border" /> Reservando...</> : hora ? `Confirmar turno a las ${hora}` : 'Confirmar turno'}
                 </button>

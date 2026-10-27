@@ -42,6 +42,18 @@ describe("Comportamiento específico (Dado / Cuando / Entonces)", () => {
   });
 
   describe("POST /api/turnos - Reserva de turno", () => {
+    // Catálogo que "devuelve la base" para la regla de servicios del turno
+    const CATALOGO = [
+      { id: 2, nombre: "Cambio de aceite y filtro", precio: 35000, desc: "", tipo: "lubricentro" },
+      { id: 3, nombre: "Alineación y Balanceo", precio: 25000, desc: "", tipo: "lubricentro" },
+      { id: 5, nombre: "Lavado Básico", precio: 7000, desc: "", tipo: "lavadero" },
+      { id: 6, nombre: "Lavado Premium", precio: 12000, desc: "", tipo: "lavadero" },
+    ];
+    beforeEach(() => {
+      vi.mocked(prisma.servicio.findMany).mockImplementation((async (args: { where: { id: { in: number[] } } }) =>
+        CATALOGO.filter((s) => args.where.id.in.includes(s.id))) as never);
+    });
+
     it("Dado un cliente autenticado con datos válidos, Cuando solicita un turno por POST, Entonces responde 201 con el turno creado a nombre de su propia ficha", async () => {
       // Dado (Arrange): el usuario 3 (CLIENTE) tiene la ficha de cliente 1 con el vehículo 4
       const fichaPropia = {
@@ -57,7 +69,7 @@ describe("Comportamiento específico (Dado / Cuando / Entonces)", () => {
         fecha: "2030-10-25",
         hora: "10:30",
         vehiculoId: 4,
-        servicioId: 2,
+        servicioIds: [2],
       };
       const turnoCreado = {
         id: 10,
@@ -68,13 +80,7 @@ describe("Comportamiento específico (Dado / Cuando / Entonces)", () => {
         createdAt: new Date("2026-10-20T12:00:00Z"),
         cliente: fichaPropia,
         vehiculo: { id: 4, patente: "AA123BB", marca: "Ford", modelo: "Fiesta" },
-        servicio: {
-          id: 2,
-          nombre: "Cambio de aceite y filtro",
-          precio: 35000,
-          desc: "Aceite sintético 5W30",
-          tipo: "lubricentro",
-        },
+        servicios: [{ turnoId: 10, servicioId: 2, servicio: CATALOGO[0] }],
       };
       vi.mocked(prisma.cliente.findUnique).mockResolvedValueOnce(fichaPropia);
       vi.mocked(prisma.vehiculo.findUnique).mockResolvedValueOnce({ id: 4, clienteId: 1 } as never);
@@ -90,9 +96,14 @@ describe("Comportamiento específico (Dado / Cuando / Entonces)", () => {
       // Entonces (Assert)
       expect(res.status).toBe(201);
       expect(res.body).toMatchObject({ id: 10, clienteId: 1, estado: "PENDIENTE" });
+      const { servicioIds: _ids, ...resto } = payloadTurno;
       expect(prisma.turno.create).toHaveBeenCalledWith({
-        data: { ...payloadTurno, clienteId: 1 },
-        include: { cliente: true, servicio: true, vehiculo: true },
+        data: { ...resto, clienteId: 1, servicios: { create: [{ servicioId: 2 }] } },
+        include: {
+          cliente: true,
+          servicios: { include: { servicio: true }, orderBy: { servicioId: "asc" } },
+          vehiculo: true,
+        },
       });
     });
 
@@ -106,7 +117,7 @@ describe("Comportamiento específico (Dado / Cuando / Entonces)", () => {
       const res = await request(app)
         .post("/api/turnos")
         .set("Authorization", `Bearer ${tokenCliente}`)
-        .send({ fecha: "2030-10-25", hora: "11:00", servicioId: 2, clienteId: 99 });
+        .send({ fecha: "2030-10-25", hora: "11:00", servicioIds: [2], clienteId: 99 });
 
       // Entonces
       expect(res.status).toBe(201);
@@ -121,7 +132,7 @@ describe("Comportamiento específico (Dado / Cuando / Entonces)", () => {
       const res = await request(app)
         .post("/api/turnos")
         .set("Authorization", `Bearer ${tokenEmpleado}`)
-        .send({ fecha: "2030-10-25", hora: "09:00", clienteId: 1, servicioId: 2 });
+        .send({ fecha: "2030-10-25", hora: "09:00", clienteId: 1, servicioIds: [2] });
 
       // Entonces
       expect(res.status).toBe(409);
@@ -134,7 +145,7 @@ describe("Comportamiento específico (Dado / Cuando / Entonces)", () => {
       const res = await request(app)
         .post("/api/turnos")
         .set("Authorization", `Bearer ${tokenEmpleado}`)
-        .send({ fecha: "2020-01-15", hora: "10:00", clienteId: 1, servicioId: 2 });
+        .send({ fecha: "2020-01-15", hora: "10:00", clienteId: 1, servicioIds: [2] });
 
       // Entonces
       expect(res.status).toBe(400);
@@ -146,10 +157,60 @@ describe("Comportamiento específico (Dado / Cuando / Entonces)", () => {
       const res = await request(app)
         .post("/api/turnos")
         .set("Authorization", `Bearer ${tokenEmpleado}`)
-        .send({ fecha: "2030-10-20", hora: "10:00", clienteId: 1, servicioId: 2 }); // 20/10/2030 es domingo
+        .send({ fecha: "2030-10-20", hora: "10:00", clienteId: 1, servicioIds: [2] }); // 20/10/2030 es domingo
 
       expect(res.status).toBe(400);
       expect(res.body).toEqual({ error: "El taller no atiende los domingos" });
+    });
+
+    it("Dado un cliente que elige un cambio de aceite, una alineación y un lavado, Cuando reserva, Entonces el turno se crea con los tres servicios", async () => {
+      // Dado
+      vi.mocked(prisma.cliente.findUnique).mockResolvedValueOnce({ id: 1, usuarioId: 3 } as never);
+      vi.mocked(prisma.turno.count).mockResolvedValueOnce(0);
+      vi.mocked(prisma.turno.create).mockResolvedValueOnce({ id: 12 } as never);
+
+      // Cuando
+      const res = await request(app)
+        .post("/api/turnos")
+        .set("Authorization", `Bearer ${tokenCliente}`)
+        .send({ fecha: "2030-10-25", hora: "12:00", servicioIds: [2, 3, 5] });
+
+      // Entonces
+      expect(res.status).toBe(201);
+      expect(vi.mocked(prisma.turno.create).mock.calls[0][0].data.servicios).toEqual({
+        create: [{ servicioId: 2 }, { servicioId: 3 }, { servicioId: 5 }],
+      });
+    });
+
+    it("Dado un cliente que elige Lavado Básico y Lavado Premium, Cuando reserva, Entonces responde 400 y no crea el turno", async () => {
+      // Dado
+      vi.mocked(prisma.cliente.findUnique).mockResolvedValueOnce({ id: 1, usuarioId: 3 } as never);
+
+      // Cuando
+      const res = await request(app)
+        .post("/api/turnos")
+        .set("Authorization", `Bearer ${tokenCliente}`)
+        .send({ fecha: "2030-10-25", hora: "12:00", servicioIds: [2, 5, 6] });
+
+      // Entonces
+      expect(res.status).toBe(400);
+      expect(res.body.error).toBe("Solo se puede elegir un servicio de lavadero por turno");
+      expect(prisma.turno.create).not.toHaveBeenCalled();
+    });
+
+    it("Dado un servicio que no existe, Cuando se reserva, Entonces responde 400 y no crea el turno", async () => {
+      // Dado
+      vi.mocked(prisma.cliente.findUnique).mockResolvedValueOnce({ id: 1, usuarioId: 3 } as never);
+
+      // Cuando
+      const res = await request(app)
+        .post("/api/turnos")
+        .set("Authorization", `Bearer ${tokenCliente}`)
+        .send({ fecha: "2030-10-25", hora: "12:00", servicioIds: [2, 999] });
+
+      // Entonces
+      expect(res.status).toBe(400);
+      expect(prisma.turno.create).not.toHaveBeenCalled();
     });
 
     it("Dado un cliente autenticado con un body sin horario, Cuando envía POST /api/turnos, Entonces responde 400 y no toca la DB", async () => {
@@ -158,7 +219,7 @@ describe("Comportamiento específico (Dado / Cuando / Entonces)", () => {
         fecha: "2030-10-25",
         hora: "   ",
         clienteId: 1,
-        servicioId: 2,
+        servicioIds: [2],
       };
 
       // Cuando (Act)

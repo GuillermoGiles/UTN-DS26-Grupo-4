@@ -12,6 +12,7 @@ import { BotonGuardar } from '../components/Formulario';
 import { clienteDatosSchema } from '../schemas/clienteSchema';
 import { fechaCorta, fechaLarga, km, mensajeDeError } from '../utils/formato';
 import type { ClienteDetalle as Ficha } from '../types/cliente';
+import { nombresServicios } from '../types/turno';
 
 /** Ficha de un cliente para el personal: datos editables, sus autos y su historial de turnos. */
 export function ClienteDetalle() {
@@ -83,7 +84,7 @@ export function ClienteDetalle() {
                     <tr key={t.id}>
                       <td><Link to={`/agenda?fecha=${t.fecha}`} className="text-reset fw-bold">{fechaCorta(t.fecha)}</Link></td>
                       <td>{t.hora}</td>
-                      <td>{t.servicio.nombre}</td>
+                      <td>{nombresServicios(t)}</td>
                       <td>{t.vehiculo ? <Patente patente={t.vehiculo.patente} /> : '—'}</td>
                       <td><EstadoTurnoBadge estado={t.estado} /></td>
                     </tr>

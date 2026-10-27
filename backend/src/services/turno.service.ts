@@ -70,6 +70,22 @@ async function verificarVehiculoDelCliente(vehiculoId: number, clienteId: number
 }
 
 /**
+ * Los servicios del turno tienen que existir y, como máximo, uno puede ser de lavadero
+ * (no tiene sentido un Lavado Básico y un Premium en el mismo turno). Los de lubricentro
+ * se combinan libremente. Es regla de negocio: necesita el tipo de cada servicio (la base).
+ */
+async function verificarServicios(servicioIds: number[]) {
+  const servicios = await prisma.servicio.findMany({ where: { id: { in: servicioIds } } });
+  if (servicios.length !== servicioIds.length) throw new AppError(400, "Alguno de los servicios no existe");
+  if (servicios.filter((s) => s.tipo === "lavadero").length > 1) {
+    throw new AppError(400, "Solo se puede elegir un servicio de lavadero por turno");
+  }
+}
+
+/** Renglones de la tabla intermedia para un create/update anidado de Prisma. */
+const renglones = (servicioIds: number[]) => servicioIds.map((servicioId) => ({ servicioId }));
+
+/**
  * Reserva. Un CLIENTE siempre reserva para su propia ficha (se ignora el clienteId del body,
  * así no puede sacar turnos a nombre de otro). EMPLEADO/ADMIN indican el cliente.
  */
@@ -83,10 +99,12 @@ export async function create(datos: TurnoCreate, usuario: UsuarioSesion): Promis
   if (!clienteId) throw new AppError(400, "Indicá el cliente del turno");
 
   if (datos.vehiculoId) await verificarVehiculoDelCliente(datos.vehiculoId, clienteId);
+  await verificarServicios(datos.servicioIds);
   await verificarHorarioLibre(datos.fecha, datos.hora);
 
+  const { servicioIds, ...resto } = datos;
   return prisma.turno.create({
-    data: { ...datos, clienteId },
+    data: { ...resto, clienteId, servicios: { create: renglones(servicioIds) } },
     include: turnoInclude,
   });
 }
@@ -111,12 +129,19 @@ export async function update(id: number, datos: TurnoUpdate): Promise<TurnoConDe
 
   const clienteId = datos.clienteId ?? actual.clienteId;
   if (datos.vehiculoId) await verificarVehiculoDelCliente(datos.vehiculoId, clienteId);
+  if (datos.servicioIds) await verificarServicios(datos.servicioIds);
 
-  return prisma.turno.update({ where: { id }, data: datos, include: turnoInclude });
+  // Si vienen servicios, reemplazan a los anteriores (se borran los renglones y se crean los nuevos)
+  const { servicioIds, ...resto } = datos;
+  return prisma.turno.update({
+    where: { id },
+    data: { ...resto, ...(servicioIds ? { servicios: { deleteMany: {}, create: renglones(servicioIds) } } : {}) },
+    include: turnoInclude,
+  });
 }
 
 /**
- * Cambio de estado desde la agenda. Al completar un turno de lubricentro,
+ * Cambio de estado desde la agenda. Al completar un turno con algún servicio de lubricentro,
  * queda registrado el service del vehículo con su kilometraje actual.
  */
 export async function cambiarEstado(id: number, estado: EstadoTurno): Promise<TurnoConDetalle | null> {
@@ -131,10 +156,12 @@ export async function cambiarEstado(id: number, estado: EstadoTurno): Promise<Tu
       include: turnoInclude,
     });
     if (completa) {
-      // Descuento automático de insumos (una sola vez por turno)
-      await descontarPorServicio(tx, turno.servicioId, `Turno #${turno.id} · ${turno.servicio.nombre}`);
-      // Service de lubricentro: queda registrado con el kilometraje actual
-      if (turno.servicio.tipo === "lubricentro" && turno.vehiculo) {
+      // Descuento automático de insumos de cada servicio (una sola vez por turno)
+      for (const { servicio } of turno.servicios) {
+        await descontarPorServicio(tx, servicio.id, `Turno #${turno.id} · ${servicio.nombre}`);
+      }
+      // Si incluye algún servicio de lubricentro, queda registrado el service con el km actual
+      if (turno.servicios.some(({ servicio }) => servicio.tipo === "lubricentro") && turno.vehiculo) {
         await tx.vehiculo.update({
           where: { id: turno.vehiculo.id },
           data: { kmUltimoService: turno.vehiculo.km, fechaUltimoService: new Date() },

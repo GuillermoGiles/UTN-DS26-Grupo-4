@@ -14,7 +14,8 @@ erDiagram
     CLIENTE ||--o{ VEHICULO : "es titular de"
     CLIENTE ||--o{ TURNO : "reserva"
     VEHICULO |o--o{ TURNO : "se atiende en"
-    SERVICIO ||--o{ TURNO : "se presta en"
+    TURNO ||--|{ TURNO_SERVICIO : "incluye"
+    SERVICIO ||--o{ TURNO_SERVICIO : "se presta en"
     VEHICULO ||--o{ LAVADO : "ingresa a"
     SERVICIO ||--o{ LAVADO : "se presta en"
     USUARIO ||--o{ LAVADO : "registra (empleado)"
@@ -58,12 +59,22 @@ Reserva anticipada.
 - **nota** (opcional), **createdAt**
 - **stockDescontado**: evita descontar insumos dos veces si el turno se vuelve a completar
 - **recordatorioEnviado**: el recordatorio automático sale una sola vez
-- **clienteId** → `Cliente`, **vehiculoId** (opcional) → `Vehiculo`, **servicioId** → `Servicio`
+- **clienteId** → `Cliente`, **vehiculoId** (opcional) → `Vehiculo`
+- **servicios** → `Servicio` (N:M a través de `TurnoServicio`): uno o más por turno
 
 Reglas: un horario admite un solo turno activo (los cancelados liberan el lugar); el vehículo
 tiene que ser del cliente; un `CLIENTE` siempre reserva a nombre de su propia ficha y solo puede
-cancelar sus turnos pendientes o confirmados. Al completar un turno de lubricentro se registra el
-service del vehículo.
+cancelar sus turnos pendientes o confirmados. Un turno puede incluir varios servicios, pero como
+máximo **uno de tipo lavadero** (no tiene sentido un Lavado Básico y un Premium juntos); los de
+lubricentro se combinan libremente. Al completarlo se descuentan los insumos de cada servicio y,
+si incluye alguno de lubricentro, se registra el service del vehículo. Su precio es la suma de
+sus servicios.
+
+### TurnoServicio (N:M explícita)
+Tabla intermedia entre `Turno` y `Servicio`. Clave compuesta (**turnoId**, **servicioId**).
+Es **explícita** (y no la implícita de Prisma) para poder decidir el `onDelete` de cada lado.
+La migración `20261027120000_turno_varios_servicios` copió el `servicioId` de cada turno existente
+a esta tabla antes de borrar la columna: ningún turno perdió su servicio.
 
 ### Lavado
 Auto que entra al lavadero **sin turno** y se registra al ingresar.
@@ -98,7 +109,8 @@ Registro de cada recordatorio: **destinatario**, **asunto**, **cuerpo**, **estad
 | Cliente → Vehiculo | 1:N | Cascade | Un auto no tiene sentido sin su titular. |
 | Cliente → Turno | 1:N | Restrict | No se borra un cliente con turnos: se perdería el historial. |
 | Vehiculo → Turno | 1:N | SetNull | El turno queda en el historial aunque se dé de baja el auto. |
-| Servicio → Turno | 1:N | Restrict | No se borra un servicio que ya se usó. |
+| Turno → TurnoServicio | 1:N | Cascade | Los renglones son parte del turno: si se borra el turno, se van. |
+| Servicio → TurnoServicio | 1:N | Restrict | No se borra un servicio que figura en algún turno: se perdería el historial (la API responde 409). |
 | Vehiculo → Lavado | 1:N | Restrict | Los lavados son la caja del día. |
 | Servicio → Lavado | 1:N | Restrict | Idem. |
 | Usuario → Lavado | 1:N | Restrict | Queda registrado qué empleado lo hizo. |

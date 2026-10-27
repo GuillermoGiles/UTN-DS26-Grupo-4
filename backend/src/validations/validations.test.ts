@@ -98,13 +98,23 @@ describe("Validaciones de dominio (Dado / Cuando / Entonces)", () => {
       }
     });
 
-    it("rechaza un turno si clienteId o servicioId no son enteros positivos", () => {
+    it("rechaza un turno sin servicios o con servicios repetidos", () => {
+      // Dado
+      const base = { fecha: "2030-10-21", hora: "09:00" };
+
+      // Cuando / Entonces
+      expect(turnoCreateSchema.safeParse({ ...base, servicioIds: [] }).success).toBe(false);
+      expect(turnoCreateSchema.safeParse({ ...base, servicioIds: [2, 2] }).success).toBe(false);
+      expect(turnoCreateSchema.safeParse({ ...base, servicioIds: [2, 3] }).success).toBe(true);
+    });
+
+    it("rechaza un turno si clienteId o servicioIds no son enteros positivos", () => {
       // Dado
       const turnoInvalido = {
         fecha: "2026-10-20",
         hora: "09:00",
         clienteId: 0,
-        servicioId: -1,
+        servicioIds: [-1],
       };
 
       // Cuando

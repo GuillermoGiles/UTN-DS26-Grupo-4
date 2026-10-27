@@ -10,7 +10,7 @@ export const clienteListadoInclude = {
 export const clienteDetalleInclude = {
   vehiculos: { orderBy: { id: "asc" } },
   turnos: {
-    include: { servicio: true, vehiculo: true },
+    include: { servicios: { include: { servicio: true }, orderBy: { servicioId: "asc" } }, vehiculo: true },
     orderBy: [{ fecha: "desc" }, { hora: "desc" }],
   },
 } satisfies Prisma.ClienteInclude;

@@ -10,7 +10,7 @@ import { EstadoTurnoBadge, Patente, ServiceBadge } from '../components/Badges';
 import { fechaCorta, mostrarPatente, pesos } from '../utils/formato';
 import { TEXTO_ESTADO_TURNO } from '../utils/estados';
 import type { ResumenPanel } from '../types/panel';
-import type { EstadoTurno } from '../types/turno';
+import { nombresServicios, type EstadoTurno } from '../types/turno';
 
 const COLOR_ESTADO: Record<EstadoTurno, string> = {
   PENDIENTE: 'var(--primary)', CONFIRMADO: 'var(--teal)', EN_PROCESO: 'var(--amber)', COMPLETADO: '#2f7a46', CANCELADO: 'var(--muted)',
@@ -79,7 +79,7 @@ export function PanelGestion() {
                   <div className="fila-titulo">{t.cliente.nombre}</div>
                   <div className="fila-sub">{t.vehiculo ? `${t.vehiculo.marca} ${t.vehiculo.modelo} · ${mostrarPatente(t.vehiculo.patente)}` : 'Sin vehículo'}</div>
                 </div>
-                <div className="d-none d-md-block flex-grow-1 small">{t.servicio.nombre}</div>
+                <div className="d-none d-md-block flex-grow-1 small">{nombresServicios(t)}</div>
                 <EstadoTurnoBadge estado={t.estado} />
               </Link>
             ))}

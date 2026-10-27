@@ -36,6 +36,13 @@ describe('Servicios: botones según el rol (Dado / Cuando / Entonces)', () => {
     expect(screen.getAllByRole('link', { name: 'Reservar' })[0]).toHaveAttribute('href', '/turnos/nuevo?servicio=1');
   });
 
+  it('Dado un invitado, Cuando toca Reservar, Entonces lo lleva a iniciar sesión (no a crear cuenta)', async () => {
+    renderConAuth(<Servicios />, { usuario: null });
+
+    expect(await screen.findByText('Lavado Premium')).toBeInTheDocument();
+    expect(screen.getAllByRole('link', { name: 'Reservar' })[0]).toHaveAttribute('href', '/login');
+  });
+
   it('Dado que la API falla, Entonces muestra el mensaje de error que devolvió el back', async () => {
     vi.mocked(apiFetch).mockRejectedValueOnce(new Error('Error interno del servidor'));
     renderConAuth(<Servicios />, { usuario: null });

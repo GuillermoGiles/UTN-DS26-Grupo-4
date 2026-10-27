@@ -1,4 +1,3 @@
-import type { Servicio } from './servicio';
 import type { Turno } from './turno';
 import type { Vehiculo, VehiculoConService } from './vehiculo';
 
@@ -21,5 +20,5 @@ export interface ClienteListado extends Cliente {
 /** GET /api/clientes/:id y GET /api/clientes/mio */
 export interface ClienteDetalle extends Cliente {
   vehiculos: VehiculoConService[];
-  turnos: (Turno & { servicio: Servicio; vehiculo: Vehiculo | null })[];
+  turnos: (Turno & { vehiculo: Vehiculo | null })[];
 }

@@ -31,8 +31,10 @@ export function Servicios() {
     }
   };
 
-  // Invitado → registro; cliente y personal → reservar con el servicio preseleccionado
-  const destinoReserva = (id: number) => (usuario ? `/turnos/nuevo?servicio=${id}` : '/registro');
+  // Cliente y personal → reservar con el servicio preseleccionado.
+  // Invitado → iniciar sesión, y al entrar vuelve a esa misma reserva (Login lee state.desde).
+  const reserva = (id: number) => `/turnos/nuevo?servicio=${id}`;
+  const destinoReserva = (id: number) => (usuario ? reserva(id) : '/login');
 
   return (
     <div className="page">
@@ -76,7 +78,7 @@ export function Servicios() {
                   tipo={srv.tipo}
                   accion={
                     !esAdmin && (
-                      <Link to={destinoReserva(srv.id)} className="btn-sgi btn-sm-sgi">
+                      <Link to={destinoReserva(srv.id)} state={usuario ? undefined : { desde: reserva(srv.id) }} className="btn-sgi btn-sm-sgi">
                         Reservar
                       </Link>
                     )

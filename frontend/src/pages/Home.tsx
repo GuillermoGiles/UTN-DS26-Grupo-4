@@ -21,7 +21,7 @@ export function Home() {
   const { data: servicios, loading, error } = useFetch<Servicio[]>('/servicios');
 
   const cta = !usuario
-    ? { to: '/registro', texto: 'Reservar un turno' }
+    ? { to: '/login', texto: 'Reservar un turno' }
     : usuario.rol === 'CLIENTE'
       ? { to: '/turnos/nuevo', texto: 'Reservar un turno' }
       : { to: inicioPorRol(usuario.rol), texto: usuario.rol === 'ADMIN' ? 'Ir al panel' : 'Ver la agenda de hoy' };
@@ -34,7 +34,8 @@ export function Home() {
           <h1>El cuidado que tu vehículo merece, sin vueltas.</h1>
           <p>Cambio de aceite, filtros, alineación y lavado. Reservá tu turno online y llevá el control del service de cada auto.</p>
           <div className="d-flex flex-wrap gap-2 mt-3">
-            <Link to={cta.to} className="btn-sgi">{cta.texto}</Link>
+            {/* El invitado inicia sesión y vuelve directo a reservar (Login lee state.desde) */}
+            <Link to={cta.to} state={!usuario ? { desde: '/turnos/nuevo' } : undefined} className="btn-sgi">{cta.texto}</Link>
             <Link to="/servicios" className="btn-sgi-outline">Ver servicios y precios</Link>
           </div>
         </section>
