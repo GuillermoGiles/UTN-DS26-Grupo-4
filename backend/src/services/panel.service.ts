@@ -5,6 +5,10 @@ import { turnoInclude } from "../types/turno.types";
 import { lavadoInclude } from "./lavado.service";
 import { conService } from "./vehiculo.service";
 
+/** Precio de un turno: la suma de sus servicios. */
+const totalTurno = (t: { servicios: { servicio: { precio: number } }[] }) =>
+  t.servicios.reduce((s, ts) => s + ts.servicio.precio, 0);
+
 /** Resumen del día para el panel del ADMIN, calculado con los datos reales. */
 export async function resumen(fecha: string = hoyAR()) {
   const { desde, hasta } = rangoDelDia(fecha);
@@ -17,7 +21,7 @@ export async function resumen(fecha: string = hoyAR()) {
   ]);
 
   const completados = turnosDelDia.filter((t) => t.estado === "COMPLETADO");
-  const ingresosTurnos = completados.reduce((suma, t) => suma + t.servicio.precio, 0);
+  const ingresosTurnos = completados.reduce((suma, t) => suma + totalTurno(t), 0);
   const ingresosLavados = lavadosDelDia.reduce((suma, l) => suma + l.precio, 0);
 
   const serviceAtrasado = vehiculos
@@ -30,7 +34,7 @@ export async function resumen(fecha: string = hoyAR()) {
   const [turnosSemana, lavadosSemana, insumosBajos] = await Promise.all([
     prisma.turno.findMany({
       where: { fecha: { gte: desdeSemana, lte: fecha }, estado: "COMPLETADO" },
-      select: { fecha: true, servicio: { select: { precio: true } } },
+      select: { fecha: true, servicios: { select: { servicio: { select: { precio: true } } } } },
     }),
     prisma.lavado.findMany({
       where: { fecha: { gte: rangoDelDia(desdeSemana).desde, lt: hasta } },
@@ -42,7 +46,7 @@ export async function resumen(fecha: string = hoyAR()) {
     const dia = sumarDias(desdeSemana, i);
     const { desde: d, hasta: h } = rangoDelDia(dia);
     const total =
-      turnosSemana.filter((t) => t.fecha === dia).reduce((s, t) => s + t.servicio.precio, 0) +
+      turnosSemana.filter((t) => t.fecha === dia).reduce((s, t) => s + totalTurno(t), 0) +
       lavadosSemana.filter((l) => l.fecha >= d && l.fecha < h).reduce((s, l) => s + l.precio, 0);
     return { fecha: dia, total };
   });

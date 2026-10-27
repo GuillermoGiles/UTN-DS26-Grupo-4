@@ -46,7 +46,7 @@ export interface LavadoDeVehiculo {
 
 /** GET /api/vehiculos/:id */
 export interface VehiculoDetalle extends VehiculoListado {
-  turnos: (Turno & { servicio: Servicio })[];
+  turnos: Turno[];
   lavados: LavadoDeVehiculo[];
 }
 

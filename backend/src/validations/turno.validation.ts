@@ -17,7 +17,12 @@ export const turnoCreateSchema = z.object({
   // Lo exige el service para EMPLEADO/ADMIN. Un CLIENTE siempre reserva para su propia ficha.
   clienteId: z.number().int().positive("El ID de cliente debe ser un entero positivo").optional(),
   vehiculoId: z.number().int().positive("El ID de vehículo debe ser un entero positivo").optional(),
-  servicioId: z.number().int().positive("El ID de servicio debe ser un entero positivo"),
+  // Uno o más servicios. "Como máximo un lavado" necesita el tipo de cada servicio: lo valida el service.
+  servicioIds: z
+    .array(z.number().int().positive("El ID de servicio debe ser un entero positivo"))
+    .min(1, "Elegí al menos un servicio")
+    .max(10, "Demasiados servicios para un turno")
+    .refine((ids) => new Set(ids).size === ids.length, "Hay servicios repetidos"),
   nota: z.string().trim().max(300, "La nota no puede superar los 300 caracteres").optional(),
 });
 

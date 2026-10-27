@@ -97,12 +97,12 @@ async function main() {
   if ((await prisma.turno.count()) === 0) {
     const hoy = hoyAR();
     const plan = [
-      { fecha: sumarDias(hoy, -1), hora: "09:00", patente: "FGH452", servicio: "Cambio de Aceite", estado: "COMPLETADO" as const },
-      { fecha: sumarDias(hoy, -1), hora: "11:30", patente: "AB123CD", servicio: "Lavado Premium", estado: "COMPLETADO" as const },
-      { fecha: hoy, hora: "09:00", patente: "XTZ987", servicio: "Alineación y Balanceo", estado: "EN_PROCESO" as const },
-      { fecha: hoy, hora: "10:30", patente: "EF456GH", servicio: "Lavado Premium", estado: "CONFIRMADO" as const },
-      { fecha: hoy, hora: "15:00", patente: "AB123CD", servicio: "Cambio de Aceite", estado: "PENDIENTE" as const },
-      { fecha: sumarDias(hoy, 1), hora: "10:00", patente: "AC987ZX", servicio: "Limpieza Tapizados", estado: "PENDIENTE" as const },
+      { fecha: sumarDias(hoy, -1), hora: "09:00", patente: "FGH452", servicios: ["Cambio de Aceite"], estado: "COMPLETADO" as const },
+      { fecha: sumarDias(hoy, -1), hora: "11:30", patente: "AB123CD", servicios: ["Lavado Premium"], estado: "COMPLETADO" as const },
+      { fecha: hoy, hora: "09:00", patente: "XTZ987", servicios: ["Alineación y Balanceo"], estado: "EN_PROCESO" as const },
+      { fecha: hoy, hora: "10:30", patente: "EF456GH", servicios: ["Lavado Premium"], estado: "CONFIRMADO" as const },
+      { fecha: hoy, hora: "15:00", patente: "AB123CD", servicios: ["Cambio de Aceite", "Lavado Básico"], estado: "PENDIENTE" as const },
+      { fecha: sumarDias(hoy, 1), hora: "10:00", patente: "AC987ZX", servicios: ["Limpieza Tapizados"], estado: "PENDIENTE" as const },
     ];
     for (const t of plan) {
       const v = await vehiculo(t.patente);
@@ -113,7 +113,7 @@ async function main() {
           estado: t.estado,
           clienteId: v.clienteId,
           vehiculoId: v.id,
-          servicioId: await servicio(t.servicio),
+          servicios: { create: await Promise.all(t.servicios.map(async (n) => ({ servicioId: await servicio(n) }))) },
         },
       });
     }

@@ -13,6 +13,7 @@ import { EstadoTurnoBadge, Patente, ServiceBadge } from '../components/Badges';
 import { clienteDatosSchema, vehiculoCamposSchema } from '../schemas/clienteSchema';
 import { fechaCorta, fechaLarga, km, mensajeDeError, mostrarPatente, pesos } from '../utils/formato';
 import type { ClienteDetalle } from '../types/cliente';
+import { nombresServicios, totalServicios } from '../types/turno';
 
 /** Portal del cliente: sus turnos, el historial de servicios y sus autos con el próximo service. */
 export function MiCuenta() {
@@ -50,7 +51,7 @@ export function MiCuenta() {
 
   const indicadores = [
     { icono: <FiTool />, etiqueta: 'SERVICIOS REALIZADOS', valor: String(completados.length), nota: `Cliente desde ${fechaLarga(ficha.createdAt)}` },
-    { icono: <FiCalendar />, etiqueta: 'ÚLTIMA VISITA', valor: ultima ? fechaCorta(ultima.fecha) : '—', nota: ultima?.servicio.nombre ?? 'Todavía no viniste' },
+    { icono: <FiCalendar />, etiqueta: 'ÚLTIMA VISITA', valor: ultima ? fechaCorta(ultima.fecha) : '—', nota: ultima ? nombresServicios(ultima) : 'Todavía no viniste' },
     {
       icono: <BsSpeedometer2 />, etiqueta: 'PRÓXIMO SERVICE',
       valor: autoPrincipal?.service.proximoKm ? km(autoPrincipal.service.proximoKm) : '—',
@@ -93,7 +94,7 @@ export function MiCuenta() {
               <div key={t.id} className="fila">
                 <span className="hora-box">{t.hora}</span>
                 <div className="flex-grow-1">
-                  <div className="fila-titulo">{t.servicio.nombre}</div>
+                  <div className="fila-titulo">{nombresServicios(t)}</div>
                   <div className="fila-sub">{fechaCorta(t.fecha)}{t.vehiculo ? ` · ${t.vehiculo.marca} ${t.vehiculo.modelo} · ${mostrarPatente(t.vehiculo.patente)}` : ''}</div>
                 </div>
                 <EstadoTurnoBadge estado={t.estado} />
@@ -113,12 +114,12 @@ export function MiCuenta() {
                   <small className="text-muted">{t.hora} hs</small>
                 </div>
                 <div className="flex-grow-1">
-                  <div className="fila-titulo display fs-6">{t.servicio.nombre} <span className="ms-1"><EstadoTurnoBadge estado={t.estado} /></span></div>
+                  <div className="fila-titulo display fs-6">{nombresServicios(t)} <span className="ms-1"><EstadoTurnoBadge estado={t.estado} /></span></div>
                   <div className="fila-sub">{t.vehiculo ? `${t.vehiculo.marca} ${t.vehiculo.modelo} · ${mostrarPatente(t.vehiculo.patente)}` : 'Sin vehículo'}</div>
                 </div>
                 <div className="text-end">
                   <small className="text-muted d-block" style={{ fontSize: '.68rem', letterSpacing: '.06em' }}>PRECIO</small>
-                  <strong className="display fs-5">{pesos(t.servicio.precio)}</strong>
+                  <strong className="display fs-5">{pesos(totalServicios(t))}</strong>
                 </div>
               </div>
             ))}

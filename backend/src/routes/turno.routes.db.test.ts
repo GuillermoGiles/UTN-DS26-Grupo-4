@@ -35,7 +35,7 @@ describe("Reserva de turno de punta a punta (con DB)", () => {
     const reserva = await request(app)
       .post("/api/turnos")
       .set(auth)
-      .send({ fecha, hora, servicioId: servicio.id });
+      .send({ fecha, hora, servicioIds: [servicio.id] });
     expect(reserva.status).toBe(201);
     creados.push(reserva.body.id);
 
@@ -47,7 +47,7 @@ describe("Reserva de turno de punta a punta (con DB)", () => {
     const repetida = await request(app)
       .post("/api/turnos")
       .set(auth)
-      .send({ fecha, hora, servicioId: servicio.id });
+      .send({ fecha, hora, servicioIds: [servicio.id] });
     expect(repetida.status).toBe(409);
   });
 });

@@ -20,12 +20,12 @@ export async function enviar({ destinatario, asunto, cuerpo, turnoId }: DatosCor
   }
 }
 
-function textoRecordatorio(t: { fecha: string; hora: string; cliente: { nombre: string }; servicio: { nombre: string }; vehiculo: { patente: string } | null }) {
+function textoRecordatorio(t: { fecha: string; hora: string; cliente: { nombre: string }; servicios: { servicio: { nombre: string } }[]; vehiculo: { patente: string } | null }) {
   const auto = t.vehiculo ? ` para tu vehículo ${t.vehiculo.patente}` : "";
   return [
     `Hola ${t.cliente.nombre.split(" ")[0]},`,
     "",
-    `Te recordamos tu turno de ${t.servicio.nombre}${auto} el ${t.fecha} a las ${t.hora} hs.`,
+    `Te recordamos tu turno de ${t.servicios.map((s) => s.servicio.nombre).join(" + ")}${auto} el ${t.fecha} a las ${t.hora} hs.`,
     "Si no podés venir, cancelalo desde Mi cuenta o avisanos por teléfono.",
     "",
     "Lavadero y Lubricentro San José",
@@ -36,7 +36,7 @@ function textoRecordatorio(t: { fecha: string; hora: string; cliente: { nombre: 
 export async function recordatorioDeTurno(turnoId: number) {
   const turno = await prisma.turno.findUnique({
     where: { id: turnoId },
-    include: { cliente: true, servicio: true, vehiculo: true },
+    include: { cliente: true, servicios: { include: { servicio: true } }, vehiculo: true },
   });
   if (!turno) return null;
   if (!turno.cliente.email) throw new AppError(400, "El cliente no tiene e-mail cargado");

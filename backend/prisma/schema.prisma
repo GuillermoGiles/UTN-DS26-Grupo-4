@@ -17,7 +17,7 @@ datasource db {
 //                                                   se perdería el historial.
 //  Vehiculo 1 ── N Turno       onDelete: SetNull  → el turno queda en el historial
 //                                                   aunque se dé de baja el auto.
-//  Servicio 1 ── N Turno       onDelete: Restrict → no se borra un servicio usado.
+//  Turno N ── M Servicio       vía TurnoServicio (ver el modelo, más abajo).
 //  Vehiculo 1 ── N Lavado      onDelete: Restrict → los lavados son la caja del día.
 //  Servicio 1 ── N Lavado      onDelete: Restrict → idem.
 //  Usuario  1 ── N Lavado      onDelete: Restrict → queda registrado quién lo hizo.
@@ -86,7 +86,7 @@ model Servicio {
   precio  Float
   desc    String
   tipo    String // "lavadero" | "lubricentro"
-  turnos  Turno[]
+  turnos  TurnoServicio[]
   lavados Lavado[]
   insumos ServicioInsumo[] // "receta": qué insumos consume cada vez que se hace
 }
@@ -102,11 +102,24 @@ model Turno {
   cliente             Cliente     @relation(fields: [clienteId], references: [id], onDelete: Restrict)
   vehiculoId          Int?
   vehiculo            Vehiculo?   @relation(fields: [vehiculoId], references: [id], onDelete: SetNull)
-  servicioId          Int
-  servicio            Servicio    @relation(fields: [servicioId], references: [id], onDelete: Restrict)
+  servicios           TurnoServicio[] // N:M explícita: un turno puede incluir varios servicios
   stockDescontado     Boolean     @default(false) // evita descontar dos veces si se re-completa
   recordatorioEnviado Boolean     @default(false) // el recordatorio automático sale una sola vez
   correos             Correo[]
+}
+
+// N:M explícita Turno ↔ Servicio. Explícita (y no implícita) para poder decidir el onDelete:
+//  Turno    1 ── N TurnoServicio  onDelete: Cascade  → si se borra el turno, se van sus renglones.
+//  Servicio 1 ── N TurnoServicio  onDelete: Restrict → no se borra un servicio que figura en
+//                                                      algún turno (se perdería el historial).
+// Regla de negocio (en el service): como máximo un servicio de tipo "lavadero" por turno.
+model TurnoServicio {
+  turnoId    Int
+  turno      Turno    @relation(fields: [turnoId], references: [id], onDelete: Cascade)
+  servicioId Int
+  servicio   Servicio @relation(fields: [servicioId], references: [id], onDelete: Restrict)
+
+  @@id([turnoId, servicioId])
 }
 
 // Lavado "en el momento": el auto llega sin turno y se registra al ingresar.

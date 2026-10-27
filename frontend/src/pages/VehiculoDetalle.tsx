@@ -11,6 +11,7 @@ import { BotonGuardar } from '../components/Formulario';
 import { registrarServiceSchema } from '../schemas/vehiculoSchema';
 import { fechaCorta, fechaLarga, km, mensajeDeError, pesos } from '../utils/formato';
 import type { VehiculoDetalle as Detalle } from '../types/vehiculo';
+import { nombresServicios } from '../types/turno';
 
 /** Historial del vehículo (wireframe 03, ficha técnica): service, turnos y lavados. */
 export function VehiculoDetalle() {
@@ -63,7 +64,7 @@ export function VehiculoDetalle() {
                 <tbody>
                   {v.turnos.map((t) => (
                     <tr key={t.id}>
-                      <td>{fechaCorta(t.fecha)}</td><td>{t.hora}</td><td>{t.servicio.nombre}</td>
+                      <td>{fechaCorta(t.fecha)}</td><td>{t.hora}</td><td>{nombresServicios(t)}</td>
                       <td><EstadoTurnoBadge estado={t.estado} /></td>
                     </tr>
                   ))}

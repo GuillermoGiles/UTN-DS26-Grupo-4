@@ -9,7 +9,7 @@ export const vehiculoListadoInclude = {
 
 export const vehiculoDetalleInclude = {
   cliente: { select: { id: true, nombre: true, telefono: true } },
-  turnos: { include: { servicio: true }, orderBy: [{ fecha: "desc" }, { hora: "desc" }] },
+  turnos: { include: { servicios: { include: { servicio: true }, orderBy: { servicioId: "asc" } } }, orderBy: [{ fecha: "desc" }, { hora: "desc" }] },
   lavados: {
     include: { servicio: true, empleado: { select: { id: true, nombre: true } } },
     orderBy: { fecha: "desc" },

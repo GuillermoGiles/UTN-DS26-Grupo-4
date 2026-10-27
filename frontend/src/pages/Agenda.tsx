@@ -11,7 +11,7 @@ import { EncabezadoPagina } from '../components/Formulario';
 import { EstadoTurnoBadge, Patente } from '../components/Badges';
 import { fechaCorta, hoyAR, horaDe, horaActualAR, mensajeDeError, mostrarPatente, pesos, sumarDias } from '../utils/formato';
 import { TEXTO_ESTADO_TURNO } from '../utils/estados';
-import { ESTADOS_TURNO, type Disponibilidad, type EstadoTurno, type TurnoConDetalle } from '../types/turno';
+import { nombresServicios, totalServicios, ESTADOS_TURNO, type Disponibilidad, type EstadoTurno, type TurnoConDetalle } from '../types/turno';
 import type { Lavado } from '../types/lavado';
 
 /** Agenda operativa (wireframe 02): turnos del día, detalle con acciones y autos sin turno. */
@@ -107,7 +107,7 @@ export function Agenda() {
                   <div className="fila-titulo">{t.cliente.nombre}</div>
                   <div className="fila-sub">{t.vehiculo ? `${t.vehiculo.marca} ${t.vehiculo.modelo} · ${mostrarPatente(t.vehiculo.patente)}` : 'Sin vehículo'}</div>
                 </div>
-                <div className="d-none d-md-block small" style={{ minWidth: 150 }}>{t.servicio.nombre}</div>
+                <div className="d-none d-md-block small" style={{ minWidth: 150 }}>{nombresServicios(t)}</div>
                 <EstadoTurnoBadge estado={t.estado} />
                 <FiChevronRight className="text-muted" />
               </button>
@@ -193,8 +193,8 @@ function DetalleTurno({ turno: t, onEstado, onRecordatorio, onReprogramado, onEr
           <li className="d-flex gap-3"><span className="icon-circle"><BsCarFront /></span><div><div className="eyebrow d-block mb-0">VEHÍCULO</div>
             {t.vehiculo ? (<><Link to={`/vehiculos/${t.vehiculo.id}`} className="fw-bold text-reset">{t.vehiculo.marca} {t.vehiculo.modelo}</Link>
               <div className="fila-sub">{mostrarPatente(t.vehiculo.patente)} · {t.vehiculo.km.toLocaleString('es-AR')} km</div></>) : <div className="fila-sub">Sin vehículo cargado</div>}</div></li>
-          <li className="d-flex gap-3"><span className="icon-circle"><FiTool /></span><div><div className="eyebrow d-block mb-0">SERVICIO</div><div className="fw-bold">{t.servicio.nombre}</div>
-            <div className="fila-sub">{pesos(t.servicio.precio)}</div></div></li>
+          <li className="d-flex gap-3"><span className="icon-circle"><FiTool /></span><div><div className="eyebrow d-block mb-0">{t.servicios.length > 1 ? 'SERVICIOS' : 'SERVICIO'}</div><div className="fw-bold">{nombresServicios(t)}</div>
+            <div className="fila-sub">{pesos(totalServicios(t))}</div></div></li>
           {t.nota && <li className="d-flex gap-3"><span className="icon-circle"><FiMessageSquare /></span><div><div className="eyebrow d-block mb-0">NOTA DEL CLIENTE</div><div className="fw-bold">{t.nota}</div></div></li>}
         </ul>
 
@@ -214,7 +214,7 @@ function DetalleTurno({ turno: t, onEstado, onRecordatorio, onReprogramado, onEr
               <button type="button" className="btn-sgi-ghost" onClick={() => onEstado('PENDIENTE')}>Volver a pendiente</button>
             )}
           </div>
-          {t.estado === 'COMPLETADO' && <p className="small text-muted mb-3">Al completarlo se descontaron los insumos del servicio{t.servicio.tipo === 'lubricentro' ? ' y quedó registrado el service del vehículo' : ''}.</p>}
+          {t.estado === 'COMPLETADO' && <p className="small text-muted mb-3">Al completarlo se descontaron los insumos de {t.servicios.length > 1 ? 'los servicios' : 'el servicio'}{t.servicios.some((s) => s.servicio.tipo === 'lubricentro') ? ' y quedó registrado el service del vehículo' : ''}.</p>}
 
           {activo && (
             <div className="d-flex flex-wrap gap-2">
