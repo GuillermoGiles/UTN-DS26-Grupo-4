@@ -98,7 +98,7 @@ export async function create(datos: TurnoCreate, usuario: UsuarioSesion): Promis
   }
   if (!clienteId) throw new AppError(400, "Indicá el cliente del turno");
 
-  if (datos.vehiculoId) await verificarVehiculoDelCliente(datos.vehiculoId, clienteId);
+  await verificarVehiculoDelCliente(datos.vehiculoId, clienteId);
   await verificarServicios(datos.servicioIds);
   await verificarHorarioLibre(datos.fecha, datos.hora);
 

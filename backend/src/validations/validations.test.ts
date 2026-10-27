@@ -100,7 +100,7 @@ describe("Validaciones de dominio (Dado / Cuando / Entonces)", () => {
 
     it("rechaza un turno sin servicios o con servicios repetidos", () => {
       // Dado
-      const base = { fecha: "2030-10-21", hora: "09:00" };
+      const base = { fecha: "2030-10-21", hora: "09:00", vehiculoId: 4 };
 
       // Cuando / Entonces
       expect(turnoCreateSchema.safeParse({ ...base, servicioIds: [] }).success).toBe(false);

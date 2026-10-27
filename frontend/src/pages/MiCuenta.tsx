@@ -3,14 +3,15 @@ import { Row, Col, Alert, Modal, Form } from 'react-bootstrap';
 import { Link, useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { FiCalendar, FiEdit2, FiPlus, FiTool } from 'react-icons/fi';
+import { FiCalendar, FiEdit2, FiPlus, FiTool, FiTrash2 } from 'react-icons/fi';
 import { BsCarFront, BsSpeedometer2 } from 'react-icons/bs';
 import { useFetch } from '../hooks/useFetch';
 import { apiFetch } from '../services/api';
 import { Cargando, ErrorCarga, Vacio } from '../components/Estado';
 import { BotonGuardar, EncabezadoPagina } from '../components/Formulario';
 import { EstadoTurnoBadge, Patente, ServiceBadge } from '../components/Badges';
-import { clienteDatosSchema, vehiculoCamposSchema } from '../schemas/clienteSchema';
+import { clienteDatosSchema } from '../schemas/clienteSchema';
+import { AgregarAutoModal } from '../components/AgregarAutoModal';
 import { fechaCorta, fechaLarga, km, mensajeDeError, mostrarPatente, pesos } from '../utils/formato';
 import type { ClienteDetalle } from '../types/cliente';
 import { nombresServicios, totalServicios } from '../types/turno';
@@ -22,6 +23,20 @@ export function MiCuenta() {
   const { data: ficha, loading, error, recargar } = useFetch<ClienteDetalle>('/clientes/mio');
   const [modal, setModal] = useState<'datos' | 'auto' | null>(null);
   const [errorAccion, setErrorAccion] = useState<string | null>(null);
+  // Auto del que se muestran las estadísticas (null = el de service más urgente)
+  const [autoElegidoId, setAutoElegidoId] = useState<number | null>(null);
+
+  const eliminarAuto = async (id: number, nombre: string) => {
+    if (!window.confirm(`¿Eliminar ${nombre} de tus autos?`)) return;
+    setErrorAccion(null);
+    try {
+      await apiFetch(`/vehiculos/${id}`, { method: 'DELETE' });
+      if (autoElegidoId === id) setAutoElegidoId(null);
+      recargar();
+    } catch (err) {
+      setErrorAccion(mensajeDeError(err)); // 409 si tiene turnos reservados o lavados registrados
+    }
+  };
 
   const cancelar = async (id: number) => {
     if (!window.confirm('¿Cancelar este turno?')) return;
@@ -43,11 +58,13 @@ export function MiCuenta() {
     .filter((t) => t.estado !== 'COMPLETADO' && t.estado !== 'CANCELADO')
     .sort((a, b) => `${a.fecha} ${a.hora}`.localeCompare(`${b.fecha} ${b.hora}`));
   const historial = ficha.turnos.filter((t) => t.estado === 'COMPLETADO' || t.estado === 'CANCELADO');
-  const completados = historial.filter((t) => t.estado === 'COMPLETADO');
-  const ultima = completados[0];
-  // El auto con el service más urgente es el que se muestra como "próximo control"
+  // Por defecto se muestra el auto con el service más urgente; el cliente puede elegir otro
   const orden = { vencido: 0, proximo: 1, ok: 2, 'sin-datos': 3 } as const;
-  const autoPrincipal = [...ficha.vehiculos].sort((a, b) => orden[a.service.estado] - orden[b.service.estado])[0];
+  const masUrgente = [...ficha.vehiculos].sort((a, b) => orden[a.service.estado] - orden[b.service.estado])[0];
+  const autoPrincipal = ficha.vehiculos.find((v) => v.id === autoElegidoId) ?? masUrgente;
+  // Las estadísticas son del auto elegido (sin autos cargados, las de todos sus turnos)
+  const completados = historial.filter((t) => t.estado === 'COMPLETADO' && (!autoPrincipal || t.vehiculoId === autoPrincipal.id));
+  const ultima = completados[0];
 
   const indicadores = [
     { icono: <FiTool />, etiqueta: 'SERVICIOS REALIZADOS', valor: String(completados.length), nota: `Cliente desde ${fechaLarga(ficha.createdAt)}` },
@@ -57,7 +74,6 @@ export function MiCuenta() {
       valor: autoPrincipal?.service.proximoKm ? km(autoPrincipal.service.proximoKm) : '—',
       nota: autoPrincipal?.service.proximaFecha ? `o antes del ${fechaLarga(autoPrincipal.service.proximaFecha)}` : 'Sin service registrado',
     },
-    { icono: <BsCarFront />, etiqueta: 'AUTO PRINCIPAL', valor: autoPrincipal ? mostrarPatente(autoPrincipal.patente) : '—', nota: autoPrincipal ? `${autoPrincipal.marca} ${autoPrincipal.modelo}` : 'Cargá tu auto' },
   ];
 
   return (
@@ -72,6 +88,25 @@ export function MiCuenta() {
       {errorAccion && <Alert variant="danger" dismissible onClose={() => setErrorAccion(null)}>{errorAccion}</Alert>}
 
       <Row className="g-3 mb-4">
+        <Col sm={6} xl={3}>
+          <div className="card-sgi p-3 d-flex gap-3 align-items-center h-100">
+            <span className="icon-circle"><BsCarFront /></span>
+            <div className="lh-sm flex-grow-1" style={{ minWidth: 0 }}>
+              <label htmlFor="auto-principal" className="fw-bold text-muted d-block" style={{ fontSize: '.7rem', letterSpacing: '.06em' }}>AUTO PRINCIPAL</label>
+              {ficha.vehiculos.length === 0 ? (
+                <><div className="display fs-4">—</div><small className="text-muted">Cargá tu auto</small></>
+              ) : (
+                <>
+                  <Form.Select id="auto-principal" size="sm" className="fw-bold my-1" value={autoPrincipal?.id ?? ''}
+                    onChange={(e) => setAutoElegidoId(Number(e.target.value))}>
+                    {ficha.vehiculos.map((v) => <option key={v.id} value={v.id}>{mostrarPatente(v.patente)}</option>)}
+                  </Form.Select>
+                  <small className="text-muted">{autoPrincipal ? `${autoPrincipal.marca} ${autoPrincipal.modelo}` : ''}</small>
+                </>
+              )}
+            </div>
+          </div>
+        </Col>
         {indicadores.map((i) => (
           <Col key={i.etiqueta} sm={6} xl={3}>
             <div className="card-sgi p-3 d-flex gap-3 align-items-center h-100">
@@ -133,9 +168,15 @@ export function MiCuenta() {
               <button type="button" className="btn-sgi-ghost" onClick={() => setModal('auto')}><FiPlus /> Agregar</button>
             </div>
             {ficha.vehiculos.length === 0 ? <Vacio>Todavía no cargaste ningún auto.</Vacio> : ficha.vehiculos.map((v) => (
-              <div key={v.id} className="fila flex-column align-items-start gap-2">
-                <div className="d-flex justify-content-between w-100 align-items-center">
-                  <span className="fila-titulo">{v.marca} {v.modelo}</span><Patente patente={v.patente} />
+              <div key={v.id} className="fila flex-column align-items-start gap-2"
+                style={v.id === autoPrincipal?.id && ficha.vehiculos.length > 1 ? { background: 'var(--teal-soft)' } : undefined}>
+                <div className="d-flex justify-content-between w-100 align-items-center gap-2">
+                  <span className="fila-titulo">{v.marca} {v.modelo}</span>
+                  <span className="d-flex align-items-center gap-2">
+                    <Patente patente={v.patente} />
+                    <button type="button" className="btn-sgi-ghost px-2" onClick={() => eliminarAuto(v.id, `${v.marca} ${v.modelo}`)}
+                      aria-label={`Eliminar ${v.marca} ${v.modelo}`} title="Eliminar auto"><FiTrash2 /></button>
+                  </span>
                 </div>
                 <div className="fila-sub">{km(v.km)}{v.anio ? ` · ${v.anio}` : ''}</div>
                 <ServiceBadge service={v.service} detalle />
@@ -159,7 +200,7 @@ export function MiCuenta() {
       </Row>
 
       <EditarDatosModal mostrar={modal === 'datos'} ficha={ficha} onCerrar={() => setModal(null)} onGuardado={() => { setModal(null); recargar(); }} />
-      <AgregarAutoModal mostrar={modal === 'auto'} onCerrar={() => setModal(null)} onGuardado={() => { setModal(null); recargar(); }} />
+      <AgregarAutoModal mostrar={modal === 'auto'} onCerrar={() => setModal(null)} onGuardado={(v) => { setModal(null); setAutoElegidoId(v.id); recargar(); }} />
     </div>
   );
 }
@@ -206,68 +247,6 @@ function EditarDatosModal({ mostrar, ficha, onCerrar, onGuardado }: ModalProps &
           </Form.Group>
         </Modal.Body>
         <Modal.Footer><BotonGuardar guardando={isSubmitting} texto="Guardar cambios" /></Modal.Footer>
-      </Form>
-    </Modal>
-  );
-}
-
-function AgregarAutoModal({ mostrar, onCerrar, onGuardado }: ModalProps) {
-  const [errorApi, setErrorApi] = useState<string | null>(null);
-  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm({
-    resolver: zodResolver(vehiculoCamposSchema),
-    defaultValues: { patente: '', marca: '', modelo: '', anio: '', km: '' },
-  });
-
-  const onSubmit = handleSubmit(async (datos) => {
-    setErrorApi(null);
-    try {
-      // Sin clienteId: la API lo carga a nombre de la ficha del cliente logueado
-      await apiFetch('/vehiculos', { method: 'POST', body: JSON.stringify(datos) });
-      reset();
-      onGuardado();
-    } catch (err) {
-      setErrorApi(mensajeDeError(err));
-    }
-  });
-
-  return (
-    <Modal show={mostrar} onHide={onCerrar} centered>
-      <Form onSubmit={onSubmit} noValidate>
-        <Modal.Header closeButton><Modal.Title>Agregar un auto</Modal.Title></Modal.Header>
-        <Modal.Body>
-          {errorApi && <Alert variant="danger">{errorApi}</Alert>}
-          <Row className="g-3">
-            <Col sm={6}>
-              <Form.Group controlId="aa-patente">
-                <Form.Label>Patente</Form.Label>
-                <Form.Control {...register('patente')} isInvalid={!!errors.patente} placeholder="AB 123 CD" />
-                <Form.Control.Feedback type="invalid">{errors.patente?.message}</Form.Control.Feedback>
-              </Form.Group>
-            </Col>
-            <Col sm={6}>
-              <Form.Group controlId="aa-km">
-                <Form.Label>Km actuales</Form.Label>
-                <Form.Control inputMode="numeric" {...register('km')} isInvalid={!!errors.km} />
-                <Form.Control.Feedback type="invalid">{errors.km?.message}</Form.Control.Feedback>
-              </Form.Group>
-            </Col>
-            <Col sm={6}>
-              <Form.Group controlId="aa-marca">
-                <Form.Label>Marca</Form.Label>
-                <Form.Control {...register('marca')} isInvalid={!!errors.marca} />
-                <Form.Control.Feedback type="invalid">{errors.marca?.message}</Form.Control.Feedback>
-              </Form.Group>
-            </Col>
-            <Col sm={6}>
-              <Form.Group controlId="aa-modelo">
-                <Form.Label>Modelo</Form.Label>
-                <Form.Control {...register('modelo')} isInvalid={!!errors.modelo} />
-                <Form.Control.Feedback type="invalid">{errors.modelo?.message}</Form.Control.Feedback>
-              </Form.Group>
-            </Col>
-          </Row>
-        </Modal.Body>
-        <Modal.Footer><BotonGuardar guardando={isSubmitting} texto="Agregar auto" /></Modal.Footer>
       </Form>
     </Modal>
   );

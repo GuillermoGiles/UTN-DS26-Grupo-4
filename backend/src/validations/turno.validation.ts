@@ -16,7 +16,8 @@ export const turnoCreateSchema = z.object({
   hora: horaSchema,
   // Lo exige el service para EMPLEADO/ADMIN. Un CLIENTE siempre reserva para su propia ficha.
   clienteId: z.number().int().positive("El ID de cliente debe ser un entero positivo").optional(),
-  vehiculoId: z.number().int().positive("El ID de vehículo debe ser un entero positivo").optional(),
+  // Obligatorio al reservar: el taller necesita saber qué auto viene (y el service se registra en él)
+  vehiculoId: z.number({ message: "Elegí el vehículo del turno" }).int().positive("El ID de vehículo debe ser un entero positivo"),
   // Uno o más servicios. "Como máximo un lavado" necesita el tipo de cada servicio: lo valida el service.
   servicioIds: z
     .array(z.number().int().positive("El ID de servicio debe ser un entero positivo"))

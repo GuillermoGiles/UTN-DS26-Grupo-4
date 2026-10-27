@@ -8,6 +8,7 @@ import { apiFetch } from '../services/api';
 import { useAuth } from '../hooks/useAuth';
 import { BotonGuardar } from '../components/Formulario';
 import { AuthSplit } from '../components/AuthSplit';
+import { CampoPassword } from '../components/CampoPassword';
 import { mensajeDeError } from '../utils/formato';
 
 /**
@@ -76,15 +77,13 @@ export function Registro() {
           <Col sm={6}>
             <Form.Group className="mb-3" controlId="password">
               <Form.Label>Contraseña</Form.Label>
-              <Form.Control type="password" {...register('password')} isInvalid={!!errors.password} autoComplete="new-password" placeholder="Mínimo 6 caracteres" />
-              <Form.Control.Feedback type="invalid">{errors.password?.message}</Form.Control.Feedback>
+              <CampoPassword {...register('password')} error={errors.password?.message} autoComplete="new-password" placeholder="Mínimo 6 caracteres" />
             </Form.Group>
           </Col>
           <Col sm={6}>
             <Form.Group className="mb-4" controlId="confirmar">
               <Form.Label>Repetí la contraseña</Form.Label>
-              <Form.Control type="password" {...register('confirmar')} isInvalid={!!errors.confirmar} autoComplete="new-password" />
-              <Form.Control.Feedback type="invalid">{errors.confirmar?.message}</Form.Control.Feedback>
+              <CampoPassword {...register('confirmar')} error={errors.confirmar?.message} autoComplete="new-password" />
             </Form.Group>
           </Col>
         </Row>

@@ -22,6 +22,7 @@ router.post("/", authenticate, authorize("ADMIN", "EMPLEADO", "CLIENTE"), valida
 router.put("/:id", authenticate, authorize("ADMIN", "EMPLEADO"), validateParams(idParamSchema), validate(vehiculoUpdateSchema), vehiculoController.update);
 router.post("/:id/service", authenticate, authorize("ADMIN", "EMPLEADO"), validateParams(idParamSchema), validate(registrarServiceSchema), vehiculoController.registrarService);
 
-router.delete("/:id", authenticate, authorize("ADMIN"), validateParams(idParamSchema), vehiculoController.remove);
+// CLIENTE: solo sus autos (lo verifica el service → 403 si es ajeno)
+router.delete("/:id", authenticate, authorize("ADMIN", "CLIENTE"), validateParams(idParamSchema), vehiculoController.remove);
 
 export default router;

@@ -64,7 +64,9 @@ Reserva anticipada.
 
 Reglas: un horario admite un solo turno activo (los cancelados liberan el lugar); el vehículo
 tiene que ser del cliente; un `CLIENTE` siempre reserva a nombre de su propia ficha y solo puede
-cancelar sus turnos pendientes o confirmados. Un turno puede incluir varios servicios, pero como
+cancelar sus turnos pendientes o confirmados. **Sin vehículo no se reserva** (la columna sigue siendo
+opcional porque, si después se borra el auto, el turno terminado queda en el historial con `SetNull`).
+Un turno puede incluir varios servicios, pero como
 máximo **uno de tipo lavadero** (no tiene sentido un Lavado Básico y un Premium juntos); los de
 lubricentro se combinan libremente. Al completarlo se descuentan los insumos de cada servicio y,
 si incluye alguno de lubricentro, se registra el service del vehículo. Su precio es la suma de

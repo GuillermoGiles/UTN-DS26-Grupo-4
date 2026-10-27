@@ -15,10 +15,11 @@ const catalogo = [
 ];
 
 // Cada endpoint que pide la pantalla devuelve su dato de prueba
+let vehiculosDelCliente: object[] = [];
 function mockApi(url: string) {
   if (url === '/servicios') return Promise.resolve(catalogo);
   if (url.startsWith('/turnos/disponibles')) return Promise.resolve({ fecha: '2030-01-15', horarios: ['10:00'], ocupados: [], libres: ['10:00'] });
-  if (url === '/clientes/mio') return Promise.resolve({ id: 1, vehiculos: [], turnos: [] });
+  if (url === '/clientes/mio') return Promise.resolve({ id: 1, vehiculos: vehiculosDelCliente, turnos: [] });
   return Promise.resolve(null);
 }
 
@@ -26,7 +27,26 @@ const boton = (nombre: string) => screen.getByRole('button', { name: new RegExp(
 
 describe('AltaTurno: elegir varios servicios (Dado / Cuando / Entonces)', () => {
   beforeEach(() => {
+    vehiculosDelCliente = [];
     vi.mocked(apiFetch).mockImplementation(mockApi as never);
+  });
+
+  it('Dado un cliente sin autos, Cuando entra a reservar, Entonces le pide cargar uno y no reserva sin vehículo', async () => {
+    renderConAuth(<AltaTurno />, { usuario: cliente });
+
+    expect(await screen.findByText('Para reservar necesitás cargar tu auto.')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Confirmar turno/ }));
+    expect(await screen.findByText('Elegí el vehículo')).toBeInTheDocument();
+    expect(apiFetch).not.toHaveBeenCalledWith('/turnos', expect.anything());
+  });
+
+  it('Dado un cliente con un solo auto, Cuando entra a reservar, Entonces ese auto queda elegido', async () => {
+    vehiculosDelCliente = [{ id: 4, patente: 'AB123CD', marca: 'Toyota', modelo: 'Hilux' }];
+    renderConAuth(<AltaTurno />, { usuario: cliente });
+
+    const select = await screen.findByLabelText('Vehículo');
+    await screen.findByRole('option', { name: /AB 123 CD|AB123CD/ });
+    await vi.waitFor(() => expect(select).toHaveValue('4'));
   });
 
   it('Dado un cliente, Cuando elige dos de lubricentro y un lavado, Entonces quedan los tres y el total los suma', async () => {

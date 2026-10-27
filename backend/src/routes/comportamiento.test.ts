@@ -16,6 +16,7 @@ vi.mock("../config/prisma", () => ({
     },
     vehiculo: {
       findUnique: vi.fn(),
+      delete: vi.fn(),
     },
     servicio: {
       create: vi.fn(),
@@ -52,6 +53,8 @@ describe("Comportamiento específico (Dado / Cuando / Entonces)", () => {
     beforeEach(() => {
       vi.mocked(prisma.servicio.findMany).mockImplementation((async (args: { where: { id: { in: number[] } } }) =>
         CATALOGO.filter((s) => args.where.id.in.includes(s.id))) as never);
+      // El vehículo 4 es del cliente 1 (todas las reservas lo usan)
+      vi.mocked(prisma.vehiculo.findUnique).mockResolvedValue({ id: 4, clienteId: 1 } as never);
     });
 
     it("Dado un cliente autenticado con datos válidos, Cuando solicita un turno por POST, Entonces responde 201 con el turno creado a nombre de su propia ficha", async () => {
@@ -117,7 +120,7 @@ describe("Comportamiento específico (Dado / Cuando / Entonces)", () => {
       const res = await request(app)
         .post("/api/turnos")
         .set("Authorization", `Bearer ${tokenCliente}`)
-        .send({ fecha: "2030-10-25", hora: "11:00", servicioIds: [2], clienteId: 99 });
+        .send({ fecha: "2030-10-25", hora: "11:00", servicioIds: [2], clienteId: 99, vehiculoId: 4 });
 
       // Entonces
       expect(res.status).toBe(201);
@@ -132,7 +135,7 @@ describe("Comportamiento específico (Dado / Cuando / Entonces)", () => {
       const res = await request(app)
         .post("/api/turnos")
         .set("Authorization", `Bearer ${tokenEmpleado}`)
-        .send({ fecha: "2030-10-25", hora: "09:00", clienteId: 1, servicioIds: [2] });
+        .send({ fecha: "2030-10-25", hora: "09:00", clienteId: 1, servicioIds: [2], vehiculoId: 4 });
 
       // Entonces
       expect(res.status).toBe(409);
@@ -145,7 +148,7 @@ describe("Comportamiento específico (Dado / Cuando / Entonces)", () => {
       const res = await request(app)
         .post("/api/turnos")
         .set("Authorization", `Bearer ${tokenEmpleado}`)
-        .send({ fecha: "2020-01-15", hora: "10:00", clienteId: 1, servicioIds: [2] });
+        .send({ fecha: "2020-01-15", hora: "10:00", clienteId: 1, servicioIds: [2], vehiculoId: 4 });
 
       // Entonces
       expect(res.status).toBe(400);
@@ -157,7 +160,7 @@ describe("Comportamiento específico (Dado / Cuando / Entonces)", () => {
       const res = await request(app)
         .post("/api/turnos")
         .set("Authorization", `Bearer ${tokenEmpleado}`)
-        .send({ fecha: "2030-10-20", hora: "10:00", clienteId: 1, servicioIds: [2] }); // 20/10/2030 es domingo
+        .send({ fecha: "2030-10-20", hora: "10:00", clienteId: 1, servicioIds: [2], vehiculoId: 4 }); // 20/10/2030 es domingo
 
       expect(res.status).toBe(400);
       expect(res.body).toEqual({ error: "El taller no atiende los domingos" });
@@ -173,7 +176,7 @@ describe("Comportamiento específico (Dado / Cuando / Entonces)", () => {
       const res = await request(app)
         .post("/api/turnos")
         .set("Authorization", `Bearer ${tokenCliente}`)
-        .send({ fecha: "2030-10-25", hora: "12:00", servicioIds: [2, 3, 5] });
+        .send({ fecha: "2030-10-25", hora: "12:00", servicioIds: [2, 3, 5], vehiculoId: 4 });
 
       // Entonces
       expect(res.status).toBe(201);
@@ -190,11 +193,24 @@ describe("Comportamiento específico (Dado / Cuando / Entonces)", () => {
       const res = await request(app)
         .post("/api/turnos")
         .set("Authorization", `Bearer ${tokenCliente}`)
-        .send({ fecha: "2030-10-25", hora: "12:00", servicioIds: [2, 5, 6] });
+        .send({ fecha: "2030-10-25", hora: "12:00", servicioIds: [2, 5, 6], vehiculoId: 4 });
 
       // Entonces
       expect(res.status).toBe(400);
       expect(res.body.error).toBe("Solo se puede elegir un servicio de lavadero por turno");
+      expect(prisma.turno.create).not.toHaveBeenCalled();
+    });
+
+    it("Dado un cliente que no elige vehículo, Cuando reserva, Entonces responde 400 y no crea el turno", async () => {
+      // Cuando
+      const res = await request(app)
+        .post("/api/turnos")
+        .set("Authorization", `Bearer ${tokenCliente}`)
+        .send({ fecha: "2030-10-25", hora: "12:00", servicioIds: [2] });
+
+      // Entonces
+      expect(res.status).toBe(400);
+      expect(res.body.detalles).toContainEqual({ campo: "vehiculoId", mensaje: "Elegí el vehículo del turno" });
       expect(prisma.turno.create).not.toHaveBeenCalled();
     });
 
@@ -206,7 +222,7 @@ describe("Comportamiento específico (Dado / Cuando / Entonces)", () => {
       const res = await request(app)
         .post("/api/turnos")
         .set("Authorization", `Bearer ${tokenCliente}`)
-        .send({ fecha: "2030-10-25", hora: "12:00", servicioIds: [2, 999] });
+        .send({ fecha: "2030-10-25", hora: "12:00", servicioIds: [2, 999], vehiculoId: 4 });
 
       // Entonces
       expect(res.status).toBe(400);
@@ -219,6 +235,7 @@ describe("Comportamiento específico (Dado / Cuando / Entonces)", () => {
         fecha: "2030-10-25",
         hora: "   ",
         clienteId: 1,
+        vehiculoId: 4,
         servicioIds: [2],
       };
 
@@ -236,6 +253,50 @@ describe("Comportamiento específico (Dado / Cuando / Entonces)", () => {
         mensaje: "La hora es obligatoria",
       });
       expect(prisma.turno.create).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("DELETE /api/vehiculos/:id - El cliente elimina un auto de Mis autos", () => {
+    const autoDe = (usuarioId: number) => ({ id: 4, clienteId: 1, cliente: { id: 1, usuarioId } });
+
+    it("Dado un auto propio sin turnos reservados, Cuando el cliente lo elimina, Entonces responde 204 y se borra", async () => {
+      // Dado: el usuario 3 (tokenCliente) es el titular
+      vi.mocked(prisma.vehiculo.findUnique).mockResolvedValueOnce(autoDe(3) as never);
+      vi.mocked(prisma.turno.count).mockResolvedValueOnce(0);
+      vi.mocked(prisma.vehiculo.delete).mockResolvedValueOnce({ id: 4 } as never);
+
+      // Cuando
+      const res = await request(app).delete("/api/vehiculos/4").set("Authorization", `Bearer ${tokenCliente}`);
+
+      // Entonces
+      expect(res.status).toBe(204);
+      expect(prisma.vehiculo.delete).toHaveBeenCalledWith({ where: { id: 4 } });
+    });
+
+    it("Dado un auto de otro cliente, Cuando el cliente intenta eliminarlo, Entonces responde 403 y no borra nada", async () => {
+      // Dado: el titular es el usuario 99
+      vi.mocked(prisma.vehiculo.findUnique).mockResolvedValueOnce(autoDe(99) as never);
+
+      // Cuando
+      const res = await request(app).delete("/api/vehiculos/4").set("Authorization", `Bearer ${tokenCliente}`);
+
+      // Entonces
+      expect(res.status).toBe(403);
+      expect(prisma.vehiculo.delete).not.toHaveBeenCalled();
+    });
+
+    it("Dado un auto propio con un turno reservado, Cuando el cliente lo elimina, Entonces responde 409 y no borra nada", async () => {
+      // Dado
+      vi.mocked(prisma.vehiculo.findUnique).mockResolvedValueOnce(autoDe(3) as never);
+      vi.mocked(prisma.turno.count).mockResolvedValueOnce(1);
+
+      // Cuando
+      const res = await request(app).delete("/api/vehiculos/4").set("Authorization", `Bearer ${tokenCliente}`);
+
+      // Entonces
+      expect(res.status).toBe(409);
+      expect(res.body.error).toMatch(/turnos reservados/);
+      expect(prisma.vehiculo.delete).not.toHaveBeenCalled();
     });
   });
 

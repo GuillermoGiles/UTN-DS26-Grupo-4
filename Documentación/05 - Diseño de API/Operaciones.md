@@ -76,7 +76,7 @@ Cada vehículo se devuelve con `service: { estado, proximoKm, proximaFecha }`.
 | POST | `/` | Crear. El personal indica `clienteId`; un CLIENTE carga a su nombre | `{patente, marca, modelo, anio?, km?, clienteId?}` | 201 | 400, 409 patente repetida |
 | PUT | `/:id` | Editar | campos a cambiar | 200 | 400, 404, 409 |
 | POST | `/:id/service` | Registrar service hoy con esos km | `{km}` | 200 | 400, 404 |
-| DELETE | `/:id` | Borrar | — | 204 | 404, 409 si tiene lavados |
+| DELETE | `/:id` | Borrar. ADMIN cualquiera; un CLIENTE solo los suyos ("Mis autos") | — | 204 | 403 auto ajeno, 404, 409 si tiene turnos reservados o lavados |
 
 ### Turnos (`/api/turnos`)
 
@@ -86,7 +86,7 @@ Cada vehículo se devuelve con `service: { estado, proximoKm, proximaFecha }`.
 | GET | `/mios` | Turnos del cliente logueado | — | 200 | — |
 | GET | `/` | Agenda (`?fecha=`, `?estado=`) | — | 200 | 400 |
 | GET | `/:id` | Detalle | — | 200 | 400, 404 |
-| POST | `/` | Reservar uno o más servicios. Un CLIENTE reserva para sí (se ignora `clienteId`) | `{fecha, hora, servicioIds: number[], vehiculoId?, clienteId?, nota?}` | 201 | 400 (pasado, domingo, horario fuera de atención, sin servicios, servicio inexistente, más de un servicio de lavadero), 409 horario ocupado |
+| POST | `/` | Reservar uno o más servicios. Un CLIENTE reserva para sí (se ignora `clienteId`) | `{fecha, hora, servicioIds: number[], vehiculoId, clienteId?, nota?}` | 201 | 400 (pasado, domingo, horario fuera de atención, sin vehículo o vehículo de otro cliente, sin servicios, servicio inexistente, más de un servicio de lavadero), 409 horario ocupado |
 | PUT | `/:id` | Editar / reprogramar | campos a cambiar (incluye `estado`) | 200 | 400, 404, 409 |
 | PATCH | `/:id/estado` | Cambiar estado. Al pasar a COMPLETADO descuenta los insumos (una vez) y registra el service si es de lubricentro | `{estado}` | 200 | 400, 404 |
 | POST | `/:id/recordatorio` | Enviar el recordatorio por e-mail | — | 201 | 400 sin e-mail, 404, 409 turno cancelado o completado |

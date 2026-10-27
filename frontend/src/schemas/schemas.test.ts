@@ -36,13 +36,19 @@ describe('Validaciones de los formularios (Zod)', () => {
   });
 
   it('turno: los <select> llegan como texto y salen como ids numéricos (vacío → undefined)', () => {
-    const r = turnoSchema.safeParse({ fecha: '2026-10-25', hora: '10:30', servicioIds: ['2', '5'], vehiculoId: '', clienteId: '7', nota: '' });
+    const r = turnoSchema.safeParse({ fecha: '2026-10-25', hora: '10:30', servicioIds: ['2', '5'], vehiculoId: '4', clienteId: '', nota: '' });
     expect(r.success).toBe(true);
-    if (r.success) expect(r.data).toMatchObject({ servicioIds: [2, 5], vehiculoId: undefined, clienteId: 7, nota: undefined });
+    if (r.success) expect(r.data).toMatchObject({ servicioIds: [2, 5], vehiculoId: 4, clienteId: undefined, nota: undefined });
+  });
+
+  it('turno: sin vehículo elegido no se puede reservar', () => {
+    const r = turnoSchema.safeParse({ fecha: '2026-10-25', hora: '10:30', servicioIds: ['2'], vehiculoId: '', clienteId: '', nota: '' });
+    expect(r.success).toBe(false);
+    if (!r.success) expect(r.error.issues[0].message).toBe('Elegí el vehículo');
   });
 
   it('turno: sin ningún servicio elegido muestra el error', () => {
-    const r = turnoSchema.safeParse({ fecha: '2026-10-25', hora: '10:30', servicioIds: [], vehiculoId: '', clienteId: '', nota: '' });
+    const r = turnoSchema.safeParse({ fecha: '2026-10-25', hora: '10:30', servicioIds: [], vehiculoId: '4', clienteId: '', nota: '' });
     expect(r.success).toBe(false);
     if (!r.success) expect(r.error.issues[0].message).toBe('Elegí al menos un servicio');
   });

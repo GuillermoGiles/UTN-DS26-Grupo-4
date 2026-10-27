@@ -25,6 +25,7 @@ const turnoValido = {
   fecha: "2030-10-21",
   hora: "10:00",
   clienteId: 1,
+  vehiculoId: 1,
   servicioIds: [1],
 };
 
