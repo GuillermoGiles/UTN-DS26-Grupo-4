@@ -302,6 +302,26 @@ Authorization: Bearer {{tokenEmpleado}}
 DELETE {{baseUrl}}/api/vehiculos/{{vehiculoId}}
 Authorization: Bearer {{tokenAdmin}}
 
+### El CLIENTE agrega un auto en "Mis autos" (queda a su nombre)...
+# @name autoDelCliente
+POST {{baseUrl}}/api/vehiculos
+Authorization: Bearer {{tokenCliente}}
+Content-Type: application/json
+
+{ "patente": "AH555CC", "marca": "Renault", "modelo": "Kwid" }
+
+### ...y lo elimina (204: es suyo y no tiene turnos reservados)
+DELETE {{baseUrl}}/api/vehiculos/{{autoDelCliente.response.body.id}}
+Authorization: Bearer {{tokenCliente}}
+
+### 403: un CLIENTE no puede eliminar el auto de otro cliente
+DELETE {{baseUrl}}/api/vehiculos/1
+Authorization: Bearer {{tokenCliente}}
+
+### 409: un CLIENTE no puede eliminar un auto con turnos reservados (AB123CD tiene uno en el seed)
+DELETE {{baseUrl}}/api/vehiculos/4
+Authorization: Bearer {{tokenCliente}}
+
 ### 404: vehículo inexistente
 GET {{baseUrl}}/api/vehiculos/9999
 Authorization: Bearer {{tokenEmpleado}}
@@ -340,21 +360,28 @@ POST {{baseUrl}}/api/turnos
 Authorization: Bearer {{tokenEmpleado}}
 Content-Type: application/json
 
-{ "fecha": "2030-01-15", "hora": "10:00", "servicioIds": [1], "clienteId": 1 }
+{ "fecha": "2030-01-15", "hora": "10:00", "servicioIds": [1], "clienteId": 1, "vehiculoId": 1 }
 
 ### 400: dos servicios de lavadero en el mismo turno (Lavado Premium + Lavado Básico)
 POST {{baseUrl}}/api/turnos
 Authorization: Bearer {{tokenCliente}}
 Content-Type: application/json
 
-{ "fecha": "2030-01-16", "hora": "10:00", "servicioIds": [1, 2, 5] }
+{ "fecha": "2030-01-16", "hora": "10:00", "servicioIds": [1, 2, 5], "vehiculoId": 4 }
 
 ### 400: turno sin servicios
 POST {{baseUrl}}/api/turnos
 Authorization: Bearer {{tokenCliente}}
 Content-Type: application/json
 
-{ "fecha": "2030-01-16", "hora": "10:00", "servicioIds": [] }
+{ "fecha": "2030-01-16", "hora": "10:00", "servicioIds": [], "vehiculoId": 4 }
+
+### 400: turno sin vehículo
+POST {{baseUrl}}/api/turnos
+Authorization: Bearer {{tokenCliente}}
+Content-Type: application/json
+
+{ "fecha": "2030-01-16", "hora": "10:00", "servicioIds": [1] }
 
 ### 400: hora fuera de los horarios de atención y fecha mal formada
 POST {{baseUrl}}/api/turnos
@@ -375,14 +402,14 @@ POST {{baseUrl}}/api/turnos
 Authorization: Bearer {{tokenEmpleado}}
 Content-Type: application/json
 
-{ "fecha": "2030-01-15", "hora": "11:00", "servicioIds": [2] }
+{ "fecha": "2030-01-15", "hora": "11:00", "servicioIds": [2], "vehiculoId": 1 }
 
-### 409: cliente inexistente (FK, Prisma P2003)
+### 400: cliente inexistente (el vehículo no es suyo)
 POST {{baseUrl}}/api/turnos
 Authorization: Bearer {{tokenEmpleado}}
 Content-Type: application/json
 
-{ "fecha": "2030-01-15", "hora": "11:30", "servicioIds": [2], "clienteId": 9999 }
+{ "fecha": "2030-01-15", "hora": "11:30", "servicioIds": [2], "clienteId": 9999, "vehiculoId": 1 }
 
 ### Cambiar estado desde la agenda (EMPLEADO)
 PATCH {{baseUrl}}/api/turnos/{{turnoId}}/estado

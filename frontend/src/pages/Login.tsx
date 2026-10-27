@@ -7,6 +7,7 @@ import { FiAlertCircle } from 'react-icons/fi';
 import { loginSchema, type LoginFormData } from '../schemas/loginSchema';
 import { useAuth } from '../hooks/useAuth';
 import { inicioPorRol } from '../utils/inicioPorRol';
+import { CampoPassword } from '../components/CampoPassword';
 import { AuthSplit } from '../components/AuthSplit';
 
 export function Login() {
@@ -60,8 +61,7 @@ export function Login() {
         </Form.Group>
         <Form.Group className="mb-4" controlId="password">
           <Form.Label>Contraseña</Form.Label>
-          <Form.Control type="password" autoComplete="current-password" isInvalid={!!errors.password} {...register('password')} />
-          <Form.Control.Feedback type="invalid">{errors.password?.message}</Form.Control.Feedback>
+          <CampoPassword autoComplete="current-password" error={errors.password?.message} {...register('password')} />
         </Form.Group>
         <button type="submit" className="btn-sgi" disabled={isSubmitting}>
           {isSubmitting ? 'Iniciando sesión...' : 'Ingresar'}

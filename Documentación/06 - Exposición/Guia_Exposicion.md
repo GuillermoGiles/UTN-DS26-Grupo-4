@@ -13,9 +13,10 @@ El hilo es el problema del negocio: hoy todo está en cuadernos, nadie sabe cuá
 
 **Parte 1: el cliente (3 min)**
 1. Inicio sin sesión: los servicios vienen de la API. Mostrar que la NavBar solo ofrece *Ingresar* y *Crear cuenta*.
-2. **Crear cuenta** → queda logueado en **Mi cuenta**. Agregar un auto escribiendo la patente en minúscula y con espacios (`ab 123-cd`): se guarda `AB 123 CD`.
+2. **Crear cuenta** (tocar el ojito: la contraseña se ve y se oculta) → queda logueado en **Mi cuenta**. Ir a **Reservar turno** sin autos: avisa que hace falta uno y lo deja agregar ahí mismo, escribiendo la patente en minúscula y con espacios (`ab 123-cd`): se guarda `AB 123 CD` y queda elegido.
 3. **Reservar turno**: elegir *Cambio de Aceite* + *Alineación* + *Lavado Básico* y después tocar *Lavado Premium*: reemplaza al Básico (un solo lavado por turno) y el total se recalcula. Los horarios tachados están ocupados o ya pasaron. Elegir uno → aparece en *Próximos turnos*.
-4. Escribir `/panel` en la barra → **Acceso denegado**. "Esconder el link no alcanza: la ruta tiene su `PrivateRoute` y la API su 403".
+4. En **Mi cuenta**, agregar un segundo auto y cambiar el *Auto principal*: los indicadores pasan a ser de ese auto. Eliminarlo con el tachito (si tuviera turnos reservados, la API responde 409 y se muestra el motivo).
+5. Escribir `/panel` en la barra → **Acceso denegado**. "Esconder el link no alcanza: la ruta tiene su `PrivateRoute` y la API su 403".
 
 **Parte 2: el empleado (3 min)**
 1. Login empleado → cae directo en la **Agenda** de hoy (datos del seed) y ahí está el turno que reservó el cliente.
@@ -36,7 +37,7 @@ El hilo es el problema del negocio: hoy todo está en cuadernos, nadie sabe cuá
 3. Lavado con un servicio de lubricentro → `400` (regla en el service, no en Zod: necesita la base).
 
 **Parte 5: calidad (2 min)**
-1. `npm run test:sin-db` → 212 tests en verde en segundos, sin Docker.
+1. `npm run test:sin-db` → 216 tests en verde en segundos, sin Docker.
 2. Mostrar `matriz-permisos.test.ts`: la matriz de permisos escrita como tabla; cada celda es un test.
 3. `npx tsc --noEmit` en back y front → 0 errores.
 
@@ -58,7 +59,7 @@ El hilo es el problema del negocio: hoy todo está en cuadernos, nadie sabe cuá
 | C18 | Autenticación | JWT + bcrypt; `passwordHash` nunca sale; registro que no permite elegir rol |
 | C19 | Integración front–back | Todas las pantallas contra la API, mensajes reales del servidor en la UI, CORS por variable |
 | C20 | Autorización en el front | `PrivateRoute` (cargando → login → rol), NavBar por rol, 401 global que cierra la sesión |
-| C21 | Testing | 239 tests; pirámide (utils puros → rutas con Supertest → DB); Dado/Cuando/Entonces |
+| C21 | Testing | 251 tests; pirámide (utils puros → rutas con Supertest → DB); Dado/Cuando/Entonces |
 | Visión y Alcance | Los 5 módulos de la sección 5.1 | Clientes y vehículos (con DNI), turnos online sin superposición, historial y próximo service, **stock de insumos** con descuento y alertas, precios; **recordatorios por e-mail** |
 | Entrega 4 | Deploy | Render (`render.yaml`) + Vercel (`vercel.json`), ver `07 - Deploy` |
 
@@ -92,7 +93,7 @@ En el deploy el servidor está en UTC: a las 22 h de La Plata para el servidor y
 La API responde 401; `apiFetch` dispara el evento `sesion-expirada`, el `AuthProvider` cierra la sesión y manda a `/login` con el aviso y la ruta de la que venía.
 
 **¿Los tests necesitan la base?**
-212 no: Prisma está mockeado y Supertest usa `app` sin levantar el puerto. Los 2 `*.db.test.ts` sí, y están separados para que la base apagada no rompa el resto.
+216 no: Prisma está mockeado y Supertest usa `app` sin levantar el puerto. Los 2 `*.db.test.ts` sí, y están separados para que la base apagada no rompa el resto.
 
 **¿Cómo funciona el descuento de stock?**
 Cada servicio tiene una receta (`ServicioInsumo`: qué insumo y cuánto). Al pasar un turno a COMPLETADO, en una transacción se descuenta la receta y se marca `stockDescontado`, así volver a completarlo no descuenta dos veces. Si no alcanza, queda en 0 (el trabajo ya se hizo) y el insumo entra en alerta. Cada cambio queda como `MovimientoStock`.

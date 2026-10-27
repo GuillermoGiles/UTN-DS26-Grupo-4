@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form, Row, Col, Alert, Spinner } from 'react-bootstrap';
@@ -9,6 +9,7 @@ import { useFetch } from '../hooks/useFetch';
 import { apiFetch } from '../services/api';
 import { Cargando } from '../components/Estado';
 import { EncabezadoPagina } from '../components/Formulario';
+import { AgregarAutoModal } from '../components/AgregarAutoModal';
 import { fechaCorta, horaActualAR, hoyAR, mensajeDeError, mostrarPatente, pesos, sumarDias } from '../utils/formato';
 
 const ULTIMO_HORARIO = '17:30';
@@ -44,6 +45,7 @@ export function AltaTurno() {
   const { usuario } = useAuth();
   const esCliente = usuario?.rol === 'CLIENTE';
   const [errorApi, setErrorApi] = useState<string | null>(null);
+  const [agregandoAuto, setAgregandoAuto] = useState(false);
 
   const { register, handleSubmit, control, setValue, formState: { errors, isSubmitting } } = useForm({
     resolver: zodResolver(turnoSchema),
@@ -80,6 +82,12 @@ export function AltaTurno() {
     setValue('servicioIds', siguiente, { shouldValidate: true });
   };
   const vehiculo = vehiculos.find((v) => String(v.id) === vehiculoId);
+
+  // Con un solo auto no hace falta elegirlo: queda seleccionado (también el que se acaba de agregar)
+  const unicoAuto = vehiculos.length === 1 ? String(vehiculos[0].id) : null;
+  useEffect(() => {
+    if (unicoAuto && !vehiculoId) setValue('vehiculoId', unicoAuto, { shouldValidate: true });
+  }, [unicoAuto, vehiculoId, setValue]);
 
   // Hoy no se ofrecen los horarios que ya pasaron (la API igual los rechaza con 400)
   const ahora = fecha === hoyAR() ? horaActualAR() : null;
@@ -119,12 +127,19 @@ export function AltaTurno() {
               )}
               <Form.Group controlId="vehiculoId">
                 <Form.Label>Vehículo</Form.Label>
-                <Form.Select {...register('vehiculoId')} disabled={!esCliente && !clienteId}>
+                <Form.Select {...register('vehiculoId')} disabled={!esCliente && !clienteId} isInvalid={!!errors.vehiculoId}>
                   <option value="">{vehiculos.length ? 'Elegí el vehículo' : 'Sin vehículos cargados'}</option>
                   {vehiculos.map((v) => <option key={v.id} value={v.id}>{mostrarPatente(v.patente)} · {v.marca} {v.modelo}</option>)}
                 </Form.Select>
+                <Form.Control.Feedback type="invalid">{errors.vehiculoId?.message}</Form.Control.Feedback>
                 {esCliente && miFicha.data && vehiculos.length === 0 && (
-                  <Form.Text>Podés <Link to="/mi-cuenta">cargar tu auto en Mi cuenta</Link> o reservar igual.</Form.Text>
+                  <Alert variant="warning" className="mt-2 mb-0 small d-flex flex-wrap align-items-center justify-content-between gap-2">
+                    Para reservar necesitás cargar tu auto.
+                    <button type="button" className="btn-sgi btn-sm-sgi" onClick={() => setAgregandoAuto(true)}>Agregar auto</button>
+                  </Alert>
+                )}
+                {!esCliente && clienteId && vehiculos.length === 0 && (
+                  <Form.Text>Este cliente no tiene autos: <Link to="/vehiculos/nuevo">cargale uno</Link> antes de reservar.</Form.Text>
                 )}
               </Form.Group>
             </section>
@@ -201,6 +216,10 @@ export function AltaTurno() {
           </Col>
         </Row>
       </Form>
+
+      {/* El cliente sin autos lo carga acá mismo y queda elegido para el turno */}
+      <AgregarAutoModal mostrar={agregandoAuto} onCerrar={() => setAgregandoAuto(false)}
+        onGuardado={() => { setAgregandoAuto(false); miFicha.recargar(); }} />
     </div>
   );
 }

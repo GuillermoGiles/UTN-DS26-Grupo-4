@@ -30,12 +30,13 @@ describe("Reserva de turno de punta a punta (con DB)", () => {
     const antes = await request(app).get(`/api/turnos/disponibles?fecha=${fecha}`);
     const hora = antes.body.libres[0];
     const servicio = await prisma.servicio.findFirstOrThrow();
+    const vehiculo = await prisma.vehiculo.findFirstOrThrow({ where: { cliente: { email: "cliente@sanjose.test" } } });
 
     // Cuando
     const reserva = await request(app)
       .post("/api/turnos")
       .set(auth)
-      .send({ fecha, hora, servicioIds: [servicio.id] });
+      .send({ fecha, hora, servicioIds: [servicio.id], vehiculoId: vehiculo.id });
     expect(reserva.status).toBe(201);
     creados.push(reserva.body.id);
 
@@ -47,7 +48,7 @@ describe("Reserva de turno de punta a punta (con DB)", () => {
     const repetida = await request(app)
       .post("/api/turnos")
       .set(auth)
-      .send({ fecha, hora, servicioIds: [servicio.id] });
+      .send({ fecha, hora, servicioIds: [servicio.id], vehiculoId: vehiculo.id });
     expect(repetida.status).toBe(409);
   });
 });

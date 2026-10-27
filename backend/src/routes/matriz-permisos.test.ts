@@ -38,7 +38,7 @@ const matriz: { metodo: Metodo; ruta: string; prohibido: Rol[] }[] = [
   { metodo: "post", ruta: "/api/vehiculos", prohibido: [] },
   { metodo: "put", ruta: "/api/vehiculos/1", prohibido: ["CLIENTE"] },
   { metodo: "post", ruta: "/api/vehiculos/1/service", prohibido: ["CLIENTE"] },
-  { metodo: "delete", ruta: "/api/vehiculos/1", prohibido: ["CLIENTE", "EMPLEADO"] },
+  { metodo: "delete", ruta: "/api/vehiculos/1", prohibido: ["EMPLEADO"] },
   // Lavados
   { metodo: "get", ruta: "/api/lavados", prohibido: ["CLIENTE"] },
   { metodo: "get", ruta: "/api/lavados/1", prohibido: ["CLIENTE"] },

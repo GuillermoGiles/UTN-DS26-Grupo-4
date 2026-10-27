@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { usuarioSchema } from '../schemas/usuarioSchema';
 import { apiFetch } from '../services/api';
 import { MarcoFormulario, BotonGuardar } from '../components/Formulario';
+import { CampoPassword } from '../components/CampoPassword';
 import { mensajeDeError } from '../utils/formato';
 
 /** Alta de personal (solo ADMIN): rol EMPLEADO o ADMIN. */
@@ -44,15 +45,13 @@ export function AltaUsuario() {
           <Col md={6}>
             <Form.Group className="mb-3" controlId="password">
               <Form.Label>Contraseña inicial</Form.Label>
-              <Form.Control type="password" {...register('password')} isInvalid={!!errors.password} autoComplete="new-password" />
-              <Form.Control.Feedback type="invalid">{errors.password?.message}</Form.Control.Feedback>
+              <CampoPassword {...register('password')} error={errors.password?.message} autoComplete="new-password" />
             </Form.Group>
           </Col>
           <Col md={6}>
             <Form.Group className="mb-3" controlId="confirmar">
               <Form.Label>Repetir contraseña</Form.Label>
-              <Form.Control type="password" {...register('confirmar')} isInvalid={!!errors.confirmar} autoComplete="new-password" />
-              <Form.Control.Feedback type="invalid">{errors.confirmar?.message}</Form.Control.Feedback>
+              <CampoPassword {...register('confirmar')} error={errors.confirmar?.message} autoComplete="new-password" />
             </Form.Group>
           </Col>
         </Row>

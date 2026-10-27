@@ -38,7 +38,7 @@ Cada fila con ❌ 401 / ❌ 403 tiene su test sin base de datos en `backend/src/
 | | `/api/vehiculos` | POST | ❌ 401 | ✅ 201 | ✅ 201 | ✅ 201 | Personal: `/vehiculos/nuevo` (elige titular). Cliente: "Agregar auto" en `/mi-cuenta` (queda a su nombre). |
 | | `/api/vehiculos/:id` | PUT | ❌ 401 | ❌ 403 | ✅ 200 | ✅ 200 | (API) edición de datos del vehículo. |
 | | `/api/vehiculos/:id/service` | POST | ❌ 401 | ❌ 403 | ✅ 200 | ✅ 200 | "Registrar service" en el historial del vehículo. |
-| | `/api/vehiculos/:id` | DELETE | ❌ 401 | ❌ 403 | ❌ 403 | ✅ 204 | Botón "Borrar" solo ADMIN. |
+| | `/api/vehiculos/:id` | DELETE | ❌ 401 | ✅ 204* | ❌ 403 | ✅ 204 | ADMIN: botón "Borrar" en `/vehiculos`. CLIENTE: ícono de eliminar en "Mis autos" de `/mi-cuenta`. *Auto ajeno → 403; con turnos reservados → 409. |
 | **Turnos** | `/api/turnos/disponibles` | GET | ✅ 200 | ✅ 200 | ✅ 200 | ✅ 200 | El formulario de reserva muestra solo los horarios libres del día elegido. |
 | | `/api/turnos/mios` | GET | ❌ 401 | ✅ 200 | ❌ 403 | ❌ 403 | (API) turnos del cliente; el portal los obtiene con `/clientes/mio`. |
 | | `/api/turnos` | GET | ❌ 401 | ❌ 403 | ✅ 200 | ✅ 200 | Agenda `/agenda` por fecha. |

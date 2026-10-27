@@ -88,12 +88,34 @@ export async function registrarService(id: number, km: number): Promise<ConServi
   return conService(v);
 }
 
-export async function remove(id: number): Promise<boolean> {
+/**
+ * Baja de un vehículo. ADMIN borra cualquiera; un CLIENTE solo los suyos ("Mis autos").
+ * No se borra un auto con turnos por delante (hay que cancelarlos antes). Los turnos ya
+ * terminados quedan en el historial sin vehículo (onDelete: SetNull). Si tiene lavados
+ * registrados, Postgres lo frena (Restrict: son la caja) y se responde 409.
+ */
+export async function remove(id: number, usuario: { id: number; rol: Rol }): Promise<boolean> {
+  const vehiculo = await prisma.vehiculo.findUnique({ where: { id }, include: { cliente: true } });
+  if (!vehiculo) return false;
+  if (usuario.rol === "CLIENTE" && vehiculo.cliente.usuarioId !== usuario.id) {
+    throw new AppError(403, "No tenés permiso para esta operación");
+  }
+
+  const activos = await prisma.turno.count({
+    where: { vehiculoId: id, estado: { in: ["PENDIENTE", "CONFIRMADO", "EN_PROCESO"] } },
+  });
+  if (activos > 0) {
+    throw new AppError(409, "El auto tiene turnos reservados: cancelalos antes de eliminarlo");
+  }
+
   try {
     await prisma.vehiculo.delete({ where: { id } });
     return true;
   } catch (e) {
-    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2025") return false;
+    if (e instanceof Prisma.PrismaClientKnownRequestError) {
+      if (e.code === "P2025") return false;
+      if (e.code === "P2003") throw new AppError(409, "El auto tiene lavados registrados y no se puede eliminar");
+    }
     throw e;
   }
 }
