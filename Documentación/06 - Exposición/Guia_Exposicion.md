@@ -3,7 +3,7 @@
 ## 0. Fechas y formato (C23)
 
 - **Entrega 4 (final del TP): 15/11.** App deployada, tests verdes, README y Documentación al día, usuarios de prueba por Discord, PRs con review cruzado.
-- **Presentación: 16/11, tanda 3.** El Grupo 4 abre la tanda (orden: G04 · G06 · G01 · G03).
+- **Presentación: lunes 02/11 (C25).** Se movió del 16/11 por un paro; el Grupo 4 presenta **último** en esa clase, después de G02 · G10 · G08 · G11.
 - **20 minutos máximo** + 3 a 5 de preguntas **individuales**. Participan todos, 3 a 4 minutos cada uno. Se presenta como si vendiéramos el producto, no como si rindiéramos.
 - Esquema: **Introducción (2-3')** equipo, problema, usuario y propuesta de valor · **Demo (~10')** la app deployada, como la usaría un usuario real (sección 2) · **Experiencia y aprendizajes (3-5')** desafíos, decisiones técnicas, trabajo en equipo · **Cierre (2-3')** qué falta y qué haríamos distinto (la "Deuda técnica" de `07 - Deploy` sirve de guion).
 
