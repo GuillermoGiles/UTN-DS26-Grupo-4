@@ -4,7 +4,7 @@
 El negocio "San José" ofrece lavados y servicios de mantenimiento (cambio de aceite y filtros), pero hoy maneja toda su información en cuadernos o papeles. Esto trae varios problemas: es difícil acordarse qué se le hizo a cada auto en el pasado, los turnos se amontonan porque no hay una agenda clara y es complicado avisarle a los clientes cuando su auto está listo o le toca un nuevo servicio.
 
 ## Miembros del Equipo
-- **Guillermo Giles**, 33359, guillermogiles, [GitHub](https://github.com/guille123giles-cloud)
+- **Guillermo Giles**, 33359, guillermogiles, [GitHub](https://github.com/GuillermoGiles)
 - **Martinez Baltazar**, 33242, baltazar martinez, [GitHub](https://github.com/gitbal-hzd)
 - **Puertas Bautista**, 33604, bautistapuertas, [GitHub](https://github.com/Bautistapuertas)
 - **Olivan Jeremias**, 33643, JereOlivan, [GitHub](https://github.com/JereOlivan)
@@ -160,11 +160,11 @@ Para dar cumplimiento a la pauta de trabajo en equipo de la actividad **[AG-C21]
 
 | Integrante | Rol Asignado | Rama de Trabajo | Pull Request | Revisor Cruzado |
 | :--- | :--- | :--- | :--- | :--- |
-| **Participante 1**<br>*(Configuración e Infraestructura)* | Configuración base de Vitest en backend y frontend, scripts npm, tipados, `vitest.config.mts` y separación de `*.db.test.ts`. | `test/c21-config-vitest` | **PR #54** | Baltazar Martinez / Leon Luna |
-| **Participante 2**<br>*(Seguridad e Integración)* | Transformación de la Matriz de Permisos en suite automatizada (401/403/400) sin tocar la base de datos con Supertest. | `feature/test-seguridad-integracion` | **PR #55** | Bautista Puertas |
-| **Participante 3**<br>*(Comportamiento Específico)* | Implementación de casos de negocio bajo estructura Dado/Cuando/Entonces y validaciones de datos (6 tests AAA). | `feature/test-comportamiento` | **PR #56** | Leon Luna |
-| **Participante 4**<br>*(Documentación Técnica y Git Flow)* | Redacción exhaustiva de la sección Testing en `README.md`, detalle de comandos, dependencias, cobertura y control de Git flow. | `feature/doc-testing-gitflow` | **PR #57** | Guillermo Giles / Jeremias Olivan |
-| **Participante 5**<br>*(Gestión y Entrega)* | Administración del tablero Trello (Done), facilitación de retrospectiva y planning, y comunicación final en Discord. | Coordinación General | — | Todo el equipo |
+| **Guillermo Giles**<br>*(Configuración e Infraestructura)* | Configuración base de Vitest en backend y frontend, scripts npm, tipados, `vitest.config.mts` y separación de `*.db.test.ts`. | `test/c21-config-vitest` | **PR #54** | Baltazar Martinez / Leon Luna |
+| **Baltazar Martinez**<br>*(Seguridad e Integración)* | Transformación de la Matriz de Permisos en suite automatizada (401/403/400) sin tocar la base de datos con Supertest. | `feature/test-seguridad-integracion` | **PR #55** | Bautista Puertas |
+| **Bautista Puertas**<br>*(Comportamiento Específico)* | Implementación de casos de negocio bajo estructura Dado/Cuando/Entonces y validaciones de datos (6 tests AAA). | `feature/test-comportamiento` | **PR #56** | Leon Luna |
+| **Leon Luna Guelfo**<br>*(Documentación Técnica y Git Flow)* | Redacción exhaustiva de la sección Testing en `README.md`, detalle de comandos, dependencias, cobertura y control de Git flow. | `feature/doc-testing-gitflow` | **PR #57** | Guillermo Giles / Jeremias Olivan |
+| **Jeremias Olivan**<br>*(Gestión y Entrega)* | Administración del tablero Trello (Done), facilitación de retrospectiva y planning, y comunicación final en Discord. | Coordinación General | — | Todo el equipo |
 
 #### Buenas Prácticas Aplicadas en las Revisiones de Código (PRs):
 - **Tests independientes:** Ningún test depende del resultado ni del orden de ejecución de otro.
