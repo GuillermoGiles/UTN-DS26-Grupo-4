@@ -1,53 +1,71 @@
-# Blueprint de Render: backend (Docker) + PostgreSQL.
-# En Render: New → Blueprint → elegir este repo. Pide completar FRONTEND_URL.
-# El frontend va en Vercel (ver Documentación/07 - Deploy/Deploy.md).
-
-databases:
-  - name: sgi-sanjose-db
-    plan: free
-    databaseName: sgi_sanjose_db
-    user: sgi
+# Arquitectura de producción (C23): Render Static Site + Render Web Service (Docker) + Neon (PostgreSQL).
+#
+#   Navegador ─► sgi-sanjose (Static Site: frontend/dist) ─fetch VITE_API_URL─► sgi-sanjose-api (Docker)
+#                                                       FRONTEND_URL (CORS) ◄─┘        │ DATABASE_URL
+#                                                                                      ▼
+#                                                                           Neon PostgreSQL (us-east-1)
+#
+# Los servicios se crearon desde el panel de Render: este archivo documenta cómo están configurados
+# (la interfaz manda; render.yaml como infraestructura como código queda fuera del alcance de la materia).
+# Paso a paso, variables y qué hacer si algo falla: Documentación/07 - Deploy/Deploy.md
 
 services:
+  # Backend: imagen de producción (backend/Dockerfile.prod). Al arrancar corre
+  # "prisma migrate deploy && node dist/index.js": aplica las migraciones commiteadas y levanta la API compilada.
   - type: web
     name: sgi-sanjose-api
     runtime: docker
     plan: free
-    # Rutas relativas a la raíz del repo (así lo define el schema de Render)
-    dockerfilePath: ./backend/Dockerfile
+    region: virginia # misma región que la base en Neon (AWS us-east-1)
+    dockerfilePath: ./backend/Dockerfile.prod
     dockerContext: ./backend
     buildFilter:
       paths:
         - backend/** # un cambio solo en el frontend no redeploya la API
-    # "npm run start:render" (backend/package.json): aplica las migraciones commiteadas
-    # (nunca genera nuevas), carga el seed idempotente y levanta la API.
-    # Va como script de npm porque Render ya ejecuta este comando dentro de una shell:
-    # un "sh -c '...'" acá le llega con las comillas literales y falla.
-    dockerCommand: npm run start:render
     healthCheckPath: /
     envVars:
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
-        fromDatabase:
-          name: sgi-sanjose-db
-          property: connectionString
+        sync: false # Neon → Connection string DIRECTA (no la "pooled"), con ?sslmode=require
       - key: JWT_SECRET
-        generateValue: true # Render genera una cadena aleatoria: nunca "cambiame" en producción
+        generateValue: true # la genera Render: nadie la escribe ni la pega en Discord
       - key: JWT_EXPIRES_IN
         value: 8h
       - key: FRONTEND_URL
-        sync: false # se completa en el panel: la URL de Vercel (puede ir más de una, separadas por coma)
-      # Recordatorios por e-mail (opcional: sin estas, los correos quedan como SIMULADOS)
+        sync: false # https://sgi-sanjose.onrender.com (exacta, sin "/" al final)
+      # Recordatorios por e-mail (opcionales: sin estas, los correos quedan como SIMULADOS).
+      # Render free bloquea los puertos SMTP 25, 465 y 587: se usa un proveedor con el puerto 2525 (ej. Brevo).
       - key: SMTP_HOST
-        value: smtp.gmail.com
+        sync: false
       - key: SMTP_PORT
-        value: "465"
+        value: "2525"
       - key: SMTP_USER
         sync: false
       - key: SMTP_PASS
+        sync: false
+      - key: MAIL_FROM
         sync: false
       - key: CHECKPOINT_DISABLE
         value: "1"
       - key: PRISMA_HIDE_UPDATE_MESSAGE
         value: "1"
+
+  # Frontend: archivos estáticos (sin Node en producción). VITE_API_URL queda embebida en el build.
+  - type: web
+    name: sgi-sanjose
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    buildFilter:
+      paths:
+        - frontend/**
+    envVars:
+      - key: VITE_API_URL
+        sync: false # https://sgi-sanjose-api.onrender.com/api (con /api al final)
+    routes:
+      # SPA: un F5 en /agenda pide un archivo que no existe; se devuelve index.html y decide React Router
+      - type: rewrite
+        source: /*
+        destination: /index.html

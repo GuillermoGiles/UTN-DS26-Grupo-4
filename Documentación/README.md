@@ -34,5 +34,5 @@
 * **Guía de exposición:** guion de la demo por rol, dónde está cada tema de la cursada y preguntas probables ([Guia_Exposicion.md](./06%20-%20Exposición/Guia_Exposicion.md)).
 
 ## [07 - Deploy](./07%20-%20Deploy)
-* **Deploy paso a paso:** API y base en Render (`render.yaml`), frontend en Vercel (`frontend/vercel.json`), CORS y verificación ([Deploy.md](./07%20-%20Deploy/Deploy.md)).
+* **Deploy paso a paso:** frontend (Static Site) y API (Docker, `Dockerfile.prod`) en Render, base en Neon; variables, migraciones, seed, verificación y errores comunes ([Deploy.md](./07%20-%20Deploy/Deploy.md)).
 

@@ -1,10 +1,12 @@
 {
   "name": "sgi-sanjose-api",
   "version": "1.0.0",
-  "main": "src/index.ts",
+  "main": "dist/index.js",
   "scripts": {
-    "start": "tsx src/index.ts",
-    "start:render": "prisma generate && prisma migrate deploy && prisma db seed && tsx src/index.ts",
+    "build": "tsc -p tsconfig.build.json",
+    "start": "node dist/index.js",
+    "start:prod": "prisma migrate deploy && node dist/index.js",
+    "start:render": "npm run start:prod",
     "dev": "npx prisma generate && tsx watch src/index.ts",
     "setup": "sh src/setup.sh",
     "test": "vitest run",

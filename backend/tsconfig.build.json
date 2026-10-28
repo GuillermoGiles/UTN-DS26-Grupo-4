@@ -1,0 +1,8 @@
+{
+  // Build de producción (C23): compila src/ a dist/ una sola vez, sin tests.
+  // En producción corre "node dist/index.js": tsx queda solo para desarrollar.
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "outDir": "dist", "rootDir": "src", "sourceMap": false },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "src/**/*.test.ts"]
+}

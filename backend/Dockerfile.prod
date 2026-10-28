@@ -1,0 +1,24 @@
+# Imagen de PRODUCCIÓN (la usa Render). Para programar sigue el Dockerfile de dev + docker compose.
+# Multi-stage: la etapa 1 tiene todo para compilar; la 2 se queda con lo que corre.
+# Sin ARG ni ENV con secretos: DATABASE_URL y JWT_SECRET entran al correr, desde el panel de Render.
+
+# Etapa 1: compilar
+FROM node:22-alpine AS build
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npx prisma generate && npm run build
+
+# Etapa 2: correr (sin src/, sin tests: solo dist/ y lo que Prisma necesita para migrar)
+FROM node:22-alpine
+WORKDIR /app
+ENV NODE_ENV=production
+COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/dist ./dist
+COPY package*.json prisma.config.ts ./
+COPY prisma ./prisma
+EXPOSE 3000
+# Aplica las migraciones commiteadas (nunca genera nuevas) y arranca la API compilada.
+# Si una migración falla, el deploy falla y sigue corriendo la versión anterior.
+CMD ["npm", "run", "start:prod"]

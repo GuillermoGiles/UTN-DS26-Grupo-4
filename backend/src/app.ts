@@ -21,7 +21,7 @@ z.config(z.locales.es());
 const app = express();
 
 // FRONTEND_URL admite varios orígenes separados por coma
-// (ej. "http://localhost:5173,https://sgi-sanjose.vercel.app"). Nunca "*".
+// (ej. "http://localhost:5173,https://sgi-sanjose.onrender.com"). Nunca "*".
 const origenesPermitidos = (process.env.FRONTEND_URL ?? "http://localhost:5173")
   .split(",")
   .map((o) => o.trim())
