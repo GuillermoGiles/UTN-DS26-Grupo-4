@@ -12,6 +12,7 @@ import { EstadoTurnoBadge, Patente } from '../components/Badges';
 import { fechaCorta, hoyAR, horaDe, horaActualAR, mensajeDeError, mostrarPatente, pesos, sumarDias } from '../utils/formato';
 import { TEXTO_ESTADO_TURNO } from '../utils/estados';
 import { nombresServicios, totalServicios, ESTADOS_TURNO, type Disponibilidad, type EstadoTurno, type TurnoConDetalle } from '../types/turno';
+import { avisarCambioDeStock } from '../utils/stock';
 import type { Lavado } from '../types/lavado';
 
 /** Agenda operativa (wireframe 02): turnos del día, detalle con acciones y autos sin turno. */
@@ -51,7 +52,9 @@ export function Agenda() {
 
   const cambiarEstado = (t: TurnoConDetalle, estado: EstadoTurno) =>
     accion(() => apiFetch(`/turnos/${t.id}/estado`, { method: 'PATCH', body: JSON.stringify({ estado }) }),
-      `Turno de las ${t.hora}: ${TEXTO_ESTADO_TURNO[estado].toLowerCase()}.`, turnos.recargar);
+      `Turno de las ${t.hora}: ${TEXTO_ESTADO_TURNO[estado].toLowerCase()}.`,
+      // Completar descuenta insumos: el contador del menú se actualiza
+      () => { turnos.recargar(); if (estado === 'COMPLETADO') avisarCambioDeStock(); });
 
   const recordatorio = (t: TurnoConDetalle) =>
     accion(() => apiFetch(`/turnos/${t.id}/recordatorio`, { method: 'POST' }),

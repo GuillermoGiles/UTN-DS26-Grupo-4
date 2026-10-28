@@ -10,6 +10,7 @@ import { Cargando, ErrorCarga, Vacio } from '../components/Estado';
 import { BotonGuardar, EncabezadoPagina } from '../components/Formulario';
 import { insumoSchema, movimientoSchema } from '../schemas/insumoSchema';
 import { fechaLarga, horaDe, mensajeDeError } from '../utils/formato';
+import { avisarCambioDeStock } from '../utils/stock';
 import type { Insumo, InsumoDetalle } from '../types/insumo';
 
 /**
@@ -26,7 +27,7 @@ export function Insumos() {
   const [ok, setOk] = useState<string | null>(null);
 
   const bajos = (insumos ?? []).filter((i) => i.bajo);
-  const listo = (texto: string) => { setModal(null); setOk(texto); recargar(); };
+  const listo = (texto: string) => { setModal(null); setOk(texto); recargar(); avisarCambioDeStock(); };
 
   return (
     <div className="page">

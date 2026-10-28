@@ -10,6 +10,7 @@ import { apiFetch } from '../services/api';
 import { MarcoFormulario, BotonGuardar } from '../components/Formulario';
 import { mensajeDeError, mostrarPatente, pesos } from '../utils/formato';
 import type { Servicio } from '../types/servicio';
+import { avisarCambioDeStock } from '../utils/stock';
 import type { VehiculoListado } from '../types/vehiculo';
 
 /** Auto que llega al lavadero sin turno. El empleado que lo registra es el usuario logueado. */
@@ -29,6 +30,7 @@ export function AltaLavado() {
     setErrorApi(null);
     try {
       await apiFetch('/lavados', { method: 'POST', body: JSON.stringify(datos) });
+      avisarCambioDeStock(); // el lavado descontó insumos
       navigate('/agenda');
     } catch (err) {
       setErrorApi(mensajeDeError(err, 'No se pudo registrar el ingreso'));
