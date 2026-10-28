@@ -68,7 +68,8 @@ La app está deployada en **Render** (frontend y backend) con la base en **Neon*
 
 **Datos de demo:** se cargan una vez desde una compu del equipo, contra la base de Neon:
 ```bash
-docker compose run --rm -e DATABASE_URL="<connection string de Neon>" api npx prisma db seed
+NEON='<connection string de Neon>'   # comillas simples: Git Bash no toca los caracteres de la contraseña
+docker compose run --rm -e DATABASE_URL="$NEON" api sh -c "npx prisma generate && npx prisma db seed"
 ```
 
 **Auto-deploy:** cada push a `main` (merge de un PR) redeploya el front si cambió `frontend/` y el back si cambió `backend/`. Los usuarios de prueba se pasan por el canal del grupo en Discord.
