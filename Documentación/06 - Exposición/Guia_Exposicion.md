@@ -1,13 +1,23 @@
 # Guía de exposición — SGI San José (Grupo 4)
 
+## 0. Fechas y formato (C23)
+
+- **Entrega 4 (final del TP): 15/11.** App deployada, tests verdes, README y Documentación al día, usuarios de prueba por Discord, PRs con review cruzado.
+- **Presentación: 16/11, tanda 3.** El Grupo 4 abre la tanda (orden: G04 · G06 · G01 · G03).
+- **20 minutos máximo** + 3 a 5 de preguntas **individuales**. Participan todos, 3 a 4 minutos cada uno. Se presenta como si vendiéramos el producto, no como si rindiéramos.
+- Esquema: **Introducción (2-3')** equipo, problema, usuario y propuesta de valor · **Demo (~10')** la app deployada, como la usaría un usuario real (sección 2) · **Experiencia y aprendizajes (3-5')** desafíos, decisiones técnicas, trabajo en equipo · **Cierre (2-3')** qué falta y qué haríamos distinto (la "Deuda técnica" de `07 - Deploy` sirve de guion).
+
 ## 1. Antes de exponer
 
+- [ ] Presentación (PDF/PPT) en la notebook, y todo listo en **más de una notebook** por las dudas.
+- [ ] Notebook probada para conectar y proyectar, con todo instalado localmente y abierto.
+- [ ] Demo y presentación ensayadas al menos una vez **con cronómetro**, con el orden de participación definido.
 - [ ] Abrir la URL de la API en Render 5 minutos antes (el plan free se duerme).
-- [ ] Probar el login de los tres usuarios del seed en la URL de Vercel.
+- [ ] Probar el login de los tres usuarios del seed en `https://sgi-sanjose.onrender.com`, el mismo día.
 - [ ] Tener abiertos: la app, `backend/api.http`, `Matriz_Permisos.md` y una terminal con `npm run test:sin-db`.
 - [ ] Repartir quién muestra cada bloque (la demo de abajo tiene 5 partes, una por integrante).
 
-## 2. Demo (≈ 12 minutos)
+## 2. Demo (≈ 10 minutos)
 
 El hilo es el problema del negocio: hoy todo está en cuadernos, nadie sabe cuándo le toca el service a cada auto y los turnos se pisan.
 
@@ -61,7 +71,7 @@ El hilo es el problema del negocio: hoy todo está en cuadernos, nadie sabe cuá
 | C20 | Autorización en el front | `PrivateRoute` (cargando → login → rol), NavBar por rol, 401 global que cierra la sesión |
 | C21 | Testing | 252 tests; pirámide (utils puros → rutas con Supertest → DB); Dado/Cuando/Entonces |
 | Visión y Alcance | Los 5 módulos de la sección 5.1 | Clientes y vehículos (con DNI), turnos online sin superposición, historial y próximo service, **stock de insumos** con descuento y alertas, precios; **recordatorios por e-mail** |
-| Entrega 4 | Deploy | Render (`render.yaml`) + Vercel (`vercel.json`), ver `07 - Deploy` |
+| C23 · Entrega 4 | Deploy | Render Static Site + Web Service Docker (`Dockerfile.prod`, multi-stage, `node dist/index.js`) + Neon; auto-deploy desde `main`. Ver `07 - Deploy` |
 
 ## 4. Preguntas que pueden hacer
 

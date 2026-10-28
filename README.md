@@ -52,8 +52,28 @@ Para probar la API sin el front está `backend/api.http` (REST Client), que corr
 
 ## Deploy
 
-Backend y base en **Render** (`render.yaml`, blueprint), frontend en **Vercel** (`frontend/vercel.json`).
-Paso a paso en [Documentación/07 - Deploy](./Documentación/07%20-%20Deploy/Deploy.md).
+La app está deployada en **Render** (frontend y backend) con la base en **Neon**:
+
+| Servicio | Plataforma | URL |
+| :--- | :--- | :--- |
+| Frontend | Render · Static Site (`frontend/` → `dist/`) | https://sgi-sanjose.onrender.com |
+| Backend | Render · Web Service Docker (`backend/Dockerfile.prod`) | https://sgi-sanjose-api.onrender.com |
+| Base de datos | Neon · PostgreSQL (AWS us-east-1) | — |
+
+**Variables (los valores viven en el panel de Render, nunca en el repo):**
+- Backend: `DATABASE_URL` (Neon, conexión directa), `JWT_SECRET` (la genera Render), `JWT_EXPIRES_IN`, `FRONTEND_URL` (URL del front, sin `/` final), `NODE_ENV=production`; opcionales `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM`. `PORT` la inyecta Render.
+- Frontend: `VITE_API_URL` (URL del back con `/api`). Es pública: queda embebida en el build.
+
+**Migraciones:** la imagen de producción corre `prisma migrate deploy && node dist/index.js` al arrancar, así que cada merge a `main` con una migración nueva se aplica solo (si falla, sigue online la versión anterior). Las migraciones se crean en local con `migrate dev` y se commitean.
+
+**Datos de demo:** se cargan una vez desde una compu del equipo, contra la base de Neon:
+```bash
+docker compose run --rm -e DATABASE_URL="<connection string de Neon>" api npx prisma db seed
+```
+
+**Auto-deploy:** cada push a `main` (merge de un PR) redeploya el front si cambió `frontend/` y el back si cambió `backend/`. Los usuarios de prueba se pasan por el canal del grupo en Discord.
+
+Paso a paso, verificación y qué hacer si algo falla: [Documentación/07 - Deploy](./Documentación/07%20-%20Deploy/Deploy.md).
 
 ## Documentación
 

@@ -1,81 +1,123 @@
-# Deploy — Render (API + PostgreSQL) y Vercel (frontend)
+# Deploy — Render (frontend y API) + Neon (PostgreSQL)
+
+Producción sigue la arquitectura de la C23: tres servicios, dos cuentas (Render y Neon), un repo.
 
 ```
-Navegador ──► Vercel (React, estático) ──fetch──► Render (Express) ──► Render PostgreSQL
-                VITE_API_URL ─────────────────────▲      FRONTEND_URL (CORS) ──► URL de Vercel
+👤 Navegador
+   │ https → archivos
+   ▼
+🌐 sgi-sanjose  ·  Render Static Site        frontend/ → npm run build → publica dist/
+   │ fetch → VITE_API_URL (embebida en el build)
+   ▼
+🖥  sgi-sanjose-api  ·  Render Web Service    backend/Dockerfile.prod
+   │ FRONTEND_URL → CORS · DATABASE_URL → Prisma
+   ▼
+🗄  Neon PostgreSQL                           región AWS us-east-1 (la misma que Render Virginia)
 ```
 
-Las dos URLs se apuntan entre sí, por eso el orden es: **1)** backend, **2)** frontend con la URL del backend, **3)** volver al backend y cargar la URL del frontend.
-
-## 1. Backend y base en Render
-
-1. Entrar a [render.com](https://render.com) con la cuenta de GitHub que tiene acceso al repo.
-2. **New → Blueprint** y elegir `UTN-DS26-Grupo-4`. Render lee `render.yaml` de la raíz y propone crear:
-   - `sgi-sanjose-db`: PostgreSQL (plan free).
-   - `sgi-sanjose-api`: servicio web Docker con `backend/Dockerfile`.
-3. Pide el valor de `FRONTEND_URL`. Por ahora poner `http://localhost:5173` (se corrige en el paso 3).
-4. **Apply**. El primer deploy tarda unos minutos. Al arrancar, el contenedor corre
-   `npm run start:render`: `prisma generate → prisma migrate deploy → prisma db seed → tsx src/index.ts`.
-5. Probar: abrir `https://sgi-sanjose-api.onrender.com/` → `{"mensaje":"API SGI San José 🐳"}`.
-   Y `.../api/servicios` → el catálogo del seed.
-
-Qué configura el blueprint solo:
-- `DATABASE_URL` sale de la base (`fromDatabase`), no hay que copiarla.
-- `JWT_SECRET` lo genera Render (`generateValue`): una cadena aleatoria, nunca `cambiame`.
-- `JWT_EXPIRES_IN=8h`, `NODE_ENV=production`.
-- Solo redeploya cuando cambia algo dentro de `backend/`.
-
-> Plan free: el servicio se duerme tras unos minutos sin uso y el primer pedido tarda ~1 minuto en despertarlo.
-> **Antes de la exposición, abrir la URL de la API un rato antes.** La base free de Render vence a los 30 días: si se recrea, el seed vuelve a cargar los datos de demo.
-
-## 2. Frontend en Vercel
-
-1. Entrar a [vercel.com](https://vercel.com) con GitHub → **Add New → Project** → importar el repo.
-2. **Root Directory: `frontend`** (importante: si no, Vercel busca el `package.json` en la raíz).
-3. Framework: Vite (lo detecta solo; `frontend/vercel.json` ya define build y salida).
-4. **Environment Variables:** `VITE_API_URL` = `https://sgi-sanjose-api.onrender.com/api` (la URL del paso 1, con `/api` al final).
-5. **Deploy.** Queda en algo como `https://utn-ds26-grupo-4.vercel.app`.
-
-`vercel.json` reescribe todas las rutas a `index.html`: así un F5 en `/agenda` o `/mi-cuenta` no da 404 (las rutas las resuelve React Router, no el servidor).
-
-> `VITE_API_URL` se lee **al compilar**. Si se cambia, hay que hacer **Redeploy** en Vercel para que tome el valor nuevo.
-
-## 3. Cerrar el círculo (CORS)
-
-En Render → `sgi-sanjose-api` → **Environment** → `FRONTEND_URL` = la URL de Vercel. Se pueden poner varias separadas por coma:
-
-```
-https://utn-ds26-grupo-4.vercel.app,http://localhost:5173
-```
-
-Guardar: Render reinicia el servicio solo.
-
-## 3 bis. Recordatorios por e-mail (opcional)
-
-Sin configuración, los recordatorios quedan registrados como *simulados* (se ven en la pantalla Correos).
-Para que lleguen de verdad con Gmail:
-
-1. En la cuenta de Gmail del taller: activar la **verificación en 2 pasos** y crear una **contraseña de aplicación**.
-2. En Render → `sgi-sanjose-api` → **Environment**: completar `SMTP_USER` (el Gmail) y `SMTP_PASS` (la contraseña de aplicación). `SMTP_HOST` y `SMTP_PORT` ya vienen del blueprint.
-3. Guardar. En **Correos** desaparece el aviso de "no configurado".
-
-> En el plan free el servicio se duerme: los recordatorios automáticos solo salen mientras está despierto. Para la demo alcanza con el botón "Enviar los de mañana".
-
-## 4. Verificación (Entrega 4)
-
-| Prueba | Esperado |
+| | URL |
 | :--- | :--- |
-| Abrir la URL de Vercel | Inicio con los servicios reales del seed |
-| Login `admin@sanjose.test` | Cae en `/panel` con la caja del día |
-| F5 en `/panel` | Sigue logueado (rehidratación con `/auth/yo`) |
-| Crear cuenta nueva y reservar un turno | Aparece en Mi cuenta y en la agenda del empleado |
-| Escribir `/usuarios` logueado como cliente | `/sin-permiso` |
-| Completar un cambio de aceite en la agenda | En Insumos baja el aceite y aparece la alerta del filtro |
-| En la consola del navegador | Sin errores de CORS |
+| **Frontend** | https://sgi-sanjose.onrender.com |
+| **Backend** | https://sgi-sanjose-api.onrender.com (la API vive en `/api`) |
 
-Si aparece **"blocked by CORS policy"**: `FRONTEND_URL` no coincide exacto con la URL de Vercel (sin `/` al final, con `https`).
-Si el login da **"Failed to fetch"**: `VITE_API_URL` está mal o la API está dormida (abrirla primero).
+Los usuarios de prueba se pasan por el canal del grupo en Discord, **no** van en el repo.
 
-## Alternativa sin Blueprint
+## Qué cambia entre desarrollo y producción
 
-En Render se puede crear a mano: **New → PostgreSQL**, después **New → Web Service** (Docker), Dockerfile `backend/Dockerfile`, contexto `backend`, *Docker Command* `npm run start:render` (el mismo de `render.yaml`), y las mismas variables.
+| | Desarrollo (tu compu) | Producción |
+| :--- | :--- | :--- |
+| Backend | `Dockerfile` + `docker compose`, `tsx watch` | `Dockerfile.prod` (multi-stage): `tsc` una vez, después `node dist/index.js` |
+| Migraciones | `prisma migrate dev` (crea y aplica) | `prisma migrate deploy` al arrancar (solo aplica las commiteadas) |
+| Frontend | `npm run dev` (Vite en Node) | `npm run build` → archivos estáticos en `dist/`, sin Node |
+| Base | PostgreSQL en Docker | Neon |
+| Variables | `backend/.env`, `frontend/.env` (no van a Git) | panel de Render (nunca en el repo) |
+
+`.env.example` (en `backend/` y `frontend/`) documenta qué variables existen; el valor lo pone cada entorno.
+
+## Variables de entorno (sin valores)
+
+**`sgi-sanjose-api` (Web Service)**
+
+| Variable | Quién pone el valor | Qué es |
+| :--- | :--- | :--- |
+| `DATABASE_URL` | Neon | Connection string **directa** (no la *pooled*), termina en `?sslmode=require` |
+| `JWT_SECRET` | Render (botón *Generate*) | Firma de los tokens. Nadie la escribe ni la comparte |
+| `JWT_EXPIRES_IN` | nosotros | `8h` |
+| `FRONTEND_URL` | nosotros | La URL exacta del front, con `https` y **sin `/` al final**. Acepta varias separadas por coma |
+| `NODE_ENV` | nosotros | `production` |
+| `PORT` | Render (la inyecta) | No hace falta cargarla |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM` | proveedor de correo | Opcionales. Sin ellas los recordatorios quedan como *simulados* (ver abajo) |
+
+**`sgi-sanjose` (Static Site)**
+
+| Variable | Qué es |
+| :--- | :--- |
+| `VITE_API_URL` | URL del back **con `/api` al final**. Es pública: queda pegada en el JS del build (se ve con F12), por eso en el front nunca va un secreto |
+
+## Paso a paso (orden de creación)
+
+Cada URL existe recién cuando existe el servicio: el back necesita la del front (CORS) y el front la del back (fetch), así que uno arranca con un valor provisorio.
+
+1. **Neon**: proyecto nuevo, región **AWS us-east-1**. Copiar la *connection string* directa → `DATABASE_URL`.
+2. **Render → New → Web Service**: el repo, *Language* **Docker**, *Root Directory* `backend`, *Dockerfile Path* `./Dockerfile.prod` (o `backend/Dockerfile.prod` según cómo lo pida), región **Virginia**, plan free. Variables: `DATABASE_URL`, `JWT_SECRET` (generada), `JWT_EXPIRES_IN=8h`, `NODE_ENV=production` y `FRONTEND_URL=http://localhost:5173` provisoria. *Docker Command* vacío: usa el `CMD` de la imagen.
+   Al arrancar corre `npm run start:prod` = `prisma migrate deploy && node dist/index.js`. Probar `https://sgi-sanjose-api.onrender.com/` → `{"mensaje":"API SGI San José 🐳"}`.
+3. **Render → New → Static Site**: *Root Directory* `frontend`, *Build Command* `npm ci && npm run build`, *Publish Directory* `dist`, variable `VITE_API_URL=https://sgi-sanjose-api.onrender.com/api`. En **Redirects/Rewrites**: `Source /*` → `Destination /index.html` → **Rewrite** (si no, un F5 en `/agenda` da 404).
+4. **Volver al back**: `FRONTEND_URL=https://sgi-sanjose.onrender.com`. Cambiar una variable redeploya solo.
+5. **Cargar los datos de demo** desde nuestra compu, contra la base de Neon (el seed es idempotente: se puede correr de nuevo sin duplicar):
+   ```bash
+   docker compose run --rm -e DATABASE_URL="<connection string de Neon>" api npx prisma db seed
+   ```
+   La imagen de producción no trae `tsx` ni el seed: por eso se corre con la imagen de desarrollo.
+6. **Probar en el navegador** (ver la verificación de abajo) y pasar las dos URLs y los usuarios de prueba por Discord.
+
+`render.yaml` deja escrita esta misma configuración (servicios, Dockerfile, rewrite y variables sin valores).
+
+## Cómo se mantiene: auto-deploy
+
+```
+git push origin main (merge de un PR)
+ → Render detecta el commit
+ → ¿cambió frontend/? → build del Static Site → publica dist/
+ → ¿cambió backend/?  → build de Dockerfile.prod → migrate deploy → arranca
+ → si algo falla       → sigue online la versión anterior
+```
+
+- Se deploya solo desde `main`: el trabajo se hace en ramas y entra por PR con review.
+- **Cambiar el modelo:** `npx prisma migrate dev --name <descripcion>` en local, commitear la carpeta nueva de `prisma/migrations/` y mergear. Producción la aplica sola con `migrate deploy`; si la migración falla, no se deploya.
+- Esto es CD (entrega continua). CI (que los tests corran en cada PR con GitHub Actions) queda fuera del alcance: hoy los tests se corren a mano antes de mergear.
+
+## Verificación (Entrega 4)
+
+| Prueba | Resultado esperado |
+| :--- | :--- |
+| Abrir la URL del back | `{"mensaje":"API SGI San José 🐳"}` (si tarda ~1 minuto, estaba dormida) |
+| Abrir la URL del front | Inicio con los servicios reales de la base |
+| Login con los tres roles | Cliente → Mi cuenta · Empleado → Agenda · Admin → Panel |
+| Un CRUD completo | Ej. crear, editar y borrar un servicio como ADMIN |
+| **F5 en una ruta interna** (`/agenda`, `/mi-cuenta`) | Sigue en la misma pantalla y con la sesión (no 404) |
+| Escribir `/panel` siendo cliente | Acceso denegado |
+
+## Qué falla y por qué
+
+| Síntoma | Causa | Arreglo |
+| :--- | :--- | :--- |
+| Consola: fetch a `undefined/...` | `VITE_API_URL` no estaba al hacer el build | Cargarla en el Static Site y redeployar |
+| 404 en todos los pedidos a la API | `VITE_API_URL` sin `/api` al final | `https://sgi-sanjose-api.onrender.com/api` |
+| Consola: bloqueado por CORS | `FRONTEND_URL` sigue en localhost o tiene `/` al final | La URL exacta del front |
+| Log: `Falta JWT_SECRET` | La variable no está en el panel | Agregarla con *Generate* |
+| Log: `P1001 Can't reach database server` | URL de Neon mal pegada o la *pooled* | Copiarla de nuevo, la directa |
+| 404 al hacer F5 en `/agenda` | Falta la regla de rewrite | `/*` → `/index.html` (Rewrite) |
+| El build falla con un error de TypeScript | El `tsc` no perdona | Correr `npm run build` local y arreglarlo antes de mergear |
+| Log: `SECURITY WARNING: The SSL modes...` | Aviso informativo de `pg` | No es error |
+| El primer pedido tarda ~1 minuto | El back free se duerme sin tráfico | Abrir la URL del back unos minutos antes de usarla (warm-up) |
+| Los recordatorios quedan *simulados* | No hay SMTP configurado, o se usó Gmail | Render free bloquea los puertos 25, 465 y 587: usar un proveedor con puerto **2525** (ej. Brevo: `SMTP_HOST=smtp-relay.brevo.com`, `SMTP_PORT=2525`) |
+
+## Deuda técnica conocida
+
+| Hoy | Lo que haría un equipo real |
+| :--- | :--- |
+| Las migraciones corren al arrancar el contenedor | Un paso aparte del pipeline, antes de levantar la versión nueva |
+| El seed se corre a mano desde una compu | Script versionado o un entorno de staging con datos propios |
+| Token en `localStorage` | Cookie `httpOnly` + refresh token |
+| Sin CI | Tests y lint en cada PR; el deploy no sale si fallan |
+| Back free que se duerme | Instancia paga o un healthcheck que lo mantenga despierto |

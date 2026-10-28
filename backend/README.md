@@ -104,7 +104,7 @@ se registra como `SIMULADO` y se ve en la pantalla Correos.
 
 ## CORS
 
-`FRONTEND_URL` acepta uno o varios orígenes separados por coma (ej. `http://localhost:5173,https://sgi-sanjose.vercel.app`). Nunca `*`.
+`FRONTEND_URL` acepta uno o varios orígenes separados por coma (ej. `http://localhost:5173,https://sgi-sanjose.onrender.com`). Nunca `*`.
 
 ## Testing
 
