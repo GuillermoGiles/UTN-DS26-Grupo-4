@@ -1,11 +1,12 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import { FiBarChart2, FiCalendar, FiDroplet, FiLogOut, FiMail, FiPackage, FiPlusCircle, FiTool, FiUsers, FiUserCheck } from 'react-icons/fi';
 import { BsCarFront } from 'react-icons/bs';
-import type { ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { useFetch } from '../../hooks/useFetch';
 import { Marca } from './Marca';
 import { iniciales } from '../../utils/formato';
+import { EVENTO_STOCK } from '../../utils/stock';
 import type { Insumo } from '../../types/insumo';
 
 function Enlace({ to, icono, children, contador }: { to: string; icono: ReactNode; children: ReactNode; contador?: number }) {
@@ -24,8 +25,13 @@ export function Sidebar({ abierta, onNavegar }: { abierta: boolean; onNavegar: (
   const navigate = useNavigate();
   const esAdmin = tieneRol('ADMIN');
   // Contador de insumos en el mínimo: la alerta visual que pide el alcance
-  const { data: insumos } = useFetch<Insumo[]>(usuario ? '/insumos' : null);
+  const { data: insumos, recargar: recargarInsumos } = useFetch<Insumo[]>(usuario ? '/insumos' : null);
   const bajos = (insumos ?? []).filter((i) => i.bajo).length;
+  // Se actualiza solo cuando otra pantalla mueve el stock (ej. cargar filtros → desaparece el 1)
+  useEffect(() => {
+    window.addEventListener(EVENTO_STOCK, recargarInsumos);
+    return () => window.removeEventListener(EVENTO_STOCK, recargarInsumos);
+  }, [recargarInsumos]);
 
   // Primero salir de la ruta protegida y después cerrar la sesión: si fuera al revés,
   // PrivateRoute guardaría esta pantalla como "de dónde venía" y el próximo login volvería acá.

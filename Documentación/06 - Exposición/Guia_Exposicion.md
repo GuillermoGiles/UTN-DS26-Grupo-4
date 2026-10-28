@@ -59,7 +59,7 @@ El hilo es el problema del negocio: hoy todo está en cuadernos, nadie sabe cuá
 | C18 | Autenticación | JWT + bcrypt; `passwordHash` nunca sale; registro que no permite elegir rol |
 | C19 | Integración front–back | Todas las pantallas contra la API, mensajes reales del servidor en la UI, CORS por variable |
 | C20 | Autorización en el front | `PrivateRoute` (cargando → login → rol), NavBar por rol, 401 global que cierra la sesión |
-| C21 | Testing | 251 tests; pirámide (utils puros → rutas con Supertest → DB); Dado/Cuando/Entonces |
+| C21 | Testing | 252 tests; pirámide (utils puros → rutas con Supertest → DB); Dado/Cuando/Entonces |
 | Visión y Alcance | Los 5 módulos de la sección 5.1 | Clientes y vehículos (con DNI), turnos online sin superposición, historial y próximo service, **stock de insumos** con descuento y alertas, precios; **recordatorios por e-mail** |
 | Entrega 4 | Deploy | Render (`render.yaml`) + Vercel (`vercel.json`), ver `07 - Deploy` |
 

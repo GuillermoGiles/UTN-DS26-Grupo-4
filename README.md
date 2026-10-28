@@ -70,12 +70,12 @@ Paso a paso en [Documentación/07 - Deploy](./Documentación/07%20-%20Deploy/Dep
 
 ## 🧪 Testing
 
-**251 tests automatizados**: 218 en el backend (216 sin base de datos + 2 contra PostgreSQL) y 33 en el frontend.
+**252 tests automatizados**: 218 en el backend (216 sin base de datos + 2 contra PostgreSQL) y 34 en el frontend.
 
 ```text
-Suite total: 251 tests
+Suite total: 252 tests
 ├── Backend: 218 (216 sin DB en ~3 s + 2 con DB real)
-└── Frontend: 33 (jsdom + Testing Library, sin backend)
+└── Frontend: 34 (jsdom + Testing Library, sin backend)
 ```
 
 ### 1. Comandos
@@ -97,7 +97,7 @@ npm run lint
 
 | Suite | Qué hace falta | Cómo |
 | :--- | :--- | :--- |
-| Sin DB (216 back + 33 front) | **Nada** | `supertest` usa `app` sin `listen`; Prisma está mockeado con `vi.mock`; el JWT se firma con el secreto de prueba de `vitest.config.mts`. El front corre en jsdom con la API mockeada. |
+| Sin DB (216 back + 34 front) | **Nada** | `supertest` usa `app` sin `listen`; Prisma está mockeado con `vi.mock`; el JWT se firma con el secreto de prueba de `vitest.config.mts`. El front corre en jsdom con la API mockeada. |
 | Con DB (`*.db.test.ts`) | PostgreSQL con migraciones y seed | `docker compose up -d db` + `npm run setup`. Si la base está apagada solo fallan esos 2 archivos; el resto sigue verde. |
 
 ### 3. Qué cubren
@@ -127,6 +127,7 @@ npm run lint
 | `pages/AltaTurno.test.tsx` | 5 | Sin autos pide cargar uno y no reserva; con un solo auto queda elegido; elegir varios servicios y que el total los sume; elegir otro lavado reemplaza al anterior; tocar de nuevo quita el servicio. |
 | `pages/MiCuenta.test.tsx` | 3 | Cambiar el auto principal cambia las estadísticas; eliminar un auto pide DELETE; si la API responde 409 se muestra el motivo. |
 | `components/CampoPassword.test.tsx` | 2 | El ojito muestra y oculta la contraseña; el error de validación se ve debajo. |
+| `components/Layout/Sidebar.test.tsx` | 1 | Al cargar stock y superar el mínimo, el contador de insumos del menú desaparece solo. |
 | `pages/SinPermiso.test.tsx` | 2 | La pantalla del 403 con el rol actual. |
 | `schemas/schemas.test.ts` | 6 | Contraseñas que no coinciden; vehículo obligatorio si se marca; body final del alta de cliente; `<select>` → ids numéricos. |
 
