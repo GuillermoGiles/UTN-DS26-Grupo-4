@@ -65,9 +65,10 @@ Cada URL existe recién cuando existe el servicio: el back necesita la del front
 4. **Volver al back**: `FRONTEND_URL=https://sgi-sanjose.onrender.com`. Cambiar una variable redeploya solo.
 5. **Cargar los datos de demo** desde nuestra compu, contra la base de Neon (el seed es idempotente: se puede correr de nuevo sin duplicar):
    ```bash
-   docker compose run --rm -e DATABASE_URL="<connection string de Neon>" api npx prisma db seed
+   NEON='<connection string de Neon>'   # comillas simples: Git Bash no toca los caracteres de la contraseña
+docker compose run --rm -e DATABASE_URL="$NEON" api sh -c "npx prisma generate && npx prisma db seed"
    ```
-   La imagen de producción no trae `tsx` ni el seed: por eso se corre con la imagen de desarrollo.
+   La imagen de producción no trae `tsx` ni el seed: por eso se corre con la imagen de desarrollo (`prisma generate` va antes porque `docker compose run` no pasa por `npm run dev`). Requiere `backend/.env` (copiarlo de `.env.example`). Nunca pegar la URL en un chat ni en una captura: tiene la contraseña.
 6. **Probar en el navegador** (ver la verificación de abajo) y pasar las dos URLs y los usuarios de prueba por Discord.
 
 `render.yaml` deja escrita esta misma configuración (servicios, Dockerfile, rewrite y variables sin valores).
@@ -106,6 +107,8 @@ git push origin main (merge de un PR)
 | Consola: bloqueado por CORS | `FRONTEND_URL` sigue en localhost o tiene `/` al final | La URL exacta del front |
 | Log: `Falta JWT_SECRET` | La variable no está en el panel | Agregarla con *Generate* |
 | Log: `P1001 Can't reach database server` | URL de Neon mal pegada o la *pooled* | Copiarla de nuevo, la directa |
+| Seed: `Cannot find module '.prisma/client/default'` | Falta generar el cliente de Prisma en el contenedor | `sh -c "npx prisma generate && npx prisma db seed"` |
+| Seed: `getaddrinfo EAI_AGAIN` | La URL llegó cortada al comando | Guardarla en una variable con comillas simples y usar `"$NEON"` |
 | 404 al hacer F5 en `/agenda` | Falta la regla de rewrite | `/*` → `/index.html` (Rewrite) |
 | El build falla con un error de TypeScript | El `tsc` no perdona | Correr `npm run build` local y arreglarlo antes de mergear |
 | Log: `SECURITY WARNING: The SSL modes...` | Aviso informativo de `pg` | No es error |
