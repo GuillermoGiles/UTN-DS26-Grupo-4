@@ -4,6 +4,7 @@ import { prisma } from "../config/prisma";
 import { SALT_ROUNDS } from "../config/env";
 import { AppError } from "../errors/AppError";
 import type { UsuarioPublico } from "./auth.service";
+import { esErrorDeRelacion } from "../utils/prismaErrors";
 import type { UsuarioCreate, UsuarioUpdate } from "../validations/usuario.validation";
 
 // Nunca se devuelve passwordHash
@@ -50,12 +51,8 @@ export async function remove(id: number, adminId: number): Promise<boolean> {
     await prisma.usuario.delete({ where: { id } });
     return true;
   } catch (e) {
-    if (e instanceof Prisma.PrismaClientKnownRequestError) {
-      if (e.code === "P2025") return false;
-      if (e.code === "P2003") {
-        throw new AppError(409, "No se puede borrar: el usuario tiene lavados registrados");
-      }
-    }
+    if (esErrorDeRelacion(e)) throw new AppError(409, "No se puede borrar: el usuario tiene lavados registrados");
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2025") return false;
     throw e;
   }
 }

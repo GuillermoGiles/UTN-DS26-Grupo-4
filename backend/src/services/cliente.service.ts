@@ -8,6 +8,7 @@ import {
   type ClienteDetalle,
 } from "../types/cliente.types";
 import { conService } from "./vehiculo.service";
+import { esErrorDeRelacion } from "../utils/prismaErrors";
 import type { ClienteCreate, ClienteUpdate } from "../validations/cliente.validation";
 
 export async function findAll(q?: string): Promise<ClienteListado[]> {
@@ -73,18 +74,16 @@ export async function updateByUsuario(usuarioId: number, datos: Pick<ClienteUpda
   }
 }
 
-// Los vehículos se borran en cascada; si tiene turnos, Postgres frena (Restrict) → 409
+// Los vehículos se borran en cascada; si tiene turnos o lavados, Postgres frena (Restrict) → 409
 export async function remove(id: number): Promise<boolean> {
   try {
     await prisma.cliente.delete({ where: { id } });
     return true;
   } catch (e) {
-    if (e instanceof Prisma.PrismaClientKnownRequestError) {
-      if (e.code === "P2025") return false;
-      if (e.code === "P2003") {
-        throw new AppError(409, "No se puede borrar un cliente con turnos registrados");
-      }
+    if (esErrorDeRelacion(e)) {
+      throw new AppError(409, "No se puede borrar un cliente con turnos o lavados registrados");
     }
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2025") return false;
     throw e;
   }
 }
