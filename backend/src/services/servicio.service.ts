@@ -1,6 +1,7 @@
 import type { Servicio } from "@prisma/client";
 import { Prisma } from "@prisma/client";
 import { prisma } from "../config/prisma";
+import { esErrorDeRelacion } from "../utils/prismaErrors";
 import { AppError } from "../errors/AppError";
 
 export async function findAll(tipo?: string): Promise<Servicio[]> {
@@ -37,12 +38,8 @@ export async function remove(id: number): Promise<boolean> {
     await prisma.servicio.delete({ where: { id } });
     return true;
   } catch (e) {
-    if (e instanceof Prisma.PrismaClientKnownRequestError) {
-      if (e.code === "P2025") return false;
-      if (e.code === "P2003") {
-        throw new AppError(409, "No se puede borrar un servicio que ya tiene turnos o lavados registrados");
-      }
-    }
+    if (esErrorDeRelacion(e)) throw new AppError(409, "No se puede borrar un servicio que ya tiene turnos o lavados registrados");
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2025") return false;
     throw e;
   }
 }

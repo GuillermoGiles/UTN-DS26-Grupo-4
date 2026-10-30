@@ -10,6 +10,7 @@ import {
   type VehiculoDetalle,
   type ConService,
 } from "../types/vehiculo.types";
+import { esErrorDeRelacion } from "../utils/prismaErrors";
 import type { VehiculoCreate, VehiculoUpdate } from "../validations/vehiculo.validation";
 
 /** Agrega el cálculo del próximo service (no se guarda: depende de "hoy"). */
@@ -112,9 +113,9 @@ export async function remove(id: number, usuario: { id: number; rol: Rol }): Pro
     await prisma.vehiculo.delete({ where: { id } });
     return true;
   } catch (e) {
+    if (esErrorDeRelacion(e)) throw new AppError(409, "El auto tiene lavados registrados y no se puede eliminar");
     if (e instanceof Prisma.PrismaClientKnownRequestError) {
       if (e.code === "P2025") return false;
-      if (e.code === "P2003") throw new AppError(409, "El auto tiene lavados registrados y no se puede eliminar");
     }
     throw e;
   }
