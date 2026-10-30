@@ -14,6 +14,7 @@ import { clienteDatosSchema } from '../schemas/clienteSchema';
 import { AgregarAutoModal } from '../components/AgregarAutoModal';
 import { fechaCorta, fechaLarga, km, mensajeDeError, mostrarPatente, pesos } from '../utils/formato';
 import type { ClienteDetalle } from '../types/cliente';
+import { useConfirmar } from '../hooks/useConfirmar';
 import { nombresServicios, totalServicios } from '../types/turno';
 
 /** Portal del cliente: sus turnos, el historial de servicios y sus autos con el próximo service. */
@@ -23,15 +24,19 @@ export function MiCuenta() {
   const { data: ficha, loading, error, recargar } = useFetch<ClienteDetalle>('/clientes/mio');
   const [modal, setModal] = useState<'datos' | 'auto' | null>(null);
   const [errorAccion, setErrorAccion] = useState<string | null>(null);
+  const [ok, setOk] = useState<string | null>(null);
+  const { confirmar, modalConfirmar } = useConfirmar();
   // Auto del que se muestran las estadísticas (null = el de service más urgente)
   const [autoElegidoId, setAutoElegidoId] = useState<number | null>(null);
 
   const eliminarAuto = async (id: number, nombre: string) => {
-    if (!window.confirm(`¿Eliminar ${nombre} de tus autos?`)) return;
+    if (!(await confirmar({ titulo: `¿Eliminar el ${nombre} de tus autos?`, texto: 'Si tiene turnos reservados, primero tenés que cancelarlos.', boton: 'Eliminar' }))) return;
     setErrorAccion(null);
+    setOk(null);
     try {
       await apiFetch(`/vehiculos/${id}`, { method: 'DELETE' });
       if (autoElegidoId === id) setAutoElegidoId(null);
+      setOk(`El ${nombre} se eliminó de tus autos.`);
       recargar();
     } catch (err) {
       setErrorAccion(mensajeDeError(err)); // 409 si tiene turnos reservados o lavados registrados
@@ -39,10 +44,12 @@ export function MiCuenta() {
   };
 
   const cancelar = async (id: number) => {
-    if (!window.confirm('¿Cancelar este turno?')) return;
+    if (!(await confirmar({ titulo: '¿Cancelar este turno?', texto: 'El horario queda libre para otro cliente.', boton: 'Cancelar turno' }))) return;
     setErrorAccion(null);
+    setOk(null);
     try {
       await apiFetch(`/turnos/${id}/cancelar`, { method: 'PATCH' });
+      setOk('Turno cancelado.');
       recargar();
     } catch (err) {
       setErrorAccion(mensajeDeError(err));
@@ -85,7 +92,9 @@ export function MiCuenta() {
         acciones={<Link to="/turnos/nuevo" className="btn-sgi"><FiPlus /> Reservar turno</Link>}
       />
       {turnoCreado && <Alert variant="success">Turno reservado. Te esperamos.</Alert>}
+      {ok && <Alert variant="success" dismissible onClose={() => setOk(null)}>{ok}</Alert>}
       {errorAccion && <Alert variant="danger" dismissible onClose={() => setErrorAccion(null)}>{errorAccion}</Alert>}
+      {modalConfirmar}
 
       <Row className="g-3 mb-4">
         <Col sm={6} xl={3}>

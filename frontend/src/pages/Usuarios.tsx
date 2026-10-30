@@ -8,6 +8,7 @@ import { apiFetch } from '../services/api';
 import { Cargando, ErrorCarga } from '../components/Estado';
 import { fechaLarga, mensajeDeError } from '../utils/formato';
 import { EncabezadoPagina } from '../components/Formulario';
+import { useConfirmar } from '../hooks/useConfirmar';
 import type { Rol, Usuario } from '../types/sesion';
 
 const COLOR_ROL: Record<Rol, string> = { ADMIN: 'estado-pendiente', EMPLEADO: 'estado-confirmado', CLIENTE: 'estado-sin-datos' };
@@ -17,12 +18,16 @@ export function Usuarios() {
   const { usuario: yo } = useAuth();
   const { data: usuarios, loading, error, recargar } = useFetch<Usuario[]>('/usuarios');
   const [errorBorrado, setErrorBorrado] = useState<string | null>(null);
+  const [ok, setOk] = useState<string | null>(null);
+  const { confirmar, modalConfirmar } = useConfirmar();
 
   const borrar = async (u: Usuario) => {
-    if (!window.confirm(`¿Borrar la cuenta de ${u.nombre}?`)) return;
+    if (!(await confirmar({ titulo: `¿Borrar la cuenta de ${u.nombre}?`, texto: 'Ya no va a poder iniciar sesión. Esta acción no se puede deshacer.' }))) return;
     setErrorBorrado(null);
+    setOk(null);
     try {
       await apiFetch(`/usuarios/${u.id}`, { method: 'DELETE' });
+      setOk(`La cuenta de ${u.nombre} fue borrada.`);
       recargar();
     } catch (err) {
       setErrorBorrado(mensajeDeError(err)); // 409 si tiene lavados registrados
@@ -32,7 +37,9 @@ export function Usuarios() {
   return (
     <div className="page">
       <EncabezadoPagina eyebrow="PERSONAL" titulo="Usuarios" texto="Los clientes crean su cuenta solos; acá se da de alta al personal." />
+      {ok && <Alert variant="success" dismissible onClose={() => setOk(null)}>{ok}</Alert>}
       {errorBorrado && <Alert variant="danger" dismissible onClose={() => setErrorBorrado(null)}>{errorBorrado}</Alert>}
+      {modalConfirmar}
       <div className="card-sgi p-0">
         <div className="p-4 border-bottom  d-flex justify-content-between align-items-center">
           <p className="text-muted m-0 small">Los clientes crean su cuenta desde “Crear cuenta”. Acá se da de alta al personal.</p>

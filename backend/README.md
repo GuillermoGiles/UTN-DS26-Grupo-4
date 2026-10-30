@@ -108,7 +108,7 @@ se registra como `SIMULADO` y se ve en la pantalla Correos.
 
 ## Testing
 
-218 tests con Vitest + Supertest: 216 sin base (Prisma mockeado, ~3 s) y 2 contra PostgreSQL (`*.db.test.ts`).
+221 tests con Vitest + Supertest: 219 sin base (Prisma mockeado, ~3 s) y 2 contra PostgreSQL (`*.db.test.ts`).
 El detalle de qué cubre cada archivo está en la [sección Testing del README principal](../README.md#-testing).
 
 ```bash

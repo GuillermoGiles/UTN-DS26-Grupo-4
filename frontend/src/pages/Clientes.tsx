@@ -10,6 +10,7 @@ import { Cargando, ErrorCarga, Vacio } from '../components/Estado';
 import { Patente } from '../components/Badges';
 import { mensajeDeError } from '../utils/formato';
 import { EncabezadoPagina } from '../components/Formulario';
+import { useConfirmar } from '../hooks/useConfirmar';
 import type { ClienteListado } from '../types/cliente';
 
 export function Clientes() {
@@ -20,12 +21,16 @@ export function Clientes() {
     q ? `/clientes?q=${encodeURIComponent(q)}` : '/clientes',
   );
   const [errorBorrado, setErrorBorrado] = useState<string | null>(null);
+  const [ok, setOk] = useState<string | null>(null);
+  const { confirmar, modalConfirmar } = useConfirmar();
 
   const borrar = async (c: ClienteListado) => {
-    if (!window.confirm(`¿Borrar a ${c.nombre}? También se borran sus vehículos.`)) return;
+    if (!(await confirmar({ titulo: `¿Borrar a ${c.nombre}?`, texto: 'También se borran sus vehículos. Esta acción no se puede deshacer.' }))) return;
     setErrorBorrado(null);
+    setOk(null);
     try {
       await apiFetch(`/clientes/${c.id}`, { method: 'DELETE' });
+      setOk(`${c.nombre} fue borrado.`);
       recargar();
     } catch (err) {
       setErrorBorrado(mensajeDeError(err)); // 409 si tiene turnos
@@ -35,7 +40,9 @@ export function Clientes() {
   return (
     <div className="page">
       <EncabezadoPagina eyebrow="DIRECTORIO" titulo="Clientes" texto="Buscá por nombre, DNI, teléfono o patente." />
+      {ok && <Alert variant="success" dismissible onClose={() => setOk(null)}>{ok}</Alert>}
       {errorBorrado && <Alert variant="danger" dismissible onClose={() => setErrorBorrado(null)}>{errorBorrado}</Alert>}
+      {modalConfirmar}
       <div className="card-sgi p-0">
         <div className="p-4 border-bottom  d-flex flex-wrap gap-3 justify-content-between align-items-center">
           <Form.Control
