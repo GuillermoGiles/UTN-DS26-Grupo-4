@@ -46,21 +46,22 @@ describe('Mi cuenta: autos del cliente (Dado / Cuando / Entonces)', () => {
   });
 
   it('Dado un auto en Mis autos, Cuando toca eliminar y confirma, Entonces pide DELETE a la API', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValueOnce(true);
     renderConAuth(<MiCuenta />, { usuario: cliente });
 
     fireEvent.click(await screen.findByRole('button', { name: 'Eliminar Ford Ka' }));
+    expect(await screen.findByText('¿Eliminar el Ford Ka de tus autos?')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Eliminar' }));
 
     await vi.waitFor(() => expect(apiFetch).toHaveBeenCalledWith('/vehiculos/2', { method: 'DELETE' }));
   });
 
   it('Dado un auto con turnos reservados, Cuando intenta eliminarlo, Entonces muestra el motivo que devuelve la API', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValueOnce(true);
     renderConAuth(<MiCuenta />, { usuario: cliente });
     await screen.findByRole('button', { name: 'Eliminar Ford Fiesta' });
     vi.mocked(apiFetch).mockRejectedValueOnce(new Error('El auto tiene turnos reservados: cancelalos antes de eliminarlo'));
 
     fireEvent.click(screen.getByRole('button', { name: 'Eliminar Ford Fiesta' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Eliminar' }));
 
     expect(await screen.findByText('El auto tiene turnos reservados: cancelalos antes de eliminarlo')).toBeInTheDocument();
   });

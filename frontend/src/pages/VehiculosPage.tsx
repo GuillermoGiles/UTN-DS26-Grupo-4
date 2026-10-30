@@ -8,8 +8,9 @@ import { useDebounce } from '../hooks/useDebounce';
 import { apiFetch } from '../services/api';
 import { Cargando, ErrorCarga, Vacio } from '../components/Estado';
 import { Patente, ServiceBadge } from '../components/Badges';
-import { km, mensajeDeError } from '../utils/formato';
+import { km, mensajeDeError, mostrarPatente } from '../utils/formato';
 import { EncabezadoPagina } from '../components/Formulario';
+import { useConfirmar } from '../hooks/useConfirmar';
 import type { EstadoService, VehiculoListado } from '../types/vehiculo';
 
 const ORDEN_SERVICE: Record<EstadoService, number> = { vencido: 0, proximo: 1, 'sin-datos': 2, ok: 3 };
@@ -23,16 +24,20 @@ export function VehiculosPage() {
     q ? `/vehiculos?q=${encodeURIComponent(q)}` : '/vehiculos',
   );
   const [errorBorrado, setErrorBorrado] = useState<string | null>(null);
+  const [ok, setOk] = useState<string | null>(null);
+  const { confirmar, modalConfirmar } = useConfirmar();
 
   const vehiculos = (data ?? [])
     .filter((v) => !soloAtrasados || v.service.estado === 'vencido' || v.service.estado === 'proximo')
     .sort((a, b) => ORDEN_SERVICE[a.service.estado] - ORDEN_SERVICE[b.service.estado]);
 
   const borrar = async (v: VehiculoListado) => {
-    if (!window.confirm(`¿Borrar el vehículo ${v.patente}?`)) return;
+    if (!(await confirmar({ titulo: `¿Borrar el vehículo ${mostrarPatente(v.patente)}?`, texto: 'Sus turnos terminados quedan en el historial, sin el vehículo. Esta acción no se puede deshacer.' }))) return;
     setErrorBorrado(null);
+    setOk(null);
     try {
       await apiFetch(`/vehiculos/${v.id}`, { method: 'DELETE' });
+      setOk(`El vehículo ${mostrarPatente(v.patente)} fue borrado.`);
       recargar();
     } catch (err) {
       setErrorBorrado(mensajeDeError(err));
@@ -42,7 +47,9 @@ export function VehiculosPage() {
   return (
     <div className="page">
       <EncabezadoPagina eyebrow="FLOTA" titulo="Vehículos" texto="Kilometraje de cada auto y cuándo le toca el próximo service." />
+      {ok && <Alert variant="success" dismissible onClose={() => setOk(null)}>{ok}</Alert>}
       {errorBorrado && <Alert variant="danger" dismissible onClose={() => setErrorBorrado(null)}>{errorBorrado}</Alert>}
+      {modalConfirmar}
       <div className="card-sgi p-0">
         <div className="p-4 border-bottom  d-flex flex-wrap gap-3 justify-content-between align-items-center">
           <div className="d-flex flex-wrap gap-3 align-items-center">

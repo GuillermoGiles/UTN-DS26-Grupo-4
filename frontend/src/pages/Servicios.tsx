@@ -9,6 +9,7 @@ import { useFetch } from '../hooks/useFetch';
 import { useAuth } from '../hooks/useAuth';
 import { apiFetch } from '../services/api';
 import { mensajeDeError } from '../utils/formato';
+import { useConfirmar } from '../hooks/useConfirmar';
 import type { Servicio, TipoServicio } from '../types/servicio';
 
 export function Servicios() {
@@ -19,12 +20,16 @@ export function Servicios() {
     tipo ? `/servicios?tipo=${tipo}` : '/servicios',
   );
   const [errorBorrado, setErrorBorrado] = useState<string | null>(null);
+  const [ok, setOk] = useState<string | null>(null);
+  const { confirmar, modalConfirmar } = useConfirmar();
 
   const borrar = async (srv: Servicio) => {
-    if (!window.confirm(`¿Borrar el servicio "${srv.nombre}"?`)) return;
+    if (!(await confirmar({ titulo: `¿Borrar el servicio "${srv.nombre}"?`, texto: 'Deja de aparecer en el catálogo. Esta acción no se puede deshacer.' }))) return;
     setErrorBorrado(null);
+    setOk(null);
     try {
       await apiFetch(`/servicios/${srv.id}`, { method: 'DELETE' });
+      setOk(`El servicio "${srv.nombre}" fue borrado.`);
       recargar();
     } catch (err) {
       setErrorBorrado(mensajeDeError(err)); // ej. 409 si ya tiene turnos o lavados
@@ -58,6 +63,8 @@ export function Servicios() {
         }
       />
 
+      {ok && <Alert variant="success" dismissible onClose={() => setOk(null)}>{ok}</Alert>}
+      {modalConfirmar}
       {errorBorrado && (
         <Alert variant="danger" dismissible onClose={() => setErrorBorrado(null)}>
           {errorBorrado}

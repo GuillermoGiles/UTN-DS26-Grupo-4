@@ -91,19 +91,19 @@ Paso a paso, verificación y qué hacer si algo falla: [Documentación/07 - Depl
 
 ## 🧪 Testing
 
-**252 tests automatizados**: 218 en el backend (216 sin base de datos + 2 contra PostgreSQL) y 34 en el frontend.
+**257 tests automatizados**: 221 en el backend (219 sin base de datos + 2 contra PostgreSQL) y 36 en el frontend.
 
 ```text
-Suite total: 252 tests
-├── Backend: 218 (216 sin DB en ~3 s + 2 con DB real)
-└── Frontend: 34 (jsdom + Testing Library, sin backend)
+Suite total: 257 tests
+├── Backend: 221 (219 sin DB en ~3 s + 2 con DB real)
+└── Frontend: 36 (jsdom + Testing Library, sin backend)
 ```
 
 ### 1. Comandos
 
 ```bash
 # Backend (desde backend/, en el host o con: docker compose run --rm api <comando>)
-npm run test:sin-db     # 216 tests, no necesita Docker
+npm run test:sin-db     # 219 tests, no necesita Docker
 npm test                # todos, incluidos los *.db.test.ts (necesita la base con el seed)
 npm run test:watch
 npm run coverage
@@ -118,7 +118,7 @@ npm run lint
 
 | Suite | Qué hace falta | Cómo |
 | :--- | :--- | :--- |
-| Sin DB (216 back + 34 front) | **Nada** | `supertest` usa `app` sin `listen`; Prisma está mockeado con `vi.mock`; el JWT se firma con el secreto de prueba de `vitest.config.mts`. El front corre en jsdom con la API mockeada. |
+| Sin DB (219 back + 36 front) | **Nada** | `supertest` usa `app` sin `listen`; Prisma está mockeado con `vi.mock`; el JWT se firma con el secreto de prueba de `vitest.config.mts`. El front corre en jsdom con la API mockeada. |
 | Con DB (`*.db.test.ts`) | PostgreSQL con migraciones y seed | `docker compose up -d db` + `npm run setup`. Si la base está apagada solo fallan esos 2 archivos; el resto sigue verde. |
 
 ### 3. Qué cubren
@@ -149,6 +149,7 @@ npm run lint
 | `pages/MiCuenta.test.tsx` | 3 | Cambiar el auto principal cambia las estadísticas; eliminar un auto pide DELETE; si la API responde 409 se muestra el motivo. |
 | `components/CampoPassword.test.tsx` | 2 | El ojito muestra y oculta la contraseña; el error de validación se ve debajo. |
 | `components/Layout/Sidebar.test.tsx` | 1 | Al cargar stock y superar el mínimo, el contador de insumos del menú desaparece solo. |
+| `pages/Clientes.test.tsx` | 2 | Antes de borrar pide confirmación: "No, volver" no borra nada; confirmar borra y muestra el aviso de éxito. |
 | `pages/SinPermiso.test.tsx` | 2 | La pantalla del 403 con el rol actual. |
 | `schemas/schemas.test.ts` | 6 | Contraseñas que no coinciden; vehículo obligatorio si se marca; body final del alta de cliente; `<select>` → ids numéricos. |
 

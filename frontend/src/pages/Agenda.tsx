@@ -13,6 +13,7 @@ import { fechaCorta, hoyAR, horaDe, horaActualAR, mensajeDeError, mostrarPatente
 import { TEXTO_ESTADO_TURNO } from '../utils/estados';
 import { nombresServicios, totalServicios, ESTADOS_TURNO, type Disponibilidad, type EstadoTurno, type TurnoConDetalle } from '../types/turno';
 import { avisarCambioDeStock } from '../utils/stock';
+import { useConfirmar } from '../hooks/useConfirmar';
 import type { Lavado } from '../types/lavado';
 
 /** Agenda operativa (wireframe 02): turnos del día, detalle con acciones y autos sin turno. */
@@ -60,8 +61,10 @@ export function Agenda() {
     accion(() => apiFetch(`/turnos/${t.id}/recordatorio`, { method: 'POST' }),
       `Recordatorio registrado para ${t.cliente.email}.`, turnos.recargar);
 
-  const anularLavado = (l: Lavado) => {
-    if (!window.confirm(`¿Anular el lavado de ${l.vehiculo.patente}?`)) return;
+  const { confirmar, modalConfirmar } = useConfirmar();
+
+  const anularLavado = async (l: Lavado) => {
+    if (!(await confirmar({ titulo: `¿Anular el lavado de ${mostrarPatente(l.vehiculo.patente)}?`, texto: 'Se descuenta de la caja del día.', boton: 'Anular' }))) return;
     accion(() => apiFetch(`/lavados/${l.id}`, { method: 'DELETE' }), 'Lavado anulado.', lavados.recargar);
   };
 
@@ -122,7 +125,10 @@ export function Agenda() {
             <DetalleTurno
               key={elegido.id}
               turno={elegido}
-              onEstado={(e) => cambiarEstado(elegido, e)}
+              onEstado={async (e) => {
+                if (e === 'CANCELADO' && !(await confirmar({ titulo: '¿Cancelar este turno?', texto: 'El horario queda libre para otro cliente.', boton: 'Cancelar turno' }))) return;
+                cambiarEstado(elegido, e);
+              }}
               onRecordatorio={() => recordatorio(elegido)}
               onReprogramado={(texto) => { setAviso({ tipo: 'success', texto }); turnos.recargar(); }}
               onError={(texto) => setAviso({ tipo: 'danger', texto })}
@@ -151,6 +157,7 @@ export function Agenda() {
           </div>
         )))}
       </section>
+      {modalConfirmar}
     </div>
   );
 }
@@ -211,7 +218,7 @@ function DetalleTurno({ turno: t, onEstado, onRecordatorio, onReprogramado, onEr
               </button>
             ))}
             {t.estado !== 'CANCELADO' && t.estado !== 'COMPLETADO' && (
-              <button type="button" className="btn-sgi-ghost btn-sgi-danger" onClick={() => window.confirm('¿Cancelar este turno?') && onEstado('CANCELADO')}>Cancelar</button>
+              <button type="button" className="btn-sgi-ghost btn-sgi-danger" onClick={() => onEstado('CANCELADO')}>Cancelar</button>
             )}
             {(t.estado === 'CANCELADO' || t.estado === 'COMPLETADO') && (
               <button type="button" className="btn-sgi-ghost" onClick={() => onEstado('PENDIENTE')}>Volver a pendiente</button>
